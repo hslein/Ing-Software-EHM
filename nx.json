@@ -40,12 +40,5 @@
       }
     }
   ],
-  "analytics": false,
-  "targetDefaults": {
-    "@nx/esbuild:esbuild": {
-      "cache": true,
-      "dependsOn": ["^build"],
-      "inputs": ["production", "^production"]
-    }
-  }
+  "analytics": false
 }

@@ -5,96 +5,22 @@
   "nx": {
     "targets": {
       "build": {
-        "executor": "@nx/esbuild:esbuild",
-        "outputs": [
-          "{options.outputPath}"
-        ],
-        "defaultConfiguration": "production",
+        "executor": "@nx/js:tsc",
+        "outputs": ["{options.outputPath}"],
         "options": {
-          "platform": "node",
-          "outputPath": "apps/ehm_back/dist",
-          "format": [
-            "cjs"
-          ],
-          "bundle": false,
+          "outputPath": "dist/apps/ehm_back",
           "main": "apps/ehm_back/src/main.ts",
           "tsConfig": "apps/ehm_back/tsconfig.app.json",
-          "assets": [
-            "apps/ehm_back/src/assets"
-          ],
-          "esbuildOptions": {
-            "sourcemap": true,
-            "outExtension": {
-              ".js": ".js"
-            }
-          }
-        },
-        "configurations": {
-          "development": {},
-          "production": {
-            "esbuildOptions": {
-              "sourcemap": false,
-              "outExtension": {
-                ".js": ".js"
-              }
-            }
-          }
+          "assets": ["apps/ehm_back/src/assets"]
         }
       },
-      "prune-lockfile": {
-        "dependsOn": [
-          "build"
-        ],
-        "cache": true,
-        "executor": "@nx/js:prune-lockfile",
-        "outputs": [
-          "{workspaceRoot}/apps/ehm_back/dist/package.json",
-          "{workspaceRoot}/apps/ehm_back/dist/package-lock.json"
-        ],
-        "options": {
-          "buildTarget": "build"
-        }
-      },
-      "copy-workspace-modules": {
-        "dependsOn": [
-          "build"
-        ],
-        "cache": true,
-        "outputs": [
-          "{workspaceRoot}/apps/ehm_back/dist/workspace_modules"
-        ],
-        "executor": "@nx/js:copy-workspace-modules",
-        "options": {
-          "buildTarget": "build"
-        }
-      },
-      "prune": {
-        "dependsOn": [
-          "prune-lockfile",
-          "copy-workspace-modules"
-        ],
-        "executor": "nx:noop"
-      },
-      "serve": {
-        "continuous": true,
-        "executor": "@nx/js:node",
-        "defaultConfiguration": "development",
-        "dependsOn": [
-          "build"
-        ],
-        "options": {
-          "buildTarget": "@org/ehm_back:build",
-          "runBuildTargetDependencies": false
-        },
-        "configurations": {
-          "development": {
-            "buildTarget": "@org/ehm_back:build:development"
-          },
-          "production": {
-            "buildTarget": "@org/ehm_back:build:production"
-          }
-        }
-      }
+"serve": {
+  "executor": "@nx/js:node",
+  "options": {
+    "buildTarget": "@org/ehm_back:build",
+    "watch": true
+  }
+}
     }
   },
   "dependencies": {

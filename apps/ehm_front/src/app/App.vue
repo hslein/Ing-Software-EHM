@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import NxWelcome from './NxWelcome.vue';
+import NavBar from '../components/NavBar.vue';
+
 </script>
 
 <template>
-  <NxWelcome title="@org/ehm_front" />
+    <NavBar />
 </template>

@@ -2,5 +2,15 @@
   "extends": "./tsconfig.base.json",
   "compileOnSave": false,
   "files": [],
-  "references": []
+  "references": [
+    {
+      "path": "./apps/ehm_front"
+    },
+    {
+      "path": "./libs/shared/graphql-types"
+    },
+    {
+      "path": "./ehm_back"
+    }
+  ]
 }

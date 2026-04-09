@@ -10,7 +10,7 @@
       "path": "./libs/shared/graphql-types"
     },
     {
-      "path": "./ehm_back"
+      "path": "./apps/ehm_back"
     }
   ]
 }

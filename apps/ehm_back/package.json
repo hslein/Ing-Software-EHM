@@ -12,15 +12,15 @@
         "defaultConfiguration": "production",
         "options": {
           "platform": "node",
-          "outputPath": "ehm_back/dist",
+          "outputPath": "apps/ehm_back/dist",
           "format": [
             "cjs"
           ],
           "bundle": false,
-          "main": "ehm_back/src/main.ts",
-          "tsConfig": "ehm_back/tsconfig.app.json",
+          "main": "apps/ehm_back/src/main.ts",
+          "tsConfig": "apps/ehm_back/tsconfig.app.json",
           "assets": [
-            "ehm_back/src/assets"
+            "apps/ehm_back/src/assets"
           ],
           "esbuildOptions": {
             "sourcemap": true,
@@ -48,8 +48,8 @@
         "cache": true,
         "executor": "@nx/js:prune-lockfile",
         "outputs": [
-          "{workspaceRoot}/ehm_back/dist/package.json",
-          "{workspaceRoot}/ehm_back/dist/package-lock.json"
+          "{workspaceRoot}/apps/ehm_back/dist/package.json",
+          "{workspaceRoot}/apps/ehm_back/dist/package-lock.json"
         ],
         "options": {
           "buildTarget": "build"
@@ -61,7 +61,7 @@
         ],
         "cache": true,
         "outputs": [
-          "{workspaceRoot}/ehm_back/dist/workspace_modules"
+          "{workspaceRoot}/apps/ehm_back/dist/workspace_modules"
         ],
         "executor": "@nx/js:copy-workspace-modules",
         "options": {

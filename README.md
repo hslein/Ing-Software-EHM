@@ -73,3 +73,28 @@ npm install
 ```bash
 npm run start
 ```
+
+# Backend
+
+Para generar modulos se debe estar en la carpeta del backend "ehm_back", ejecutar:
+
+```bash
+cd apps/ehm_back
+```
+### Crear modulo
+
+```bash
+nest g module name
+```
+
+### Crear servicio
+
+```bash
+nest g service name --no-spec
+```
+
+### Crear controlador
+
+```bash
+nest g controller name --no-spec
+```

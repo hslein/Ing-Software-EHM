@@ -18,6 +18,16 @@
                     <a href="/contact" class="nav-link">Contact</a>
                 </li>
                 <li class="nav-item">
+                    <label for="brand" class="nav-label">Brand</label>
+                    <select id="brand" class="brand-select">
+                        <option value="maibatsu">Maibatsu</option>
+                        <option value="karin">Karin</option>
+                        <option value="obey">Obey</option>
+                        <option value="vapid">Vapid</option>
+                        <option value="bravado">Bravado</option>
+                    </select>
+                </li>
+                <li class="nav-item">
                     <a href="/login" class="nav-link nav-link-btn">Sign In</a>
                 </li>
             </ul>
@@ -84,5 +94,20 @@ export default {
 .nav-link-btn:hover {
     background-color: #ff5252;
     color: #fff;
+}
+
+.nav-label {
+    color: #fff;
+    margin-right: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.brand-select {
+    background-color: #fff;
+    color: #333;
+    border: none;
+    border-radius: 4px;
+    padding: 0.4rem 0.6rem;
+    font-size: 0.9rem;
 }
 </style>

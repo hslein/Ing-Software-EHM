@@ -12,31 +12,31 @@ const cars: Car[] = [
     brand: 'Mitsubishi',
     model: 'Penumbra',
     image:
-      'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&w=1200&q=80',
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Mitsubishi_logo.svg/960px-Mitsubishi_logo.svg.png?utm_source=es.wikibooks.org&utm_campaign=index&utm_content=thumbnail',
   },
   {
     brand: 'Toyota',
     model: 'Sultan',
     image:
-      'https://images.unsplash.com/photo-1542282088-fe8426682b8f?auto=format&fit=crop&w=1200&q=80',
+      'https://www.toyota-global.com/pages/contents/showroom/emblem/passion/images/passion_img01.jpg',
   },
   {
     brand: 'Audi',
     model: '8F Drafter',
     image:
-      'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=1200&q=80',
+      'https://di-uploads-pod3.dealerinspire.com/vindeversautohausofsylvania/uploads/2018/10/Audi-Logo-Banner.png',
   },
   {
     brand: 'Ford',
     model: 'Dominator',
     image:
-      'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=1200&q=80',
+      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSrvZJcFSuBzTHzbCAs5Yqj3MQMi8yF6_hlWw&s',
   },
   {
     brand: 'Volkswagen',
     model: 'Gauntlet',
     image:
-      'https://images.unsplash.com/photo-1583121274602-3e2820c69888?auto=format&fit=crop&w=1200&q=80',
+      'https://logowik.com/content/uploads/images/345_volkswagen_logo.jpg',
   },
 ];
 

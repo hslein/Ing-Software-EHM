@@ -5,7 +5,8 @@
   "license": "MIT",
   "scripts": {
     "start": "nx run-many --target=serve --projects=ehm_front,ehm_back --parallel",
-    "front": "nx serve ehm_front"
+    "front": "nx serve ehm_front",
+    "back": "nx serve ehm_back"
   },
   "devDependencies": {
     "@nx/js": "22.6.4",

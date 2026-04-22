@@ -36,8 +36,7 @@ const cars: Car[] = [
   {
     brand: 'Volkswagen',
     model: 'Gauntlet',
-    image:
-      'https://logowik.com/content/uploads/images/345_volkswagen_logo.jpg',
+    image: 'https://logowik.com/content/uploads/images/345_volkswagen_logo.jpg',
   },
 ];
 
@@ -53,7 +52,9 @@ const selectBrand = (car: Car) => {
 
 const runBrandAction = (action: string) => {
   if (!selectedCar.value) return;
-  window.alert(`${action} - ${selectedCar.value.brand} ${selectedCar.value.model}`);
+  window.alert(
+    `${action} - ${selectedCar.value.brand} ${selectedCar.value.model}`
+  );
 };
 
 const closeBrandMenu = () => {
@@ -85,7 +86,11 @@ const closeBrandMenu = () => {
           @click="selectBrand(car)"
         >
           <div class="image-wrapper">
-            <img :src="car.image" :alt="`${car.brand} ${car.model}`" class="car-image" />
+            <img
+              :src="car.image"
+              :alt="`${car.brand} ${car.model}`"
+              class="car-image"
+            />
           </div>
           <div class="car-content">
             <h2>{{ car.brand }}</h2>
@@ -98,7 +103,11 @@ const closeBrandMenu = () => {
       <section v-if="selectedCar" class="brand-menu" aria-live="polite">
         <div class="brand-menu-header">
           <h2>{{ selectedCar.brand }}</h2>
-          <button type="button" class="brand-menu-close" @click="closeBrandMenu">
+          <button
+            type="button"
+            class="brand-menu-close"
+            @click="closeBrandMenu"
+          >
             Cerrar
           </button>
         </div>
@@ -110,7 +119,10 @@ const closeBrandMenu = () => {
           <button type="button" @click="runBrandAction('Agendar test drive')">
             Agendar test drive
           </button>
-          <button type="button" @click="runBrandAction('Solicitar financiacion')">
+          <button
+            type="button"
+            @click="runBrandAction('Solicitar financiacion')"
+          >
             Solicitar financiacion
           </button>
         </div>
@@ -136,8 +148,7 @@ const closeBrandMenu = () => {
 <style scoped>
 .page-shell {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at top right, #dce9ff 0%, transparent 38%),
+  background: radial-gradient(circle at top right, #dce9ff 0%, transparent 38%),
     radial-gradient(circle at 10% 20%, #ffe6e0 0%, transparent 35%),
     linear-gradient(180deg, #f7f9ff 0%, #f3f6ff 45%, #eef1ff 100%);
 }

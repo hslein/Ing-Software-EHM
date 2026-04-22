@@ -2,11 +2,11 @@
   <nav class="navbar">
     <div class="navbar-container">
       <div class="navbar-logo">
-        <a href="/">Concesionario EHM</a>
+        <a href="/" @click.prevent="goHome">Concesionario EHM</a>
       </div>
       <ul class="nav-menu">
         <li class="nav-item">
-          <a href="/" class="nav-link">Home</a>
+          <a href="/" class="nav-link" @click.prevent="goHome">Home</a>
         </li>
         <li class="nav-item">
           <a href="/inventory" class="nav-link">Inventory</a>
@@ -20,7 +20,7 @@
         <li class="nav-item nav-brand-control">
           <label for="brand" class="nav-label">Brand</label>
           <select id="brand" class="brand-select">
-            <option value="mitsubishi">Mitsubishi</option>
+            <option value="mazda">Mazda</option>
             <option value="toyota">Toyota</option>
             <option value="audi">Audi</option>
             <option value="ford">Ford</option>
@@ -38,8 +38,11 @@
 <script>
 export default {
   name: 'NavBar',
-  data() {
-    return {};
+  emits: ['go-home'],
+  methods: {
+    goHome() {
+      this.$emit('go-home');
+    },
   },
 };
 </script>

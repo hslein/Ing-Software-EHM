@@ -9,6 +9,7 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
+    "lib": ["es2022", "dom"],
     "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo"
   },
   "exclude": [

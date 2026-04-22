@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import NavBar from '../components/NavBar.vue';
+import { defineComponent } from 'vue';
+
 
 type VehicleType = 'suv' | 'sedan' | 'deportivo' | 'pickup';
 
@@ -98,6 +100,18 @@ const runBrandAction = (action: string, vehicle: Vehicle) => {
   window.alert(`${action} - ${selectedBrand.value.name} ${vehicle.model}`);
 };
 
+const viewInventory = () => {
+  window.alert(`Inventario de ${selectedBrand.value.name}`);
+};
+
+const scheduleTestDrive = () => {
+  window.alert(`Test drive para ${selectedBrand.value.name}`);
+};
+
+const requestFinancing = () => {
+  window.alert(`Financiacion de ${selectedBrand.value.name}`);
+};
+
 const toTitleCase = (value: string) => {
   return value.charAt(0).toUpperCase() + value.slice(1);
 };
@@ -106,24 +120,48 @@ const goToHomeMenu = () => {
   showBrandVehicles.value = false;
 };
 
+const highlightsSection = ref<HTMLElement>();
+
+const scrollLeft = () => {
+  const el = highlightsSection.value;
+  if (el) {
+    if (el.scrollLeft === 0) {
+      el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' });
+    } else {
+      el.scrollBy({ left: -520, behavior: 'smooth' });
+    }
+  }
+};
+
+const scrollRight = () => {
+  const el = highlightsSection.value;
+  if (el) {
+    if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 1) {
+      el.scrollTo({ left: 0, behavior: 'smooth' });
+    } else {
+      el.scrollBy({ left: 520, behavior: 'smooth' });
+    }
+  }
+};
+
 const highlights = [
   {
     title: 'Asesoria personalizada',
     description: 'Te ayudamos a elegir el vehiculo ideal segun tu presupuesto y estilo de vida.',
     image:
-      '',
+      'https://asepyme.com/wp-content/uploads/2023/07/que-es-una-asesoria-contable.png',
   },
   {
     title: 'Test drive inmediato',
     description: 'Agenda pruebas de manejo de forma rapida y compara varias marcas en un solo lugar.',
     image:
-      '',
+      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQAwVE30iEaraD4zhb6Nlyt3FDoQMUWInH4Vg&s',
   },
   {
     title: 'Financiacion flexible',
     description: 'Opciones de credito y cuotas adaptadas para que estrenes auto sin complicaciones.',
     image:
-      '',
+      'https://www.monet.com.co/wp-content/uploads/2025/01/impacto-creditos-flexibles.jpg',
   },
 ];
 </script>
@@ -137,7 +175,7 @@ const highlights = [
         <p class="hero-kicker">Concesionario premium</p>
         <h1>Encuentra tu proximo auto ideal</h1>
         <p class="hero-subtitle">
-          Explora nuestro catalogo con diseno deportivo, tecnologia de punta y
+          Explora nuestro catalogo con diseño deportivo, tecnologia de punta y
           las mejores marcas del mercado.
         </p>
       </section>
@@ -157,15 +195,21 @@ const highlights = [
         </button>
       </section>
 
-      <section v-if="!showBrandVehicles" class="highlights-section" aria-label="Beneficios del concesionario">
-        <article v-for="item in highlights" :key="item.title" class="highlight-card">
-          <img :src="item.image" :alt="item.title" class="highlight-image" />
-          <div class="highlight-content">
-            <h3>{{ item.title }}</h3>
-            <p>{{ item.description }}</p>
-          </div>
-        </article>
-      </section>
+      <div class="highlights-container" v-if="!showBrandVehicles">
+        <button class="carousel-arrow left" @click="scrollLeft" aria-label="Previous highlights">&lt;</button>
+        <section ref="highlightsSection" class="highlights-section" aria-label="Beneficios del concesionario">
+          <article v-for="item in highlights" :key="item.title" class="highlight-card">
+            <div class="highlight-image-container">
+              <img :src="item.image" :alt="item.title" class="highlight-image" />
+            </div>
+            <div class="highlight-content">
+              <h3>{{ item.title }}</h3>
+              <p>{{ item.description }}</p>
+            </div>
+          </article>
+        </section>
+        <button class="carousel-arrow right" @click="scrollRight" aria-label="Next highlights">&gt;</button>
+      </div>
 
       <section v-if="showBrandVehicles" class="catalog-grid">
         <button
@@ -198,13 +242,13 @@ const highlights = [
         </div>
         <p>Selecciona un vehiculo de {{ selectedBrand.name }} para ver su detalle rapido.</p>
         <div class="brand-menu-actions">
-          <button type="button" @click="window.alert(`Inventario de ${selectedBrand.name}`)">
+          <button type="button" @click="viewInventory">
             Ver inventario
           </button>
-          <button type="button" @click="window.alert(`Test drive para ${selectedBrand.name}`)">
+          <button type="button" @click="scheduleTestDrive">
             Agendar test drive
           </button>
-          <button type="button" @click="window.alert(`Financiacion de ${selectedBrand.name}`)">
+          <button type="button" @click="requestFinancing">
             Solicitar financiacion
           </button>
         </div>
@@ -245,7 +289,7 @@ const highlights = [
   text-align: center;
   margin-bottom: 2.25rem;
   padding: 2rem 1.25rem;
-  min-height: 80vh;
+  min-height: 38vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -343,9 +387,62 @@ const highlights = [
 
 .highlights-section {
   display: flex;
-  flex-direction: column;
-  gap: 1.2rem;
+  flex-direction: row;
+  gap: 1rem;
   margin-bottom: 1.4rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 0 2rem;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.highlights-section::-webkit-scrollbar {
+  display: none;
+}
+
+.highlights-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid #e7ebff;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+  color: #30406a;
+  box-shadow: 0 4px 12px rgba(24, 38, 76, 0.15);
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.carousel-arrow:hover {
+  background: #ffffff;
+  box-shadow: 0 6px 16px rgba(24, 38, 76, 0.2);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.carousel-arrow.left {
+  left: -60px;
+}
+
+.carousel-arrow.right {
+  right: -60px;
 }
 
 .highlight-card {
@@ -354,15 +451,25 @@ const highlights = [
   background: #fff;
   border: 1px solid #e7ebff;
   box-shadow: 0 12px 26px rgba(24, 38, 76, 0.12);
-  min-height: 100vh;
+  min-height: 50vh;
+  width: 500px;
+  flex-shrink: 0;
   display: grid;
-  grid-template-columns: 1.2fr 1fr;
+  grid-template-columns: 1fr 1fr;
+  scroll-snap-align: start;
 }
 
 .highlight-image {
-  width: 100%;
-  height: 100%;
+  width: 80%;
+  height: auto;
   object-fit: cover;
+}
+
+.highlight-image-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
 }
 
 .highlight-content {

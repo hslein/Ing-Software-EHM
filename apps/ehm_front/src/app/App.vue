@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import NavBar from '../components/NavBar.vue';
 
 type Car = {
@@ -43,6 +44,21 @@ const cars: Car[] = [
 const openChatbot = () => {
   window.alert('Chatbot coming soon. Contact us on WhatsApp: +57 300 123 4567');
 };
+
+const selectedCar = ref<Car | null>(null);
+
+const selectBrand = (car: Car) => {
+  selectedCar.value = car;
+};
+
+const runBrandAction = (action: string) => {
+  if (!selectedCar.value) return;
+  window.alert(`${action} - ${selectedCar.value.brand} ${selectedCar.value.model}`);
+};
+
+const closeBrandMenu = () => {
+  selectedCar.value = null;
+};
 </script>
 
 <template>
@@ -60,7 +76,14 @@ const openChatbot = () => {
       </section>
 
       <section class="catalog-grid">
-        <article v-for="car in cars" :key="car.brand" class="car-card">
+        <button
+          v-for="car in cars"
+          :key="car.brand"
+          class="car-card"
+          type="button"
+          :aria-label="`Seleccionar ${car.brand} ${car.model}`"
+          @click="selectBrand(car)"
+        >
           <div class="image-wrapper">
             <img :src="car.image" :alt="`${car.brand} ${car.model}`" class="car-image" />
           </div>
@@ -69,7 +92,28 @@ const openChatbot = () => {
             <p>{{ car.model }}</p>
             <span class="car-tag">Disponible</span>
           </div>
-        </article>
+        </button>
+      </section>
+
+      <section v-if="selectedCar" class="brand-menu" aria-live="polite">
+        <div class="brand-menu-header">
+          <h2>{{ selectedCar.brand }}</h2>
+          <button type="button" class="brand-menu-close" @click="closeBrandMenu">
+            Cerrar
+          </button>
+        </div>
+        <p>Menu rapido para {{ selectedCar.model }}.</p>
+        <div class="brand-menu-actions">
+          <button type="button" @click="runBrandAction('Ver inventario')">
+            Ver inventario
+          </button>
+          <button type="button" @click="runBrandAction('Agendar test drive')">
+            Agendar test drive
+          </button>
+          <button type="button" @click="runBrandAction('Solicitar financiacion')">
+            Solicitar financiacion
+          </button>
+        </div>
       </section>
     </main>
   </div>
@@ -148,6 +192,11 @@ const openChatbot = () => {
 }
 
 .car-card {
+  text-align: left;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
   background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
   border-radius: 16px;
   overflow: hidden;
@@ -159,6 +208,11 @@ const openChatbot = () => {
 .car-card:hover {
   transform: translateY(-7px);
   box-shadow: 0 16px 38px rgba(24, 38, 76, 0.2);
+}
+
+.car-card:focus-visible {
+  outline: 3px solid #ff8b54;
+  outline-offset: 2px;
 }
 
 .image-wrapper {
@@ -199,6 +253,60 @@ const openChatbot = () => {
   background-color: #d9f7e8;
   padding: 0.3rem 0.6rem;
   border-radius: 999px;
+}
+
+.brand-menu {
+  margin-top: 1.5rem;
+  padding: 1.2rem;
+  border-radius: 14px;
+  border: 1px solid #dfe6ff;
+  background: #ffffffde;
+  box-shadow: 0 12px 30px rgba(24, 38, 76, 0.1);
+}
+
+.brand-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.brand-menu-header h2 {
+  color: #1f2a4a;
+}
+
+.brand-menu p {
+  margin-top: 0.4rem;
+  color: #576285;
+}
+
+.brand-menu-actions {
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.brand-menu-actions button,
+.brand-menu-close {
+  border: none;
+  border-radius: 999px;
+  padding: 0.5rem 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: linear-gradient(135deg, #ff6f7a, #ff9b67);
+  color: #fff;
+}
+
+.brand-menu-actions button:hover,
+.brand-menu-close:hover {
+  filter: brightness(1.05);
+}
+
+.brand-menu-actions button:focus-visible,
+.brand-menu-close:focus-visible {
+  outline: 3px solid #ff8b54;
+  outline-offset: 2px;
 }
 
 .footer {

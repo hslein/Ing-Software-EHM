@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Vehicle } from '../types/catalog.types';
+import type { Vehicle } from '../composables/useVehicles';
 
 defineProps<{
   brandName: string;
@@ -8,78 +8,164 @@ defineProps<{
 
 defineEmits<{
   close: [];
+  vehicleAction: [action: string, vehicle: Vehicle];
 }>();
+
+const toTitleCase = (value: string) => {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+};
 </script>
 
 <template>
-  <div v-if="vehicle" class="modal-overlay" @click="$emit('close')">
+  <div v-if="vehicle" class="modal" @click="$emit('close')">
     <div class="modal-content" @click.stop>
-      <button class="modal-close" @click="$emit('close')">&times;</button>
-      <div class="modal-body">
-        <img :src="vehicle.image" :alt="`${brandName} ${vehicle.model}`" class="modal-image" />
-        <h2>{{ brandName }} {{ vehicle.model }}</h2>
-        <p>{{ vehicle.description }}</p>
+      <button type="button" class="close-btn" aria-label="Close vehicle details" @click="$emit('close')">
+        &times;
+      </button>
+      <img :src="vehicle.image" :alt="`${brandName} ${vehicle.model}`" />
+      <h2>{{ brandName }} {{ vehicle.model }}</h2>
+      <p class="type">Type: {{ toTitleCase(vehicle.type) }}</p>
+      <p class="description">{{ vehicle.description }}</p>
+      <div v-if="vehicle.year" class="detail-row">
+        <span>Year:</span>
+        <strong>{{ vehicle.year }}</strong>
+      </div>
+      <div v-if="vehicle.price" class="detail-row">
+        <span>Price:</span>
+        <strong>${{ vehicle.price.toLocaleString() }}</strong>
+      </div>
+      <div v-if="vehicle.mileage !== undefined" class="detail-row">
+        <span>Mileage:</span>
+        <strong>{{ vehicle.mileage?.toLocaleString() }} km</strong>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-primary" @click="$emit('vehicleAction', 'Cotizar', vehicle)">
+          Request Quote
+        </button>
+        <button type="button" class="btn-secondary" @click="$emit('vehicleAction', 'Test Drive', vehicle)">
+          Schedule Test Drive
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-.modal-overlay {
+.modal {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
+  right: 0;
+  bottom: 0;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
   z-index: 1000;
 }
 
 .modal-content {
   background: white;
-  border-radius: 18px;
-  padding: 2rem;
+  border-radius: 8px;
+  padding: 30px;
   max-width: 500px;
   width: 90%;
-  max-height: 80vh;
+  max-height: 90vh;
   overflow-y: auto;
   position: relative;
-  box-shadow: 0 14px 40px rgba(42, 53, 89, 0.3);
 }
 
-.modal-close {
+.close-btn {
   position: absolute;
-  top: 10px;
+  top: 15px;
   right: 15px;
   background: none;
   border: none;
-  font-size: 2rem;
+  font-size: 28px;
   cursor: pointer;
   color: #666;
 }
 
-.modal-body {
-  text-align: center;
-}
-
-.modal-image {
+.modal-content img {
   width: 100%;
-  max-width: 300px;
-  height: auto;
-  border-radius: 10px;
-  margin-bottom: 1rem;
+  height: 250px;
+  object-fit: cover;
+  border-radius: 4px;
+  margin-bottom: 20px;
 }
 
-.modal-body h2 {
-  margin-bottom: 1rem;
-  color: #30406a;
+.modal-content h2 {
+  margin: 0 0 10px 0;
+  color: #333;
 }
 
-.modal-body p {
+.type {
+  margin: 0 0 10px 0;
+  font-size: 12px;
+  color: #2980b9;
+  font-weight: 600;
+}
+
+.description {
+  margin: 0 0 15px 0;
+  font-size: 14px;
   color: #666;
-  line-height: 1.6;
+  line-height: 1.5;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.detail-row span {
+  color: #666;
+}
+
+.detail-row strong {
+  color: #333;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #2980b9 0%, #2c3e50 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  transition: transform 0.2s;
+  flex: 1;
+}
+
+.btn-primary:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+}
+
+.btn-secondary {
+  background: white;
+  color: #2980b9;
+  border: 2px solid #2980b9;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #2980b9;
+  color: white;
 }
 </style>

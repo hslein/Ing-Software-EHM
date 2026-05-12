@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { Vehicle } from '../types/catalog.types';
+import { ref } from 'vue';
+import type { Vehicle } from '../composables/useVehicles';
 
 defineProps<{
   brandName: string;
@@ -8,103 +9,231 @@ defineProps<{
 
 defineEmits<{
   selectVehicle: [vehicle: Vehicle];
+  vehicleAction: [action: string, vehicle: Vehicle];
 }>();
+
+const highlightsSection = ref<HTMLElement>();
 
 const toTitleCase = (value: string) => {
   return value.charAt(0).toUpperCase() + value.slice(1);
 };
+
+const scrollLeft = () => {
+  const el = highlightsSection.value;
+  if (!el) return;
+
+  if (el.scrollLeft === 0) {
+    el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' });
+    return;
+  }
+
+  el.scrollBy({ left: -520, behavior: 'smooth' });
+};
+
+const scrollRight = () => {
+  const el = highlightsSection.value;
+  if (!el) return;
+
+  if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 1) {
+    el.scrollTo({ left: 0, behavior: 'smooth' });
+    return;
+  }
+
+  el.scrollBy({ left: 520, behavior: 'smooth' });
+};
 </script>
 
 <template>
-  <section class="catalog-grid">
-    <button
-      v-for="vehicle in vehicles"
-      :key="vehicle.id"
-      class="car-card"
-      type="button"
-      :aria-label="`Seleccionar ${brandName} ${vehicle.model}`"
-      @click="$emit('selectVehicle', vehicle)"
-    >
-      <div class="image-wrapper">
-        <img :src="vehicle.image" :alt="`${brandName} ${vehicle.model}`" class="car-image" />
-      </div>
-      <div class="car-content">
-        <h2>{{ brandName }}</h2>
-        <p>{{ vehicle.model }}</p>
-        <span class="car-tag">{{ toTitleCase(vehicle.type) }}</span>
-      </div>
+  <div class="scroll-container">
+    <button type="button" class="scroll-btn left-btn" aria-label="Previous vehicles" @click="scrollLeft">
+      &lt;
     </button>
-  </section>
+
+    <section ref="highlightsSection" class="vehicles-grid" aria-label="Vehicles">
+      <article v-for="vehicle in vehicles" :key="vehicle.id || vehicle.model" class="vehicle-card">
+        <img :src="vehicle.image" :alt="`${brandName} ${vehicle.model}`" class="vehicle-image" />
+        <div class="vehicle-info">
+          <h3>{{ brandName }} {{ vehicle.model }}</h3>
+          <p class="type">{{ toTitleCase(vehicle.type) }}</p>
+          <p class="description">{{ vehicle.description }}</p>
+          <div class="vehicle-actions">
+            <button type="button" class="btn-primary" @click="$emit('selectVehicle', vehicle)">
+              View Details
+            </button>
+            <button type="button" class="btn-secondary" @click="$emit('vehicleAction', 'Cotizar', vehicle)">
+              Quote
+            </button>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <button type="button" class="scroll-btn right-btn" aria-label="Next vehicles" @click="scrollRight">
+      &gt;
+    </button>
+  </div>
 </template>
 
 <style scoped>
-.catalog-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 1.3rem;
+.scroll-container {
+  position: relative;
+  margin-bottom: 20px;
 }
 
-.car-card {
-  text-align: left;
-  width: 100%;
-  font: inherit;
-  color: inherit;
-  cursor: pointer;
-  background: linear-gradient(180deg, #ffffff 0%, #f8faff 100%);
-  border-radius: 16px;
+.vehicles-grid {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  padding: 20px 0;
+  scroll-behavior: smooth;
+}
+
+.vehicles-grid::-webkit-scrollbar {
+  height: 8px;
+}
+
+.vehicles-grid::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.vehicles-grid::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.vehicle-card {
+  flex: 0 0 300px;
+  background: white;
+  border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #e7ebff;
-  box-shadow: 0 12px 30px rgba(24, 38, 76, 0.12);
-  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
 }
 
-.car-card:hover {
-  transform: translateY(-7px);
-  box-shadow: 0 16px 38px rgba(24, 38, 76, 0.2);
+.vehicle-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.car-card:focus-visible {
-  outline: 3px solid #ff8b54;
-  outline-offset: 2px;
-}
-
-.image-wrapper {
-  overflow: hidden;
-}
-
-.car-image {
+.vehicle-image {
   width: 100%;
-  height: 170px;
+  height: 200px;
   object-fit: cover;
-  transition: transform 0.35s ease;
 }
 
-.car-card:hover .car-image {
-  transform: scale(1.06);
+.vehicle-info {
+  padding: 15px;
 }
 
-.car-content {
-  padding: 1rem 1rem 1.1rem;
+.vehicle-info h3 {
+  margin: 0 0 5px 0;
+  font-size: 16px;
+  color: #333;
 }
 
-.car-content h2 {
-  font-size: 1.1rem;
-  color: #1f2a4a;
+.type {
+  margin: 0 0 10px 0;
+  font-size: 12px;
+  color: #2980b9;
+  font-weight: 600;
 }
 
-.car-content p {
-  color: #566086;
-  margin-top: 0.35rem;
+.description {
+  margin: 0 0 15px 0;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.4;
 }
 
-.car-tag {
-  display: inline-block;
-  margin-top: 0.75rem;
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #0e7a4b;
-  background-color: #d9f7e8;
-  padding: 0.3rem 0.6rem;
-  border-radius: 999px;
+.vehicle-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.scroll-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.5);
+  color: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+  z-index: 10;
+}
+
+.scroll-btn:hover {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.left-btn {
+  left: -50px;
+}
+
+.right-btn {
+  right: -50px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #2980b9 0%, #2c3e50 100%);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  transition: transform 0.2s;
+  flex: 1;
+}
+
+.btn-primary:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+}
+
+.btn-secondary {
+  background: white;
+  color: #2980b9;
+  border: 2px solid #2980b9;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #2980b9;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .vehicle-card {
+    flex: 0 0 250px;
+  }
+
+  .scroll-btn {
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+  }
+
+  .left-btn {
+    left: -8px;
+  }
+
+  .right-btn {
+    right: -8px;
+  }
 }
 </style>

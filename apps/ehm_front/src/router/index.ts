@@ -5,13 +5,12 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/login',
     name: 'Login',
-    component: () => import('../components/Login.vue'),
+    component: () => import('../pages/LoginPage.vue'),
   },
   {
     path: '/',
     name: 'Home',
-    component: () => import('../app/App.vue'),
-    // Removed meta: { requiresAuth: true }
+    component: () => import('../pages/HomePage.vue'),
   },
 ];
 

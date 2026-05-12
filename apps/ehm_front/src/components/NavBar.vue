@@ -2,11 +2,11 @@
   <nav class="navbar">
     <div class="navbar-container">
       <div class="navbar-logo">
-        <a href="/" @click.prevent="goHome">Concesionario EHM</a>
+        <RouterLink to="/">Concesionario EHM</RouterLink>
       </div>
       <ul class="nav-menu">
         <li class="nav-item">
-          <a href="/" class="nav-link" @click.prevent="goHome">Home</a>
+          <RouterLink to="/" class="nav-link">Home</RouterLink>
         </li>
         <li class="nav-item">
           <a href="/inventory" class="nav-link">Inventory</a>
@@ -18,23 +18,15 @@
           <a href="/contact" class="nav-link">Contact</a>
         </li>
         <li class="nav-item">
-          <a href="/login" class="nav-link nav-link-btn">Sign In</a>
+          <RouterLink to="/login" class="nav-link nav-link-btn">Sign In</RouterLink>
         </li>
       </ul>
     </div>
   </nav>
 </template>
 
-<script>
-export default {
-  name: 'NavBar',
-  emits: ['go-home'],
-  methods: {
-    goHome() {
-      this.$emit('go-home');
-    },
-  },
-};
+<script setup lang="ts">
+import { RouterLink } from 'vue-router';
 </script>
 
 <style scoped>

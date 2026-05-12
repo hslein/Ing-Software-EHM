@@ -24,7 +24,7 @@
               id="password"
               v-model="password"
               type="password"
-              placeholder="••••••••"
+              placeholder="********"
               required
             />
           </div>
@@ -64,7 +64,7 @@
               id="reg-password"
               v-model="password"
               type="password"
-              placeholder="••••••••"
+              placeholder="********"
               required
               minlength="6"
             />
@@ -76,7 +76,7 @@
               id="confirm-password"
               v-model="confirmPassword"
               type="password"
-              placeholder="••••••••"
+              placeholder="********"
               required
               minlength="6"
             />
@@ -102,11 +102,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useAuth } from '../composables/useAuth';
 import { useRouter } from 'vue-router';
+import { useAuth } from '../composables/useAuth';
 
 const router = useRouter();
-const { login, register, error: authError, loading } = useAuth();
+const { login, register, loading } = useAuth();
 
 const isLogin = ref(true);
 const email = ref('');
@@ -127,8 +127,8 @@ const handleLogin = async () => {
   try {
     await login(email.value, password.value);
     router.push('/');
-  } catch (err: any) {
-    error.value = err.message || 'Login failed';
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Login failed';
   }
 };
 
@@ -148,8 +148,8 @@ const handleRegister = async () => {
   try {
     await register(email.value, password.value);
     router.push('/');
-  } catch (err: any) {
-    error.value = err.message || 'Registration failed';
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Registration failed';
   }
 };
 </script>

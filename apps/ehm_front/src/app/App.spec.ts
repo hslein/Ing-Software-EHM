@@ -4,8 +4,16 @@ import App from './App.vue';
 
 describe('App', () => {
   it('renders properly', async () => {
-    const wrapper = mount(App, {});
+    const wrapper = mount(App, {
+      global: {
+        stubs: {
+          RouterView: {
+            template: '<main data-testid="router-view" />',
+          },
+        },
+      },
+    });
 
-    expect(wrapper.text()).toContain('Encuentra tu proximo auto ideal');
+    expect(wrapper.find('[data-testid="router-view"]').exists()).toBe(true);
   });
 });

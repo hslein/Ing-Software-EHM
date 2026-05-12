@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Brand } from '../types/catalog.types';
+import type { Brand } from '../composables/useVehicles';
 
 defineProps<{
   brands: Brand[];
@@ -12,73 +12,78 @@ defineEmits<{
 </script>
 
 <template>
-  <section class="brand-switcher" aria-label="Selector de marcas">
+  <section class="brands-grid" aria-label="Popular brands">
     <button
       v-for="brand in brands"
-      :key="brand.name"
+      :key="brand.id || brand.name"
       type="button"
-      class="brand-switcher-button"
+      class="brand-card"
       :class="{ active: selectedBrandName === brand.name }"
       :aria-pressed="selectedBrandName === brand.name"
       @click="$emit('select', brand)"
     >
-      <img :src="brand.image" :alt="`Logo ${brand.name}`" class="brand-switcher-logo" />
-      <span>{{ brand.name }}</span>
+      <img :src="brand.image" :alt="brand.name" class="brand-image" />
+      <span class="brand-name">{{ brand.name }}</span>
+      <span class="brand-count">{{ brand.vehicles?.length || 0 }} vehicles</span>
     </button>
   </section>
 </template>
 
 <style scoped>
-.brand-switcher {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+.brands-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 20px;
 }
 
-.brand-switcher-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 0.7rem;
-  min-width: 230px;
-  min-height: 82px;
-  border: 1px solid #dce3ff;
-  border-radius: 18px;
-  background: #ffffff;
-  color: #30406a;
-  font-weight: 700;
-  font-size: 1.02rem;
-  padding: 0.95rem 1.1rem;
+.brand-card {
+  background: white;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  overflow: hidden;
   cursor: pointer;
-  box-shadow: 0 10px 22px rgba(24, 38, 76, 0.1);
-  transition: all 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 0;
+  text-align: left;
+  font: inherit;
 }
 
-.brand-switcher-button:hover {
-  transform: translateY(-2px);
-  border-color: #b8c7ff;
-  box-shadow: 0 14px 28px rgba(24, 38, 76, 0.15);
+.brand-card:hover,
+.brand-card.active {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.brand-switcher-button.active {
-  border-color: transparent;
-  background: linear-gradient(135deg, #ff6f7a, #ff9b67);
-  color: #fff;
-  box-shadow: 0 14px 30px rgba(241, 93, 84, 0.34);
+.brand-card.active {
+  border-color: #2980b9;
 }
 
-.brand-switcher-logo {
-  width: 52px;
-  height: 52px;
-  border-radius: 12px;
+.brand-image {
+  width: 100%;
+  height: 120px;
   object-fit: cover;
-  background: #fff;
-  padding: 4px;
 }
 
-.brand-switcher-button span {
-  letter-spacing: 0.01em;
+.brand-name {
+  display: block;
+  padding: 12px 12px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #333;
+}
+
+.brand-count {
+  display: block;
+  padding: 4px 12px 12px;
+  font-size: 12px;
+  color: #666;
+}
+
+@media (max-width: 768px) {
+  .brands-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 15px;
+  }
 }
 </style>

@@ -4,12 +4,14 @@ import type { Vehicle } from '../composables/useVehicles';
 
 defineProps<{
   brandName: string;
+  selectedCompareIds?: string[];
   vehicles: Vehicle[];
 }>();
 
 defineEmits<{
   selectVehicle: [vehicle: Vehicle];
   quoteVehicle: [vehicle: Vehicle];
+  toggleCompare: [vehicle: Vehicle];
 }>();
 
 const highlightsSection = ref<HTMLElement>();
@@ -68,6 +70,14 @@ const scrollRight = () => {
           <h3>{{ brandName }} {{ vehicle.model }}</h3>
           <p class="type">{{ formatVehicleType(vehicle.type) }}</p>
           <p class="description">{{ vehicle.description }}</p>
+          <button
+            class="compare-toggle"
+            :class="{ selected: selectedCompareIds?.includes(vehicle.id ?? vehicle.model) }"
+            type="button"
+            @click="$emit('toggleCompare', vehicle)"
+          >
+            {{ selectedCompareIds?.includes(vehicle.id ?? vehicle.model) ? 'Selected' : 'Compare' }}
+          </button>
           <div class="vehicle-actions">
             <button class="btn-primary" type="button" @click="$emit('selectVehicle', vehicle)">
               View Details
@@ -171,6 +181,27 @@ const scrollRight = () => {
 .vehicle-actions {
   display: flex;
   gap: 10px;
+}
+
+.compare-toggle {
+  width: 100%;
+  margin-bottom: 12px;
+  background: #f3f7fb;
+  color: #2c3e50;
+  border: 1px solid #d7e4ef;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.compare-toggle:hover,
+.compare-toggle.selected {
+  background: #e8f4fc;
+  border-color: #2980b9;
+  color: #2980b9;
 }
 
 .scroll-btn {

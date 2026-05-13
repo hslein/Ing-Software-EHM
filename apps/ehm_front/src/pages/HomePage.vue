@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue';
 import BrandMenu from '../components/BrandMenu.vue';
 import BrandSwitcher from '../components/BrandSwitcher.vue';
 import HeroSection from '../components/HeroSection.vue';
+import VehicleCompareModal from '../components/VehicleCompareModal.vue';
 import VehicleGrid from '../components/VehicleGrid.vue';
 import VehicleModal from '../components/VehicleModal.vue';
 import { useAuth } from '../composables/useAuth';
@@ -15,9 +16,14 @@ const { brands, error, fetchBrands, loading } = useVehicles();
 const selectedBrand = ref<Brand | null>(null);
 const showBrandVehicles = ref(false);
 const showModal = ref(false);
+const showCompareModal = ref(false);
 const selectedVehicle = ref<Vehicle | null>(null);
+const selectedCompareVehicles = ref<Vehicle[]>([]);
 
 const vehiclesByBrand = computed(() => selectedBrand.value?.vehicles ?? []);
+const selectedCompareIds = computed(() =>
+  selectedCompareVehicles.value.map((vehicle) => vehicle.id ?? vehicle.model)
+);
 
 onMounted(async () => {
   await fetchBrands();
@@ -38,6 +44,52 @@ const selectBrand = (brand: Brand) => {
 const showVehicleDetail = (vehicle: Vehicle) => {
   selectedVehicle.value = vehicle;
   showModal.value = true;
+};
+
+const toggleCompareVehicle = (vehicle: Vehicle) => {
+  const compareId = vehicle.id ?? vehicle.model;
+  const existingIndex = selectedCompareVehicles.value.findIndex(
+    (selected) => (selected.id ?? selected.model) === compareId
+  );
+
+  if (existingIndex >= 0) {
+    selectedCompareVehicles.value.splice(existingIndex, 1);
+    if (selectedCompareVehicles.value.length < 2) {
+      showCompareModal.value = false;
+    }
+    return;
+  }
+
+  const vehicleWithBrand = {
+    ...vehicle,
+    brand: vehicle.brand || selectedBrand.value?.name || 'Unknown brand',
+  };
+
+  if (selectedCompareVehicles.value.length >= 2) {
+    selectedCompareVehicles.value = [selectedCompareVehicles.value[1], vehicleWithBrand];
+  } else {
+    selectedCompareVehicles.value.push(vehicleWithBrand);
+  }
+
+  if (selectedCompareVehicles.value.length === 2) {
+    showCompareModal.value = true;
+  }
+};
+
+const removeCompareVehicle = (vehicle: Vehicle) => {
+  const compareId = vehicle.id ?? vehicle.model;
+  selectedCompareVehicles.value = selectedCompareVehicles.value.filter(
+    (selected) => (selected.id ?? selected.model) !== compareId
+  );
+
+  if (selectedCompareVehicles.value.length < 2) {
+    showCompareModal.value = false;
+  }
+};
+
+const clearCompareVehicles = () => {
+  selectedCompareVehicles.value = [];
+  showCompareModal.value = false;
 };
 
 const runBrandAction = (action: string, vehicle: Vehicle) => {
@@ -143,6 +195,20 @@ const closeModal = () => {
       <section v-if="showBrandVehicles && selectedBrand" class="vehicles-section">
         <div class="section-header">
           <h2>{{ selectedBrand.name }} Vehicles</h2>
+          <div v-if="selectedCompareVehicles.length" class="compare-actions">
+            <span>{{ selectedCompareVehicles.length }}/2 selected</span>
+            <button
+              class="compare-open-btn"
+              type="button"
+              :disabled="selectedCompareVehicles.length < 2"
+              @click="showCompareModal = true"
+            >
+              Compare
+            </button>
+            <button class="compare-clear-btn" type="button" @click="clearCompareVehicles">
+              Clear
+            </button>
+          </div>
           <BrandMenu
             v-if="currentUser"
             :brand="selectedBrand"
@@ -154,9 +220,11 @@ const closeModal = () => {
 
         <VehicleGrid
           :brand-name="selectedBrand.name"
+          :selected-compare-ids="selectedCompareIds"
           :vehicles="vehiclesByBrand"
           @select-vehicle="showVehicleDetail"
           @quote-vehicle="runBrandAction('Cotizar', $event)"
+          @toggle-compare="toggleCompareVehicle"
         />
       </section>
     </div>
@@ -168,6 +236,13 @@ const closeModal = () => {
       @close="closeModal"
       @quote="runBrandAction('Cotizar', $event)"
       @test-drive="runBrandAction('Test Drive', $event)"
+    />
+
+    <VehicleCompareModal
+      v-if="showCompareModal"
+      :vehicles="selectedCompareVehicles"
+      @close="showCompareModal = false"
+      @remove="removeCompareVehicle"
     />
   </main>
 </template>
@@ -286,10 +361,54 @@ const closeModal = () => {
   margin: 0;
 }
 
+.compare-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.compare-actions span {
+  color: #2c3e50;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.compare-open-btn,
+.compare-clear-btn {
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 8px 12px;
+}
+
+.compare-open-btn {
+  background: #2980b9;
+  border: 1px solid #2980b9;
+  color: white;
+}
+
+.compare-open-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.compare-clear-btn {
+  background: white;
+  border: 1px solid #d7e4ef;
+  color: #2c3e50;
+}
+
 @media (max-width: 768px) {
   .section-header {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .compare-actions {
+    margin-left: 0;
+    flex-wrap: wrap;
   }
 }
 </style>

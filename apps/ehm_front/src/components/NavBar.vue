@@ -2,24 +2,38 @@
   <nav class="navbar">
     <div class="navbar-container">
       <div class="navbar-logo">
-        <a href="/" @click.prevent="goHome">Concesionario EHM</a>
+        <a href="#" @click.prevent="goHome">Concesionario EHM</a>
       </div>
       <ul class="nav-menu">
         <li class="nav-item">
-          <a href="/" class="nav-link" @click.prevent="goHome">Home</a>
+          <a href="#" class="nav-link" @click.prevent="goHome">Home</a>
         </li>
         <li class="nav-item">
           <a href="/inventory" class="nav-link">Inventory</a>
         </li>
         <li class="nav-item">
-          <a href="/about" class="nav-link">About Us</a>
+          <a href="#" class="nav-link" @click.prevent="goAbout">About Us</a>
         </li>
-        <li class="nav-item">
-          <a href="/contact" class="nav-link">Contact</a>
+
+        <li class="nav-item nav-brand-control">
+          <label for="brand" class="nav-label">Brand</label>
+          <select id="brand" class="brand-select">
+            <option value="mazda">Mazda</option>
+            <option value="toyota">Toyota</option>
+            <option value="audi">Audi</option>
+            <option value="ford">Ford</option>
+            <option value="volkswagen">Volkswagen</option>
+          </select>
         </li>
+
         <li class="nav-item">
           <a v-if="!isAuthenticated" href="/login" class="nav-link nav-link-btn">Sign In</a>
-          <button v-else type="button" class="nav-link nav-link-btn nav-button" @click="handleLogout">
+          <button
+            v-else
+            type="button"
+            class="nav-link nav-link-btn nav-button"
+            @click="handleLogout"
+          >
             Logout
           </button>
         </li>
@@ -37,6 +51,7 @@ defineOptions({
 });
 
 const emit = defineEmits<{
+  'go-about': [];
   'go-home': [];
 }>();
 
@@ -45,6 +60,10 @@ const { isAuthenticated, logout } = useAuth();
 
 const goHome = () => {
   emit('go-home');
+};
+
+const goAbout = () => {
+  emit('go-about');
 };
 
 const handleLogout = async () => {
@@ -74,10 +93,12 @@ const handleLogout = async () => {
 }
 
 .navbar-logo a {
+  color: white;
+  cursor: pointer;
   font-size: 1.5rem;
   font-weight: 700;
-  color: white;
   text-decoration: none;
+  text-shadow: 0 2px 10px rgba(255, 125, 102, 0.45);
 }
 
 .nav-menu {
@@ -95,13 +116,14 @@ const handleLogout = async () => {
 }
 
 .nav-link {
+  border-radius: 8px;
   color: #ecf0f1;
-  font-weight: 600;
+  cursor: pointer;
   font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.35rem 0.55rem;
   text-decoration: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  transition: color 0.2s ease, background-color 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .nav-link:hover {
@@ -118,8 +140,40 @@ const handleLogout = async () => {
 }
 
 .nav-link-btn:hover {
-  background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+  background: linear-gradient(135deg, #ff6f7a, #ffa36b);
+  box-shadow: 0 10px 22px rgba(255, 102, 102, 0.44);
   color: white;
+}
+
+.nav-label {
+  color: #dfe7ff;
+  margin-right: 0.4rem;
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.brand-select {
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #1d2747;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  padding: 0.34rem 0.65rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  outline: none;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.brand-select:focus {
+  border-color: #ff9c7f;
+  box-shadow: 0 0 0 3px rgba(255, 156, 127, 0.24);
+}
+
+.nav-brand-control {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 0.3rem 0.45rem;
 }
 
 .nav-button {

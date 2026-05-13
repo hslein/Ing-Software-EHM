@@ -1,0 +1,5 @@
+// Firestore index configuration
+{
+  "indexes": [],
+  "fieldOverrides": []
+}

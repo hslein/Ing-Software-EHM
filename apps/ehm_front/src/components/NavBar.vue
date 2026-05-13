@@ -25,44 +25,62 @@
             <option value="volkswagen">Volkswagen</option>
           </select>
         </li>
+
         <li class="nav-item">
-          <a href="/login" class="nav-link nav-link-btn">Sign In</a>
+          <a v-if="!isAuthenticated" href="/login" class="nav-link nav-link-btn">Sign In</a>
+          <button
+            v-else
+            type="button"
+            class="nav-link nav-link-btn nav-button"
+            @click="handleLogout"
+          >
+            Logout
+          </button>
         </li>
       </ul>
     </div>
   </nav>
 </template>
 
-<script>
-export default {
+<script setup lang="ts">
+import { useRouter } from 'vue-router';
+import { useAuth } from '../composables/useAuth';
+
+defineOptions({
   name: 'NavBar',
-  // Declaramos los eventos que App.vue escuchará
-  emits: ['open-home', 'open-about'],
-  methods: {
-    goHome() {
-      this.$emit('open-home');
-    },
-    goAbout() {
-      this.$emit('open-about');
-    },
-  },
+});
+
+const emit = defineEmits<{
+  'go-about': [];
+  'go-home': [];
+}>();
+
+const router = useRouter();
+const { isAuthenticated, logout } = useAuth();
+
+const goHome = () => {
+  emit('go-home');
+};
+
+const goAbout = () => {
+  emit('go-about');
+};
+
+const handleLogout = async () => {
+  await logout();
+  router.push('/login');
 };
 </script>
 
 <style scoped>
 .navbar {
-  background: linear-gradient(
-    135deg,
-    rgba(26, 35, 59, 0.92),
-    rgba(32, 45, 78, 0.86)
-  );
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 0.95rem 0;
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 1rem 0;
   position: sticky;
   top: 0;
   z-index: 120;
-  box-shadow: 0 10px 30px rgba(20, 30, 56, 0.22);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .navbar-container {
@@ -75,19 +93,18 @@ export default {
 }
 
 .navbar-logo a {
-  font-size: 1.45rem;
-  font-weight: 800;
-  letter-spacing: 0.01em;
-  color: #fff;
+  color: white;
+  cursor: pointer;
+  font-size: 1.5rem;
+  font-weight: 700;
   text-decoration: none;
   text-shadow: 0 2px 10px rgba(255, 125, 102, 0.45);
-  cursor: pointer;
 }
 
 .nav-menu {
   display: flex;
   list-style: none;
-  gap: 1.15rem;
+  gap: 2rem;
   align-items: center;
   margin: 0;
   padding: 0;
@@ -99,33 +116,33 @@ export default {
 }
 
 .nav-link {
-  color: #e7ecff;
-  font-weight: 600;
-  font-size: 0.95rem;
-  text-decoration: none;
-  padding: 0.35rem 0.55rem;
   border-radius: 8px;
-  transition: all 0.2s ease;
+  color: #ecf0f1;
   cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.35rem 0.55rem;
+  text-decoration: none;
+  transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .nav-link:hover {
-  color: #ffd8d2;
-  background-color: rgba(255, 255, 255, 0.08);
-  transform: translateY(-1px);
+  color: #3498db;
+  background-color: rgba(255, 255, 255, 0.05);
 }
 
 .nav-link-btn {
-  background: linear-gradient(135deg, #ff5f6d, #ff9258);
-  padding: 0.5rem 0.95rem;
-  border-radius: 999px;
-  box-shadow: 0 8px 18px rgba(255, 102, 102, 0.35);
-  color: #fff;
+  background: linear-gradient(135deg, #2980b9 0%, #2c3e50 100%);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  color: white;
 }
 
 .nav-link-btn:hover {
   background: linear-gradient(135deg, #ff6f7a, #ffa36b);
   box-shadow: 0 10px 22px rgba(255, 102, 102, 0.44);
+  color: white;
 }
 
 .nav-label {
@@ -134,7 +151,6 @@ export default {
   font-size: 0.86rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
 }
 
 .brand-select {
@@ -160,12 +176,19 @@ export default {
   padding: 0.3rem 0.45rem;
 }
 
+.nav-button {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
 @media (max-width: 980px) {
   .navbar-container {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.8rem;
   }
+
   .nav-menu {
     flex-wrap: wrap;
     gap: 0.7rem;

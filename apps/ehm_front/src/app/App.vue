@@ -1,47 +1,49 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import HomePage from '../pages/HomePage.vue';
-import CreditPage from '../pages/Credit.vue';
-import AboutPage from '../pages/About.vue'; 
+import { computed } from 'vue';
+import { RouterView, useRoute, useRouter } from 'vue-router';
 import Actions from '../components/actions.vue';
-import NavBar from '../components/NavBar.vue';
+import ChatbotButton from '../components/ChatbotButton.vue';
 import DealerFooter from '../components/DealerFooter.vue';
+import NavBar from '../components/NavBar.vue';
+import { CHATBOT_MESSAGE } from '../constants/dealer.constants';
 
-// Control de navegación
-const view = ref('home'); 
+const route = useRoute();
+const router = useRouter();
 
-const openCredit = () => { view.value = 'credit'; window.scrollTo(0,0); };
-const openHome = () => { view.value = 'home'; window.scrollTo(0,0); };
-const openAbout = () => { view.value = 'about'; window.scrollTo(0,0); };
+const showChrome = computed(() => route.meta.hideChrome !== true);
+
+const goHome = () => {
+  router.push('/');
+};
+
+const goAbout = () => {
+  router.push('/about');
+};
+
+const openCredit = () => {
+  router.push('/credit');
+};
+
+const openChatbot = () => {
+  window.alert(CHATBOT_MESSAGE);
+};
 </script>
 
 <template>
-  <div class="page-shell">
-    <NavBar 
-      @open-home="openHome" 
-      @open-about="openAbout" 
-    />
-    
-    <main class="content-wrapper">
-      <HomePage v-if="view === 'home'" />
-      <CreditPage v-if="view === 'credit'" />
-      <AboutPage v-if="view === 'about'" />
-    </main>
+  <div class="app">
+    <NavBar v-if="showChrome" @go-about="goAbout" @go-home="goHome" />
 
-    <DealerFooter />
+    <RouterView />
 
-    <Actions @open-credit="openCredit" />
+    <DealerFooter v-if="showChrome" />
+    <Actions v-if="showChrome" @open-credit="openCredit" />
+    <ChatbotButton v-if="showChrome" @open="openChatbot" />
   </div>
 </template>
 
 <style scoped>
-.page-shell {
-  display: flex;
-  flex-direction: column;
+.app {
   min-height: 100vh;
-  position: relative;
-}
-.content-wrapper {
-  flex: 1;
+  background-color: #ecf0f1;
 }
 </style>

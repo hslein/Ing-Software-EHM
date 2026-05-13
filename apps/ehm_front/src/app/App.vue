@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { RouterView, useRoute, useRouter } from 'vue-router';
-import Actions from '../components/actions.vue';
-import ChatbotButton from '../components/ChatbotButton.vue';
+import Actions from '../components/Actions.vue';
 import DealerFooter from '../components/DealerFooter.vue';
 import NavBar from '../components/NavBar.vue';
-import { CHATBOT_MESSAGE } from '../constants/dealer.constants';
 
 const route = useRoute();
 const router = useRouter();
@@ -24,9 +22,6 @@ const openCredit = () => {
   router.push('/credit');
 };
 
-const openChatbot = () => {
-  window.alert(CHATBOT_MESSAGE);
-};
 </script>
 
 <template>
@@ -37,7 +32,6 @@ const openChatbot = () => {
 
     <DealerFooter v-if="showChrome" />
     <Actions v-if="showChrome" @open-credit="openCredit" />
-    <ChatbotButton v-if="showChrome" @open="openChatbot" />
   </div>
 </template>
 

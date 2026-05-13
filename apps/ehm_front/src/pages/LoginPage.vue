@@ -9,24 +9,12 @@
         <form @submit.prevent="handleLogin">
           <div class="form-group">
             <label for="email">Email</label>
-            <input
-              id="email"
-              v-model="email"
-              type="email"
-              placeholder="your@email.com"
-              required
-            />
+            <input id="email" v-model="email" type="email" placeholder="your@email.com" required />
           </div>
 
           <div class="form-group">
             <label for="password">Password</label>
-            <input
-              id="password"
-              v-model="password"
-              type="password"
-              placeholder="••••••••"
-              required
-            />
+            <input id="password" v-model="password" type="password" placeholder="********" required />
           </div>
 
           <button type="submit" class="btn-submit" :disabled="loading">
@@ -49,13 +37,7 @@
         <form @submit.prevent="handleRegister">
           <div class="form-group">
             <label for="reg-email">Email</label>
-            <input
-              id="reg-email"
-              v-model="email"
-              type="email"
-              placeholder="your@email.com"
-              required
-            />
+            <input id="reg-email" v-model="email" type="email" placeholder="your@email.com" required />
           </div>
 
           <div class="form-group">
@@ -64,7 +46,7 @@
               id="reg-password"
               v-model="password"
               type="password"
-              placeholder="••••••••"
+              placeholder="********"
               required
               minlength="6"
             />
@@ -76,7 +58,7 @@
               id="confirm-password"
               v-model="confirmPassword"
               type="password"
-              placeholder="••••••••"
+              placeholder="********"
               required
               minlength="6"
             />
@@ -102,11 +84,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useAuth } from '../composables/useAuth';
 import { useRouter } from 'vue-router';
+import { useAuth } from '../composables/useAuth';
 
 const router = useRouter();
-const { login, register, error: authError, loading } = useAuth();
+const { login, register, loading } = useAuth();
 
 const isLogin = ref(true);
 const email = ref('');
@@ -127,8 +109,8 @@ const handleLogin = async () => {
   try {
     await login(email.value, password.value);
     router.push('/');
-  } catch (err: any) {
-    error.value = err.message || 'Login failed';
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Login failed';
   }
 };
 
@@ -148,8 +130,8 @@ const handleRegister = async () => {
   try {
     await register(email.value, password.value);
     router.push('/');
-  } catch (err: any) {
-    error.value = err.message || 'Registration failed';
+  } catch (err: unknown) {
+    error.value = err instanceof Error ? err.message : 'Registration failed';
   }
 };
 </script>
@@ -162,6 +144,7 @@ const handleRegister = async () => {
   min-height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 24px;
 }
 
 .login-box {
@@ -174,7 +157,7 @@ const handleRegister = async () => {
 }
 
 h1 {
-  margin: 0 0 5px 0;
+  margin: 0 0 5px;
   color: #333;
   text-align: center;
   font-size: 28px;
@@ -183,7 +166,7 @@ h1 {
 .subtitle {
   text-align: center;
   color: #666;
-  margin: 0 0 30px 0;
+  margin: 0 0 30px;
   font-size: 14px;
 }
 

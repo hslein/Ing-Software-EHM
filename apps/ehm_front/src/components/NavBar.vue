@@ -18,22 +18,38 @@
           <a href="/contact" class="nav-link">Contact</a>
         </li>
         <li class="nav-item">
-          <a href="/login" class="nav-link nav-link-btn">Sign In</a>
+          <a v-if="!isAuthenticated" href="/login" class="nav-link nav-link-btn">Sign In</a>
+          <button v-else type="button" class="nav-link nav-link-btn nav-button" @click="handleLogout">
+            Logout
+          </button>
         </li>
       </ul>
     </div>
   </nav>
 </template>
 
-<script>
-export default {
+<script setup lang="ts">
+import { useRouter } from 'vue-router';
+import { useAuth } from '../composables/useAuth';
+
+defineOptions({
   name: 'NavBar',
-  emits: ['go-home'],
-  methods: {
-    goHome() {
-      this.$emit('go-home');
-    },
-  },
+});
+
+const emit = defineEmits<{
+  'go-home': [];
+}>();
+
+const router = useRouter();
+const { isAuthenticated, logout } = useAuth();
+
+const goHome = () => {
+  emit('go-home');
+};
+
+const handleLogout = async () => {
+  await logout();
+  router.push('/login');
 };
 </script>
 
@@ -104,6 +120,12 @@ export default {
 .nav-link-btn:hover {
   background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
   color: white;
+}
+
+.nav-button {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 @media (max-width: 980px) {

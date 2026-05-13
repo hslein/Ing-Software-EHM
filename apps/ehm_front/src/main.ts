@@ -1,6 +1,6 @@
 import './styles.css';
 import { createApp } from 'vue';
-import App from './app/AppRouter.vue';
+import App from './app/App.vue';
 import router from './router';
 
 const app = createApp(App);

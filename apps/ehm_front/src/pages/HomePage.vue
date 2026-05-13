@@ -1,27 +1,34 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import BrandMenu from '../components/BrandMenu.vue';
 import BrandSwitcher from '../components/BrandSwitcher.vue';
 import HeroSection from '../components/HeroSection.vue';
-import HighlightsCarousel from '../components/HighlightsCarousel.vue';
-import MissionVisionSection from '../components/MissionVisionSection.vue';
 import VehicleGrid from '../components/VehicleGrid.vue';
 import VehicleModal from '../components/VehicleModal.vue';
-import {
-  getBrandsQuery,
-  getHighlightsQuery,
-  getMissionVisionQuery,
-} from '../queries/catalog.queries';
-import type { Brand, Vehicle } from '../types/catalog.types';
+import { useAuth } from '../composables/useAuth';
+import { useVehicles } from '../composables/useVehicles';
+import type { Brand, Vehicle } from '../composables/useVehicles';
 
-const brands = getBrandsQuery();
-const highlights = getHighlightsQuery();
-const missionVision = getMissionVisionQuery();
+const { currentUser } = useAuth();
+const { brands, error, fetchBrands, loading } = useVehicles();
 
-const selectedBrand = ref<Brand>(brands[0]);
+const selectedBrand = ref<Brand | null>(null);
 const showBrandVehicles = ref(false);
 const showModal = ref(false);
 const selectedVehicle = ref<Vehicle | null>(null);
+
+const vehiclesByBrand = computed(() => selectedBrand.value?.vehicles ?? []);
+
+onMounted(async () => {
+  await fetchBrands();
+
+  if (brands.value.length > 0) {
+    selectedBrand.value = brands.value[0];
+    showBrandVehicles.value = true;
+  } else {
+    console.error("No brands found in Firestore. Check collection name 'brands'.");
+  }
+});
 
 const selectBrand = (brand: Brand) => {
   selectedBrand.value = brand;
@@ -33,82 +40,256 @@ const showVehicleDetail = (vehicle: Vehicle) => {
   showModal.value = true;
 };
 
+const runBrandAction = (action: string, vehicle: Vehicle) => {
+  if (action === 'Ver detalle') {
+    showVehicleDetail(vehicle);
+    return;
+  }
+
+  window.alert(`${action} - ${selectedBrand.value?.name} ${vehicle.model}`);
+};
+
 const viewInventory = () => {
-  window.alert(`Inventario de ${selectedBrand.value.name}`);
+  window.alert(`Inventario de ${selectedBrand.value?.name}`);
 };
 
 const scheduleTestDrive = () => {
-  window.alert(`Test drive para ${selectedBrand.value.name}`);
+  window.alert(`Test drive para ${selectedBrand.value?.name}`);
 };
 
 const requestFinancing = () => {
-  window.alert(`Financiacion de ${selectedBrand.value.name}`);
+  window.alert(`Financiacion de ${selectedBrand.value?.name}`);
 };
 
 const closeModal = () => {
   showModal.value = false;
   selectedVehicle.value = null;
 };
-
-const goToHomeMenu = () => {
-  showBrandVehicles.value = false;
-  selectedVehicle.value = null;
-  showModal.value = false;
-};
-
-defineExpose({
-  goToHomeMenu,
-});
 </script>
 
 <template>
-  <main class="catalog-page">
-    <HeroSection />
-    <BrandSwitcher
-      :brands="brands"
-      :selected-brand-name="selectedBrand.name"
-      @select="selectBrand"
-    />
-    <HighlightsCarousel v-if="!showBrandVehicles" :highlights="highlights" />
-    <VehicleGrid
-      v-if="showBrandVehicles"
-      :brand-name="selectedBrand.name"
-      :vehicles="selectedBrand.vehicles"
-      @select-vehicle="showVehicleDetail"
-    />
-    <BrandMenu
-      v-if="showBrandVehicles"
-      :brand="selectedBrand"
-      @view-inventory="viewInventory"
-      @schedule-test-drive="scheduleTestDrive"
-      @request-financing="requestFinancing"
+  <main class="home-page">
+    <div class="content">
+      <HeroSection />
+
+      <section class="info-section">
+        <div class="info-header">
+          <p class="eyebrow">Sobre nuestro concesionario</p>
+          <h2>Conoce por que elegir EHM</h2>
+          <p class="info-description">
+            Cada vehiculo pasa por una inspeccion detallada y nuestro equipo esta listo para
+            acompaniarte en todo el proceso de compra.
+          </p>
+        </div>
+
+        <div class="info-cards">
+          <article class="info-card">
+            <img
+              src="https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=900&q=80"
+              alt="Concesionario familiar y confiable"
+              class="info-image"
+            />
+            <div class="info-content">
+              <h3>Concesionario familiar y confiable</h3>
+              <p>
+                EHM tiene anos de experiencia, vehiculos revisados, asesoria honesta y un servicio
+                cercano para cada cliente.
+              </p>
+            </div>
+          </article>
+
+          <article class="info-card">
+            <img
+              src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80"
+              alt="Flota completa y marcas premium"
+              class="info-image"
+            />
+            <div class="info-content">
+              <h3>Flota completa y marcas premium</h3>
+              <p>
+                Encuentra SUVs, pickups, deportivos y sedanes de marcas confiables para comprar con
+                seguridad.
+              </p>
+            </div>
+          </article>
+
+          <article class="info-card">
+            <img
+              src="https://images.unsplash.com/photo-1519999482648-25049ddd37b1?auto=format&fit=crop&w=900&q=80"
+              alt="Financiacion y prueba de manejo"
+              class="info-image"
+            />
+            <div class="info-content">
+              <h3>Financiacion y prueba de manejo</h3>
+              <p>
+                Te apoyamos con opciones flexibles y agendamos tu test drive para que decidas con
+                tranquilidad.
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <p v-if="loading" class="status-message">Loading brands...</p>
+      <p v-else-if="error" class="status-message error">{{ error }}</p>
+
+      <BrandSwitcher
+        v-if="brands.length"
+        :brands="brands"
+        :selected-brand-name="selectedBrand?.name ?? ''"
+        @select="selectBrand"
+      />
+
+      <section v-if="showBrandVehicles && selectedBrand" class="vehicles-section">
+        <div class="section-header">
+          <h2>{{ selectedBrand.name }} Vehicles</h2>
+          <BrandMenu
+            v-if="currentUser"
+            :brand="selectedBrand"
+            @view-inventory="viewInventory"
+            @schedule-test-drive="scheduleTestDrive"
+            @request-financing="requestFinancing"
+          />
+        </div>
+
+        <VehicleGrid
+          :brand-name="selectedBrand.name"
+          :vehicles="vehiclesByBrand"
+          @select-vehicle="showVehicleDetail"
+          @quote-vehicle="runBrandAction('Cotizar', $event)"
+        />
+      </section>
+    </div>
+
+    <VehicleModal
+      v-if="showModal"
+      :brand-name="selectedBrand?.name ?? ''"
+      :vehicle="selectedVehicle"
+      @close="closeModal"
+      @quote="runBrandAction('Cotizar', $event)"
+      @test-drive="runBrandAction('Test Drive', $event)"
     />
   </main>
-
-  <VehicleModal
-    v-if="showModal"
-    :brand-name="selectedBrand.name"
-    :vehicle="selectedVehicle"
-    @close="closeModal"
-  />
-  <MissionVisionSection
-    v-if="!showBrandVehicles"
-    :image="missionVision.image"
-    :mission="missionVision.mission"
-    :vision="missionVision.vision"
-  />
 </template>
 
 <style scoped>
-.catalog-page {
+.home-page {
+  min-height: 100vh;
+}
+
+.content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2.5rem 2rem 3.5rem;
+  padding: 20px;
+}
+
+.info-section {
+  background: white;
+  border-radius: 16px;
+  padding: 30px 25px;
+  margin-bottom: 40px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.05);
+}
+
+.info-header {
+  max-width: 760px;
+  margin: 0 auto 30px;
+  text-align: center;
+}
+
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #2980b9;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.info-header h2 {
+  margin: 0;
+  font-size: 28px;
+  color: #2c3e50;
+}
+
+.info-description {
+  margin: 15px auto 0;
+  max-width: 620px;
+  color: #666;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.info-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.info-card {
+  overflow: hidden;
+  border-radius: 14px;
+  background: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.info-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.info-content {
+  padding: 18px;
+}
+
+.info-content h3 {
+  margin: 0 0 10px;
+  font-size: 18px;
+  color: #2c3e50;
+}
+
+.info-content p {
+  margin: 0;
+  color: #606f7b;
+  line-height: 1.7;
+}
+
+.status-message {
+  margin-bottom: 24px;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.status-message.error {
+  color: #c0392b;
+}
+
+.vehicles-section {
+  margin-bottom: 40px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.section-header h2 {
+  font-size: 24px;
+  color: #333;
+  margin: 0;
 }
 
 @media (max-width: 768px) {
-  .catalog-page {
-    padding: 1.6rem 1rem 2.5rem;
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 </style>

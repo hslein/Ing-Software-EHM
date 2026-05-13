@@ -65,6 +65,30 @@ const requestFinancing = () => {
   window.alert(`Financiacion de ${selectedBrand.value?.name}`);
 };
 
+const infoSections = [
+  {
+    title: 'Concesionario familiar y confiable',
+    description:
+      'EHM es un concesionario con años de experiencia, enfocado en ofrecer vehículos revisados, asesoría honesta y un servicio cercano para cada cliente.',
+    image:
+      'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=900&q=80',
+  },
+  {
+    title: 'Flota completa y marcas premium',
+    description:
+      'Encuentra desde SUVs y pickup hasta deportivos y sedanes; trabajamos con las mejores marcas para que tu próxima compra sea segura y adaptada a tu estilo.',
+    image:
+      'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80',
+  },
+  {
+    title: 'Financiación y prueba de manejo',
+    description:
+      'Te apoyamos con opciones de financiación flexibles y agendamos tu test drive para que pruebes el auto antes de decidirte.',
+    image:
+      'https://images.unsplash.com/photo-1519999482648-25049ddd37b1?auto=format&fit=crop&w=900&q=80',
+  },
+];
+
 const toTitleCase = (value: string) => {
   return value.charAt(0).toUpperCase() + value.slice(1);
 };
@@ -115,6 +139,26 @@ const handleLogout = async () => {
       <section class="hero">
         <h1>Welcome to EHM Vehicles</h1>
         <p>Find your perfect vehicle with our comprehensive collection</p>
+      </section>
+
+      <section class="info-section">
+        <div class="info-header">
+          <p class="eyebrow">Sobre nuestro concesionario</p>
+          <h2>Conoce por qué elegir EHM</h2>
+          <p class="info-description">
+            Cada vehículo pasa por una inspección detallada y nuestro equipo está listo para acompañarte en todo el proceso de compra.
+          </p>
+        </div>
+
+        <div class="info-cards">
+          <article v-for="section in infoSections" :key="section.title" class="info-card">
+            <img :src="section.image" :alt="section.title" class="info-image" />
+            <div class="info-content">
+              <h3>{{ section.title }}</h3>
+              <p>{{ section.description }}</p>
+            </div>
+          </article>
+        </div>
       </section>
 
       <!-- Brands Grid -->
@@ -275,6 +319,80 @@ const handleLogout = async () => {
 .hero p {
   font-size: 16px;
   opacity: 0.9;
+}
+
+.info-section {
+  background: white;
+  border-radius: 16px;
+  padding: 30px 25px;
+  margin-bottom: 40px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.05);
+}
+
+.info-header {
+  max-width: 760px;
+  margin: 0 auto 30px;
+  text-align: center;
+}
+
+.info-header .eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #2980b9;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.info-header h2 {
+  margin: 0;
+  font-size: 28px;
+  color: #2c3e50;
+}
+
+.info-header .info-description {
+  margin: 15px auto 0;
+  max-width: 620px;
+  color: #666;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.info-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.info-card {
+  overflow: hidden;
+  border-radius: 14px;
+  background: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+}
+
+.info-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+}
+
+.info-content {
+  padding: 18px;
+}
+
+.info-content h3 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+  color: #2c3e50;
+}
+
+.info-content p {
+  margin: 0;
+  color: #606f7b;
+  line-height: 1.7;
 }
 
 .brands-section {

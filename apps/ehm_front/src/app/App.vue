@@ -1,39 +1,47 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import ChatbotButton from '../components/ChatbotButton.vue';
-import DealerFooter from '../components/DealerFooter.vue';
-import NavBar from '../components/NavBar.vue';
-import { CHATBOT_MESSAGE } from '../constants/dealer.constants';
 import HomePage from '../pages/HomePage.vue';
+import CreditPage from '../pages/Credit.vue';
+import AboutPage from '../pages/About.vue'; 
+import Actions from '../components/actions.vue';
+import NavBar from '../components/NavBar.vue';
+import DealerFooter from '../components/DealerFooter.vue';
 
-const homePage = ref<InstanceType<typeof HomePage> | null>(null);
+// Control de navegación
+const view = ref('home'); 
 
-const openChatbot = () => {
-  window.alert(CHATBOT_MESSAGE);
-};
-
-const goToHomeMenu = () => {
-  homePage.value?.goToHomeMenu();
-};
+const openCredit = () => { view.value = 'credit'; window.scrollTo(0,0); };
+const openHome = () => { view.value = 'home'; window.scrollTo(0,0); };
+const openAbout = () => { view.value = 'about'; window.scrollTo(0,0); };
 </script>
 
 <template>
   <div class="page-shell">
-    <NavBar @go-home="goToHomeMenu" />
-    <HomePage ref="homePage" />
-    <DealerFooter />
-  </div>
+    <NavBar 
+      @open-home="openHome" 
+      @open-about="openAbout" 
+    />
+    
+    <main class="content-wrapper">
+      <HomePage v-if="view === 'home'" />
+      <CreditPage v-if="view === 'credit'" />
+      <AboutPage v-if="view === 'about'" />
+    </main>
 
-  <ChatbotButton @open="openChatbot" />
+    <DealerFooter />
+
+    <Actions @open-credit="openCredit" />
+  </div>
 </template>
 
 <style scoped>
 .page-shell {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
-  background: radial-gradient(circle at top right, #dce9ff 0%, transparent 38%),
-    radial-gradient(circle at 10% 20%, #ffe6e0 0%, transparent 35%),
-    linear-gradient(180deg, #f7f9ff 0%, #f3f6ff 45%, #eef1ff 100%);
+  position: relative;
+}
+.content-wrapper {
+  flex: 1;
 }
 </style>
-
-

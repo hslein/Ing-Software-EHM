@@ -2,21 +2,19 @@
   <nav class="navbar">
     <div class="navbar-container">
       <div class="navbar-logo">
-        <a href="/" @click.prevent="goHome">Concesionario EHM</a>
+        <a href="#" @click.prevent="goHome">Concesionario EHM</a>
       </div>
       <ul class="nav-menu">
         <li class="nav-item">
-          <a href="/" class="nav-link" @click.prevent="goHome">Home</a>
+          <a href="#" class="nav-link" @click.prevent="goHome">Home</a>
         </li>
         <li class="nav-item">
           <a href="/inventory" class="nav-link">Inventory</a>
         </li>
         <li class="nav-item">
-          <a href="/about" class="nav-link">About Us</a>
+          <a href="#" class="nav-link" @click.prevent="goAbout">About Us</a>
         </li>
-        <li class="nav-item">
-          <a href="/contact" class="nav-link">Contact</a>
-        </li>
+
         <li class="nav-item nav-brand-control">
           <label for="brand" class="nav-label">Brand</label>
           <select id="brand" class="brand-select">
@@ -38,10 +36,14 @@
 <script>
 export default {
   name: 'NavBar',
-  emits: ['go-home'],
+  // Declaramos los eventos que App.vue escuchará
+  emits: ['open-home', 'open-about'],
   methods: {
     goHome() {
-      this.$emit('go-home');
+      this.$emit('open-home');
+    },
+    goAbout() {
+      this.$emit('open-about');
     },
   },
 };
@@ -79,6 +81,7 @@ export default {
   color: #fff;
   text-decoration: none;
   text-shadow: 0 2px 10px rgba(255, 125, 102, 0.45);
+  cursor: pointer;
 }
 
 .nav-menu {
@@ -102,7 +105,8 @@ export default {
   text-decoration: none;
   padding: 0.35rem 0.55rem;
   border-radius: 8px;
-  transition: color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
 .nav-link:hover {
@@ -121,7 +125,6 @@ export default {
 
 .nav-link-btn:hover {
   background: linear-gradient(135deg, #ff6f7a, #ffa36b);
-  color: #fff;
   box-shadow: 0 10px 22px rgba(255, 102, 102, 0.44);
 }
 
@@ -163,7 +166,6 @@ export default {
     align-items: flex-start;
     gap: 0.8rem;
   }
-
   .nav-menu {
     flex-wrap: wrap;
     gap: 0.7rem;

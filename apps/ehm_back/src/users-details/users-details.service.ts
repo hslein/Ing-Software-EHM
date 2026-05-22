@@ -87,7 +87,7 @@ export class UsersDetailsService {
             uid,
             email: userRecord.email ?? null,
             role: details.role ?? 'user',
-            createdAt: details.createdAt,
+            createdAt: userRecord.metadata.creationTime,
           });
         }),
       );

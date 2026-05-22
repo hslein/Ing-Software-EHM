@@ -8,22 +8,22 @@ import {
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
 
-const AUTH_TOKEN_KEY = 'firebaseIdToken';
 const currentUser = ref<User | null>(null);
 const loading = ref(true);
 const error = ref<string | null>(null);
 
-// Keep Vue state and localStorage in sync with Firebase Auth.
+// Keep Vue state in sync with Firebase Auth.
 onIdTokenChanged(auth, async (user) => {
   currentUser.value = user;
-  if (user) {
-    const token = await user.getIdToken();
-    localStorage.setItem(AUTH_TOKEN_KEY, token);
-  } else {
-    localStorage.removeItem(AUTH_TOKEN_KEY);
-  }
   loading.value = false;
 });
+
+const getIdToken = async () => {
+  if (!currentUser.value) {
+    throw new Error('User is not authenticated');
+  }
+  return await currentUser.value.getIdToken();
+};
 
 export const useAuth = () => {
   const isAuthenticated = computed(() => currentUser.value !== null);
@@ -68,5 +68,6 @@ export const useAuth = () => {
     register,
     login,
     logout,
+    getIdToken,
   };
 };

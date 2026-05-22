@@ -1,16 +1,5 @@
 import { ref, computed } from 'vue';
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  doc,
-  onSnapshot,
-} from 'firebase/firestore';
-import { db } from '../config/firebase';
+import { auth } from '../config/firebase';
 
 export type VehicleType = 'suv' | 'sedan' | 'deportivo' | 'pickup';
 
@@ -24,8 +13,8 @@ export interface Vehicle {
   price?: number;
   year?: number;
   mileage?: number;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 }
 
 export interface Brand {
@@ -33,8 +22,8 @@ export interface Brand {
   name: string;
   image: string;
   vehicles?: Vehicle[];
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
 }
 
 const vehicles = ref<Vehicle[]>([]);
@@ -42,18 +31,44 @@ const brands = ref<Brand[]>([]);
 const loading = ref(false);
 const error = ref<string | null>(null);
 
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000/api';
+
+const getAuthHeaders = async () => {
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('User is not authenticated');
+  }
+
+  const token = await user.getIdToken();
+  return {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${token}`,
+  };
+};
+
+const apiFetch = async (path: string, options: RequestInit = {}) => {
+  const headers = await getAuthHeaders();
+  const response = await fetch(`${apiBaseUrl}${path}`, {
+    ...options,
+    headers: { ...headers, ...(options.headers ?? {}) },
+  });
+  const text = await response.text();
+
+  if (!response.ok) {
+    throw new Error(text || response.statusText);
+  }
+
+  return text ? JSON.parse(text) : null;
+};
+
 export const useVehicles = () => {
   // Fetch all vehicles
   const fetchVehicles = async () => {
     loading.value = true;
     error.value = null;
     try {
-      const q = query(collection(db, 'vehicles'));
-      const querySnapshot = await getDocs(q);
-      vehicles.value = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      } as Vehicle));
+      const result = (await apiFetch('/vehicles')) as Vehicle[];
+      vehicles.value = result;
     } catch (err: any) {
       error.value = err.message;
     } finally {
@@ -66,12 +81,8 @@ export const useVehicles = () => {
     loading.value = true;
     error.value = null;
     try {
-      const q = query(collection(db, 'vehicles'), where('brand', '==', brandName));
-      const querySnapshot = await getDocs(q);
-      return querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      } as Vehicle));
+      const result = (await apiFetch(`/vehicles?brand=${encodeURIComponent(brandName)}`)) as Vehicle[];
+      return result;
     } catch (err: any) {
       error.value = err.message;
       return [];
@@ -85,31 +96,9 @@ export const useVehicles = () => {
     loading.value = true;
     error.value = null;
     try {
-      const brandsQuery = query(collection(db, 'brands'));
-      const brandsSnapshot = await getDocs(brandsQuery);
-
-      const brandsList = await Promise.all(
-        brandsSnapshot.docs.map(async (doc) => {
-          const brandData = doc.data() as Brand;
-          const vehiclesQuery = query(
-            collection(db, 'vehicles'),
-            where('brand', '==', brandData.name)
-          );
-          const vehiclesSnapshot = await getDocs(vehiclesQuery);
-
-          return {
-            id: doc.id,
-            ...brandData,
-            vehicles: vehiclesSnapshot.docs.map((vDoc) => ({
-              id: vDoc.id,
-              ...vDoc.data(),
-            })) as Vehicle[],
-          };
-        })
-      );
-
-      brands.value = brandsList;
-      return brandsList;
+      const result = (await apiFetch('/brands')) as Brand[];
+      brands.value = result;
+      return result;
     } catch (err: any) {
       error.value = err.message;
       throw err;
@@ -118,35 +107,32 @@ export const useVehicles = () => {
     }
   };
 
-  // Subscribe to real-time vehicle updates
+  // Real-time subscriptions are not supported through the backend API yet.
   const subscribeToVehicles = (callback?: (vehicles: Vehicle[]) => void) => {
-    try {
-      const q = query(collection(db, 'vehicles'));
-      return onSnapshot(q, (querySnapshot) => {
-        vehicles.value = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        } as Vehicle));
-        if (callback && typeof callback === 'function') {
-          callback(vehicles.value);
-        }
-      });
-    } catch (err: any) {
-      error.value = err.message;
-      return () => {}; // Return no-op unsubscribe function
-    }
+    console.warn('Real-time vehicle subscriptions are not supported by the backend API.');
+    if (callback) callback(vehicles.value);
+    return () => {};
   };
 
   // Add a new vehicle
   const addVehicle = async (vehicle: Vehicle) => {
     error.value = null;
     try {
-      const docRef = await addDoc(collection(db, 'vehicles'), {
-        ...vehicle,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
-      return docRef.id;
+      const payload = {
+        model: vehicle.model,
+        type: vehicle.type,
+        image: vehicle.image,
+        description: vehicle.description,
+        brand: vehicle.brand,
+        price: vehicle.price,
+        year: vehicle.year,
+        mileage: vehicle.mileage,
+      };
+      const result = (await apiFetch('/vehicles', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      })) as { id: string };
+      return result.id;
     } catch (err: any) {
       error.value = err.message;
       throw err;
@@ -157,10 +143,9 @@ export const useVehicles = () => {
   const updateVehicle = async (id: string, vehicle: Partial<Vehicle>) => {
     error.value = null;
     try {
-      const vehicleRef = doc(db, 'vehicles', id);
-      await updateDoc(vehicleRef, {
-        ...vehicle,
-        updatedAt: new Date(),
+      await apiFetch(`/vehicles/${encodeURIComponent(id)}`, {
+        method: 'PUT',
+        body: JSON.stringify(vehicle),
       });
     } catch (err: any) {
       error.value = err.message;
@@ -172,7 +157,9 @@ export const useVehicles = () => {
   const deleteVehicle = async (id: string) => {
     error.value = null;
     try {
-      await deleteDoc(doc(db, 'vehicles', id));
+      await apiFetch(`/vehicles/${encodeURIComponent(id)}`, {
+        method: 'DELETE',
+      });
     } catch (err: any) {
       error.value = err.message;
       throw err;

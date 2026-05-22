@@ -28,14 +28,17 @@
 
         <li class="nav-item">
           <a v-if="!isAuthenticated" href="/login" class="nav-link nav-link-btn">Sign In</a>
-          <button
-            v-else
-            type="button"
-            class="nav-link nav-link-btn nav-button"
-            @click="handleLogout"
-          >
-            Logout
-          </button>
+          <div v-else style="display:flex; gap:8px; align-items:center;">
+            <a href="#" class="nav-link" @click.prevent="goUsers">Users</a>
+            <a href="#" class="nav-link" @click.prevent="goUserDetails">Profile</a>
+            <button
+              type="button"
+              class="nav-link nav-link-btn nav-button"
+              @click="handleLogout"
+            >
+              Logout
+            </button>
+          </div>
         </li>
       </ul>
     </div>
@@ -64,6 +67,14 @@ const goHome = () => {
 
 const goAbout = () => {
   emit('go-about');
+};
+
+const goUsers = () => {
+  router.push('/users');
+};
+
+const goUserDetails = () => {
+  router.push('/user-details');
 };
 
 const handleLogout = async () => {

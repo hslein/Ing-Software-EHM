@@ -14,9 +14,14 @@ import {
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 
+type UserRole = 'admin' | 'user';
+
 const currentUser = ref<User | null>(null);
+const currentUserRole = ref<UserRole | null>(null);
 const loading = ref(true);
+const roleLoading = ref(false);
 const error = ref<string | null>(null);
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000/api';
 
 const ensureUserDocument = async (user: User) => {
   if (!user) return;
@@ -40,16 +45,46 @@ const ensureUserDocument = async (user: User) => {
   }
 };
 
+const loadCurrentUserRole = async (user: User) => {
+  roleLoading.value = true;
+  try {
+    const token = await user.getIdToken();
+    const res = await fetch(`${apiBaseUrl}/users-details/me`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      throw new Error(`Failed to load user role: ${res.status} ${res.statusText}`);
+    }
+
+    const details = (await res.json()) as { role?: UserRole } | null;
+    currentUserRole.value = details?.role ?? 'user';
+  } catch (err) {
+    currentUserRole.value = 'user';
+    console.error('Failed to load current user role:', err);
+  } finally {
+    roleLoading.value = false;
+  }
+};
+
 // Keep Vue state in sync with Firebase Auth.
 onIdTokenChanged(auth, async (user) => {
   currentUser.value = user;
-  loading.value = false;
-  if (user) {
-    try {
+  currentUserRole.value = null;
+
+  try {
+    if (user) {
       await ensureUserDocument(user);
-    } catch (err) {
-      console.error('Failed to ensure user Firestore document:', err);
+      await loadCurrentUserRole(user);
     }
+  } catch (err) {
+    currentUserRole.value = user ? 'user' : null;
+    console.error('Failed to sync authenticated user:', err);
+  } finally {
+    loading.value = false;
   }
 });
 
@@ -62,6 +97,8 @@ const getIdToken = async () => {
 
 export const useAuth = () => {
   const isAuthenticated = computed(() => currentUser.value !== null);
+  const isAdmin = computed(() => currentUserRole.value === 'admin');
+  const isUser = computed(() => currentUserRole.value === 'user');
 
   const register = async (email: string, password: string) => {
     error.value = null;
@@ -99,8 +136,12 @@ export const useAuth = () => {
 
   return {
     currentUser,
+    currentUserRole,
     isAuthenticated,
+    isAdmin,
+    isUser,
     loading,
+    roleLoading,
     error,
     register,
     login,

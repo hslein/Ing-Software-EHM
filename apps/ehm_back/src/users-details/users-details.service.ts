@@ -32,6 +32,26 @@ export class UsersDetailsService {
     };
   }
 
+  async getCurrentUserDetails(uid: string): Promise<UserDetails> {
+    if (!uid) throw new NotFoundException('UID required');
+
+    const ref = this.db.collection('users-details').doc(uid);
+    const snap = await ref.get();
+    return this.normalizeDetails(snap.exists ? (snap.data() as UserDetails) : undefined);
+  }
+
+  async getRoleForUid(uid: string): Promise<'admin' | 'user'> {
+    const details = await this.getCurrentUserDetails(uid);
+    return details.role ?? 'user';
+  }
+
+  async assertAdmin(uid: string) {
+    const role = await this.getRoleForUid(uid);
+    if (role !== 'admin') {
+      throw new ForbiddenException('Admin role required');
+    }
+  }
+
   async getByUid(uid: string, requesterUid?: string): Promise<UserDetails | null> {
     if (!uid) return null;
     // Simple authorization: allow if requester is same user
@@ -119,6 +139,7 @@ export class UsersDetailsService {
       uid,
       email: userRecord.email ?? null,
       role,
+      createdAt: userRecord.metadata.creationTime,
     };
   }
 

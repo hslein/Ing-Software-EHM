@@ -4,6 +4,7 @@ export type UserDetails = {
   name?: string | null;
   birthdate?: string | null; // ISO date string
   more?: string | null;
+  role?: 'admin' | 'user';
   updatedAt?: unknown;
   createdAt?: unknown;
 };

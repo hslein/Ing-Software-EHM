@@ -11,15 +11,7 @@ export class UsersDetailsController {
   @Get('me')
   async getMe(@Req() req: any) {
     const uid = req.user?.uid;
-    return this.service.getByUid(uid, uid);
-  }
-
-  // Get specific UID (only allowed for same user)
-  @UseGuards(FirebaseAuthGuard)
-  @Get(':uid')
-  async getByUid(@Param('uid') uid: string, @Req() req: any) {
-    const requester = req.user?.uid;
-    return this.service.getByUid(uid, requester);
+    return this.service.getCurrentUserDetails(uid);
   }
 
   // Upsert current user's details
@@ -33,15 +25,25 @@ export class UsersDetailsController {
   // List all users with details and role
   @UseGuards(FirebaseAuthGuard)
   @Get('all')
-  async listAll() {
+  async listAll(@Req() req: any) {
+    await this.service.assertAdmin(req.user?.uid);
     return this.service.listAllUsers();
   }
 
   // Change user role
   @UseGuards(FirebaseAuthGuard)
   @Put(':uid/role')
-  async updateRole(@Param('uid') uid: string, @Body('role') role: 'admin' | 'user') {
+  async updateRole(@Param('uid') uid: string, @Body('role') role: 'admin' | 'user', @Req() req: any) {
+    await this.service.assertAdmin(req.user?.uid);
     return this.service.updateRole(uid, role);
+  }
+
+  // Get specific UID (only allowed for same user)
+  @UseGuards(FirebaseAuthGuard)
+  @Get(':uid')
+  async getByUid(@Param('uid') uid: string, @Req() req: any) {
+    const requester = req.user?.uid;
+    return this.service.getByUid(uid, requester);
   }
 }
 

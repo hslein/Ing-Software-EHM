@@ -3,9 +3,10 @@ import { AppService } from './app.service';
 import { AppController } from './app.controller';
 import { FirebaseModule } from './firebase/firebase.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
+import { UsersDetailsModule } from './users-details/users-details.module';
 
 @Module({
-  imports: [FirebaseModule, VehiclesModule],
+  imports: [FirebaseModule, VehiclesModule, UsersDetailsModule],
   controllers: [AppController],
   providers: [AppService],
 })

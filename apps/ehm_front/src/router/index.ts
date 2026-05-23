@@ -23,6 +23,16 @@ const routes: RouteRecordRaw[] = [
     name: 'Credit',
     component: () => import('../pages/Credit.vue'),
   },
+  {
+    path: '/users',
+    name: 'Users',
+    component: () => import('../pages/UsersList.vue'),
+  },
+  {
+    path: '/user-details',
+    name: 'UserDetails',
+    component: () => import('../pages/UserDetails.vue'),
+  },
 ];
 
 const router = createRouter({

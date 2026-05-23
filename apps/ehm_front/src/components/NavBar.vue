@@ -2,20 +2,20 @@
   <nav class="navbar">
     <div class="navbar-container">
       <div class="navbar-logo">
-        <a href="#" @click.prevent="goHome">Concesionario EHM</a>
+        <RouterLink to="/" class="logo-link" @click="goHome">Concesionario EHM</RouterLink>
       </div>
       <ul class="nav-menu">
         <li class="nav-item">
-          <a href="#" class="nav-link" @click.prevent="goHome">Home</a>
+          <RouterLink to="/" class="nav-link" @click="goHome">Home</RouterLink>
         </li>
-        <li class="nav-item">
-          <a href="/inventory" class="nav-link">Inventory</a>
+        <li v-if="isAdmin" class="nav-item">
+          <RouterLink to="/inventory" class="nav-link">Inventory</RouterLink>
         </li>
-        <li class="nav-item">
-          <a href="#" class="nav-link" @click.prevent="goAbout">About Us</a>
+        <li v-if="!isAdmin" class="nav-item">
+          <RouterLink to="/about" class="nav-link" @click="goAbout">About Us</RouterLink>
         </li>
 
-        <li class="nav-item nav-brand-control">
+        <li v-if="!isAdmin" class="nav-item nav-brand-control">
           <label for="brand" class="nav-label">Brand</label>
           <select id="brand" class="brand-select">
             <option value="mazda">Mazda</option>
@@ -27,15 +27,20 @@
         </li>
 
         <li class="nav-item">
-          <a v-if="!isAuthenticated" href="/login" class="nav-link nav-link-btn">Sign In</a>
-          <button
-            v-else
-            type="button"
-            class="nav-link nav-link-btn nav-button"
-            @click="handleLogout"
-          >
-            Logout
-          </button>
+          <RouterLink v-if="!isAuthenticated" to="/login" class="nav-link nav-link-btn">
+            Sign In
+          </RouterLink>
+          <div v-else style="display:flex; gap:8px; align-items:center;">
+            <RouterLink v-if="isAdmin" to="/users" class="nav-link">Users</RouterLink>
+            <RouterLink to="/user-details" class="nav-link">Profile</RouterLink>
+            <button
+              type="button"
+              class="nav-link nav-link-btn nav-button"
+              @click="handleLogout"
+            >
+              Logout
+            </button>
+          </div>
         </li>
       </ul>
     </div>
@@ -43,7 +48,7 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
 
 defineOptions({
@@ -56,7 +61,7 @@ const emit = defineEmits<{
 }>();
 
 const router = useRouter();
-const { isAuthenticated, logout } = useAuth();
+const { isAuthenticated, isAdmin, logout } = useAuth();
 
 const goHome = () => {
   emit('go-home');
@@ -92,7 +97,7 @@ const handleLogout = async () => {
   padding: 0 2rem;
 }
 
-.navbar-logo a {
+.logo-link {
   color: white;
   cursor: pointer;
   font-size: 1.5rem;

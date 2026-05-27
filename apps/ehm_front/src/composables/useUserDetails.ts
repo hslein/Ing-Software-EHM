@@ -1,10 +1,10 @@
 import { useAuth } from './useAuth';
 
 export type UserDetails = {
-  name?: string | null;
-  birthdate?: string | null; // ISO date string
-  more?: string | null;
-  role?: 'admin' | 'user';
+  email?: string | null;
+  displayName?: string | null;
+  birthdate?: string | null;
+  role?: 'admin' | 'customer';
   updatedAt?: unknown;
   createdAt?: unknown;
 };
@@ -22,7 +22,7 @@ export const useUserDetails = () => {
 
   const loadDetails = async (uid: string): Promise<UserDetails | null> => {
     const token = await getAuthToken();
-    const res = await fetch(`${apiBaseUrl}/users-details/${encodeURIComponent(uid)}`, {
+    const res = await fetch(`${apiBaseUrl}/users/${encodeURIComponent(uid)}`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,

@@ -1,21 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import * as admin from 'firebase-admin';
-
-export type UserDetails = {
-  name?: string | null;
-  birthdate?: string | null;
-  more?: string | null;
-  role?: 'admin' | 'user';
-  createdAt?: unknown;
-  updatedAt?: unknown;
-};
-
-export type UserSummary = {
-  uid: string;
-  email: string | null;
-  role: 'admin' | 'user';
-  createdAt?: unknown;
-};
+import { UserDetails, UserSummary } from '../models/users.model';
 
 @Injectable()
 export class UsersDetailsService {
@@ -23,10 +8,10 @@ export class UsersDetailsService {
 
   private normalizeDetails(data: UserDetails | undefined): UserDetails {
     return {
-      role: data?.role ?? 'user',
-      name: data?.name ?? null,
-      birthdate: data?.birthdate ?? null,
-      more: data?.more ?? null,
+      role: data?.role ?? 'customer',
+      email: data?.email ?? undefined,
+      displayName: data?.displayName ?? undefined,
+      birthdate: data?.birthdate ?? undefined,
       createdAt: data?.createdAt,
       updatedAt: data?.updatedAt,
     };
@@ -35,14 +20,14 @@ export class UsersDetailsService {
   async getCurrentUserDetails(uid: string): Promise<UserDetails> {
     if (!uid) throw new NotFoundException('UID required');
 
-    const ref = this.db.collection('users-details').doc(uid);
+    const ref = this.db.collection('users').doc(uid);
     const snap = await ref.get();
     return this.normalizeDetails(snap.exists ? (snap.data() as UserDetails) : undefined);
   }
 
-  async getRoleForUid(uid: string): Promise<'admin' | 'user'> {
+  async getRoleForUid(uid: string): Promise<'admin' | 'customer'> {
     const details = await this.getCurrentUserDetails(uid);
-    return details.role ?? 'user';
+    return details.role ?? 'customer';
   }
 
   async assertAdmin(uid: string) {
@@ -59,7 +44,7 @@ export class UsersDetailsService {
       throw new ForbiddenException('Not allowed');
     }
 
-    const ref = this.db.collection('users-details').doc(uid);
+    const ref = this.db.collection('users').doc(uid);
     const snap = await ref.get();
     if (!snap.exists) return null;
     return snap.data() as UserDetails;
@@ -71,13 +56,13 @@ export class UsersDetailsService {
       throw new ForbiddenException('Not allowed');
     }
 
-    const ref = this.db.collection('users-details').doc(uid);
+    const ref = this.db.collection('users').doc(uid);
     const existing = await ref.get();
     const existingData = existing.exists ? (existing.data() as UserDetails) : undefined;
 
     const payload = {
       ...data,
-      role: existingData?.role ?? 'user',
+      role: existingData?.role ?? 'customer',
       updatedAt: admin.firestore.FieldValue.serverTimestamp(),
     } as any;
 
@@ -100,13 +85,13 @@ export class UsersDetailsService {
       await Promise.all(
         authPage.users.map(async (userRecord) => {
           const uid = userRecord.uid;
-          const doc = await this.db.collection('users-details').doc(uid).get();
+          const doc = await this.db.collection('users').doc(uid).get();
           const details = this.normalizeDetails(doc.exists ? (doc.data() as UserDetails) : undefined);
 
           users.push({
             uid,
             email: userRecord.email ?? null,
-            role: details.role ?? 'user',
+            role: details.role ?? 'customer',
             createdAt: userRecord.metadata.creationTime,
           });
         }),
@@ -117,8 +102,8 @@ export class UsersDetailsService {
     return users;
   }
 
-  async updateRole(uid: string, role: 'admin' | 'user'): Promise<UserSummary> {
-    const ref = this.db.collection('users-details').doc(uid);
+  async updateRole(uid: string, role: 'admin' | 'customer'): Promise<UserSummary> {
+    const ref = this.db.collection('users').doc(uid);
     const existing = await ref.get();
     const existingData = existing.exists ? (existing.data() as UserDetails) : undefined;
 
@@ -150,8 +135,6 @@ export class UsersDetailsService {
     // Delete from Firestore users collection
     await this.db.collection('users').doc(uid).delete();
     
-    // Delete from users-details collection
-    await this.db.collection('users-details').doc(uid).delete();
 
     return { success: true };
   }

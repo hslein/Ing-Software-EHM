@@ -15,7 +15,7 @@ export class UsersController {
 
   @UseGuards(FirebaseAuthGuard)
   @Put(':uid/role')
-  async updateRole(@Param('uid') uid: string, @Body('role') role: 'admin' | 'user', @Req() req: any) {
+  async updateRole(@Param('uid') uid: string, @Body('role') role: 'admin' | 'customer', @Req() req: any) {
     await this.service.assertAdmin(req.user?.uid);
     return this.service.updateRole(uid, role);
   }
@@ -26,4 +26,12 @@ export class UsersController {
     await this.service.assertAdmin(req.user?.uid);
     return this.service.deleteUser(uid);
   }
+
+  @UseGuards(FirebaseAuthGuard)
+  @Get(':uid')
+  async getByUid(@Param('uid') uid: string, @Req() req: any) {
+    const requester = req.user?.uid;
+    return this.service.getByUid(uid, requester);
+  }
+
 }

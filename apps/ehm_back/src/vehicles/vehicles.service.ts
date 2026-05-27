@@ -2,27 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import * as admin from 'firebase-admin';
 import { CreateVehicleDto } from './dto/create-vehicle.dto';
 import { UpdateVehicleDto } from './dto/update-vehicle.dto';
+import { Vehicle } from '../models/vehicle.model';
+import { Brand } from '../models/brands.model';
 
-export interface Vehicle {
-  id?: string;
-  model: string;
-  type: 'suv' | 'sedan' | 'deportivo' | 'pickup';
-  image: string;
-  description: string;
-  brand: string;
-  price?: number;
-  year?: number;
-  mileage?: number;
-  createdAt?: unknown;
-  updatedAt?: unknown;
-}
-
-export interface Brand {
-  id?: string;
-  name: string;
-  image: string;
-  vehicles?: Vehicle[];
-}
 
 @Injectable()
 export class VehiclesService {

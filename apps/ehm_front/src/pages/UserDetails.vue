@@ -11,17 +11,12 @@
 
         <div class="field">
           <label for="name">Full name</label>
-          <input id="name" v-model="form.name" type="text" placeholder="Your full name" />
+          <input id="name" v-model="form.displayName" type="text" placeholder="Your full name" />
         </div>
 
         <div class="field">
           <label for="birthdate">Birthdate</label>
           <input id="birthdate" v-model="form.birthdate" type="date" />
-        </div>
-
-        <div class="field">
-          <label for="more">More details</label>
-          <textarea id="more" v-model="form.more" rows="4" placeholder="Any additional info"></textarea>
         </div>
 
         <div class="actions">
@@ -44,7 +39,7 @@ const { currentUser, loading } = useAuth();
 const { loadDetails, saveDetails } = useUserDetails();
 const userEmail = computed(() => currentUser.value?.email ?? '');
 
-const form = reactive({ name: '', birthdate: '', more: '' });
+const form = reactive({ displayName: '', birthdate: '' });
 const saving = ref(false);
 const error = ref<string | null>(null);
 const success = ref(false);
@@ -54,9 +49,8 @@ const populate = async () => {
   try {
     const data = await loadDetails(currentUser.value.uid);
     if (data) {
-      form.name = data.name ?? '';
+      form.displayName = data.displayName ?? '';
       form.birthdate = data.birthdate ?? '';
-      form.more = data.more ?? '';
     }
   } catch (err) {
     error.value = 'Failed to load details';
@@ -88,9 +82,8 @@ const handleSubmit = async () => {
   saving.value = true;
   try {
     await saveDetails(currentUser.value.uid, {
-      name: form.name || null,
+      displayName: form.displayName || null,
       birthdate: form.birthdate || null,
-      more: form.more || null,
     });
     success.value = true;
   } catch (err) {

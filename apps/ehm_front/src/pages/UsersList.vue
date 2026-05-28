@@ -101,7 +101,7 @@ onMounted(loadUsers);
 const toggleRole = async (user: UserSummary) => {
   savingUid.value = user.uid;
   try {
-    const nextRole = user.role === 'admin' ? 'user' : 'admin';
+    const nextRole = user.role === 'admin' ? 'customer' : 'admin';
     const updated = await updateUserRole(user.uid, nextRole);
     users.value = users.value.map((item) => (item.uid === updated.uid ? updated : item));
   } catch (err) {

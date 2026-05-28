@@ -4,7 +4,7 @@ import { useAuth } from './useAuth';
 export type UserSummary = {
   uid: string;
   email: string | null;
-  role: 'admin' | 'user';
+  role: 'admin' | 'customer';
   createdAt?: unknown;
 };
 
@@ -44,7 +44,7 @@ export const useUsers = () => {
     }
   };
 
-  const updateUserRole = async (uid: string, role: 'admin' | 'user') => {
+  const updateUserRole = async (uid: string, role: 'admin' | 'customer') => {
     loading.value = true;
     error.value = null;
     try {

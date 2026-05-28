@@ -6,6 +6,7 @@ export type VehicleType = 'suv' | 'sedan' | 'deportivo' | 'pickup';
 export interface Vehicle {
   id?: string;
   model: string;
+  brandId?: string;
   type: VehicleType;
   image: string;
   description: string;
@@ -13,6 +14,7 @@ export interface Vehicle {
   price?: number;
   year?: number;
   mileage?: number;
+  isFavorite?: boolean;
   createdAt?: Date | string;
   updatedAt?: Date | string;
 }
@@ -21,7 +23,6 @@ export interface Brand {
   id?: string;
   name: string;
   image: string;
-  vehicles?: Vehicle[];
   createdAt?: Date | string;
   updatedAt?: Date | string;
 }
@@ -77,14 +78,16 @@ export const useVehicles = () => {
   };
 
   // Fetch vehicles by brand
-  const fetchVehiclesByBrand = async (brandName: string) => {
+  const fetchVehiclesByBrand = async (brandId: string) => {
     loading.value = true;
     error.value = null;
     try {
-      const result = (await apiFetch(`/vehicles?brand=${encodeURIComponent(brandName)}`)) as Vehicle[];
+      const result = (await apiFetch(`/vehicles?brandId=${encodeURIComponent(brandId)}`)) as Vehicle[];
+      vehicles.value = result;
       return result;
     } catch (err: any) {
       error.value = err.message;
+      vehicles.value = [];
       return [];
     } finally {
       loading.value = false;
@@ -166,6 +169,40 @@ export const useVehicles = () => {
     }
   };
 
+  const setVehicleFavoriteState = (vehicleId: string, isFavorite: boolean) => {
+    vehicles.value.forEach((vehicle) => {
+      if (vehicle.id === vehicleId) {
+        vehicle.isFavorite = isFavorite;
+      }
+    });
+
+    vehicles.value = [...vehicles.value];
+  };
+
+  const toggleFavorite = async (vehicle: Vehicle) => {
+    if (!vehicle.id) {
+      throw new Error('Vehicle id is required');
+    }
+
+    const previousFavoriteState = Boolean(vehicle.isFavorite);
+    const nextFavoriteState = !previousFavoriteState;
+    setVehicleFavoriteState(vehicle.id, nextFavoriteState);
+    error.value = null;
+
+    try {
+      const result = (await apiFetch(`/vehicles/${encodeURIComponent(vehicle.id)}/favorite`, {
+        method: 'PUT',
+        body: JSON.stringify({ favorite: nextFavoriteState }),
+      })) as { vehicleId: string; isFavorite: boolean };
+      setVehicleFavoriteState(result.vehicleId, result.isFavorite);
+      return result;
+    } catch (err: any) {
+      setVehicleFavoriteState(vehicle.id, previousFavoriteState);
+      error.value = err.message;
+      throw err;
+    }
+  };
+
   return {
     vehicles: computed(() => vehicles.value),
     brands: computed(() => brands.value),
@@ -178,5 +215,6 @@ export const useVehicles = () => {
     addVehicle,
     updateVehicle,
     deleteVehicle,
+    toggleFavorite,
   };
 };

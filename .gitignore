@@ -50,5 +50,7 @@ vite.config.*.timestamp*
 .env.local
 .env
 .env.*
+!.env.example
+!**/.env.example
 /firebase-service-account.json
 apps/ehm_back/src/config/firebase.service-account.json

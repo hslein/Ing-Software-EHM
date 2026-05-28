@@ -7,6 +7,7 @@ import {
   Post,
   Put,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { VehiclesService } from './vehicles.service';
@@ -20,13 +21,13 @@ export class VehiclesController {
   constructor(private readonly vehiclesService: VehiclesService) {}
 
   @Get('vehicles')
-  findAll(@Query('brand') brand?: string) {
-    return this.vehiclesService.findAll(brand);
+  findAll(@Query('brandId') brandId?: string, @Req() req?: any) {
+    return this.vehiclesService.findAll(brandId, req?.user?.uid);
   }
 
   @Get('vehicles/:id')
-  findOne(@Param('id') id: string) {
-    return this.vehiclesService.findOne(id);
+  findOne(@Param('id') id: string, @Req() req?: any) {
+    return this.vehiclesService.findOne(id, req?.user?.uid);
   }
 
   @Post('vehicles')
@@ -45,6 +46,15 @@ export class VehiclesController {
   @Delete('vehicles/:id')
   remove(@Param('id') id: string) {
     return this.vehiclesService.remove(id);
+  }
+
+  @Put('vehicles/:id/favorite')
+  setFavorite(
+    @Param('id') id: string,
+    @Body('favorite') favorite: boolean,
+    @Req() req: any,
+  ) {
+    return this.vehiclesService.setFavorite(id, req.user?.uid, favorite);
   }
 
   @Get('brands')

@@ -2,7 +2,7 @@ export interface VehicleView {
   id?: string;
   userId: string;
   vehicleId: string;
-  brand?: string;
+  brandId?: string;
   viewedAt?: unknown;
   syncedToWarehouse?: boolean;
   syncedAt?: unknown;

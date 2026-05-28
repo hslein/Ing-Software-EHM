@@ -15,14 +15,21 @@
           <RouterLink to="/about" class="nav-link" @click="goAbout">About Us</RouterLink>
         </li>
 
-        <li v-if="!isAdmin" class="nav-item nav-brand-control">
+        <li v-if="isAuthenticated && !isAdmin && brands.length" class="nav-item nav-brand-control">
           <label for="brand" class="nav-label">Brand</label>
-          <select id="brand" class="brand-select">
-            <option value="mazda">Mazda</option>
-            <option value="toyota">Toyota</option>
-            <option value="audi">Audi</option>
-            <option value="ford">Ford</option>
-            <option value="volkswagen">Volkswagen</option>
+          <select
+            id="brand"
+            class="brand-select"
+            :value="selectedBrandId"
+            @change="selectBrand"
+          >
+            <option
+              v-for="brand in brands"
+              :key="brand.id ?? brand.name"
+              :value="brand.id"
+            >
+              {{ brand.name }}
+            </option>
           </select>
         </li>
 
@@ -48,8 +55,10 @@
 </template>
 
 <script setup lang="ts">
-import { RouterLink, useRouter } from 'vue-router';
+import { computed, onMounted, watch } from 'vue';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
+import { useVehicles } from '../composables/useVehicles';
 
 defineOptions({
   name: 'NavBar',
@@ -60,8 +69,42 @@ const emit = defineEmits<{
   'go-home': [];
 }>();
 
+const route = useRoute();
 const router = useRouter();
 const { isAuthenticated, isAdmin, logout } = useAuth();
+const { brands, fetchBrands } = useVehicles();
+
+const selectedBrandId = computed(() => {
+  const brandId = route.query.brandId;
+  return typeof brandId === 'string' ? brandId : '';
+});
+
+const loadBrands = async () => {
+  if (!isAuthenticated.value || brands.value.length > 0) {
+    return;
+  }
+
+  try {
+    await fetchBrands();
+  } catch (err) {
+    console.error('Failed to load brands for navbar:', err);
+  }
+};
+
+const selectBrand = async (event: Event) => {
+  const brandId = (event.target as HTMLSelectElement).value;
+  if (!brandId) {
+    return;
+  }
+
+  await router.push({
+    path: '/',
+    query: {
+      ...route.query,
+      brandId,
+    },
+  });
+};
 
 const goHome = () => {
   emit('go-home');
@@ -75,6 +118,14 @@ const handleLogout = async () => {
   await logout();
   router.push('/login');
 };
+
+onMounted(loadBrands);
+
+watch(isAuthenticated, (authenticated) => {
+  if (authenticated) {
+    loadBrands();
+  }
+});
 </script>
 
 <style scoped>

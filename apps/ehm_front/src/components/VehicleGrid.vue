@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { Heart } from 'lucide-vue-next';
 import type { Vehicle } from '../composables/useVehicles';
 
 defineProps<{
@@ -12,6 +13,7 @@ defineEmits<{
   selectVehicle: [vehicle: Vehicle];
   quoteVehicle: [vehicle: Vehicle];
   toggleCompare: [vehicle: Vehicle];
+  toggleFavorite: [vehicle: Vehicle];
 }>();
 
 const highlightsSection = ref<HTMLElement>();
@@ -65,6 +67,16 @@ const scrollRight = () => {
         :key="vehicle.id ?? `${vehicle.model}-${index}`"
         class="vehicle-card"
       >
+        <button
+          class="favorite-toggle"
+          :class="{ favorite: vehicle.isFavorite }"
+          type="button"
+          :aria-label="vehicle.isFavorite ? 'Remove from favorites' : 'Add to favorites'"
+          :title="vehicle.isFavorite ? 'Remove from favorites' : 'Add to favorites'"
+          @click.stop="$emit('toggleFavorite', vehicle)"
+        >
+          <Heart :size="20" :fill="vehicle.isFavorite ? 'currentColor' : 'none'" />
+        </button>
         <img :src="vehicle.image" :alt="`${brandName} ${vehicle.model}`" class="vehicle-image" />
         <div class="vehicle-info">
           <h3>{{ brandName }} {{ vehicle.model }}</h3>
@@ -139,6 +151,7 @@ const scrollRight = () => {
   background: white;
   border-radius: 8px;
   overflow: hidden;
+  position: relative;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s, box-shadow 0.2s;
 }
@@ -152,6 +165,36 @@ const scrollRight = () => {
   width: 100%;
   height: 200px;
   object-fit: cover;
+}
+
+.favorite-toggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(44, 62, 80, 0.18);
+  border-radius: 50%;
+  color: #2c3e50;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+  transition: color 0.2s, transform 0.2s, border-color 0.2s;
+}
+
+.favorite-toggle:hover {
+  transform: scale(1.08);
+  border-color: #e74c3c;
+  color: #e74c3c;
+}
+
+.favorite-toggle.favorite {
+  color: #e21b2d;
+  border-color: rgba(226, 27, 45, 0.45);
 }
 
 .vehicle-info {

@@ -34,4 +34,11 @@ export class UsersController {
     return this.service.getByUid(uid, requester);
   }
 
+  @UseGuards(FirebaseAuthGuard)
+  @Put()
+  async upsert(@Req() req: any, @Body() body: any) {
+    const uid = req.user?.uid;
+    return this.service.upsertForUid(uid, body, uid);
+  }
+
 }

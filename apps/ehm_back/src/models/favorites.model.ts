@@ -1,7 +1,8 @@
 export interface Favorite {
   id?: string;
-  userId?: string;
-  vehicleId?: string;
-  createdAt?: Date;
+  userId: string;
+  vehicleId: string;
+  createdAt?: unknown;
   syncedToWarehouse?: boolean;
+  syncedAt?: unknown;
 }

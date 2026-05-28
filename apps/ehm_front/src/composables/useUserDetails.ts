@@ -38,7 +38,7 @@ export const useUserDetails = () => {
 
   const saveDetails = async (uid: string, data: Partial<UserDetails>) => {
     const token = await getAuthToken();
-    const res = await fetch(`${apiBaseUrl}/users-details`, {
+    const res = await fetch(`${apiBaseUrl}/users`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

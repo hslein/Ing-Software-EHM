@@ -3,6 +3,14 @@ import * as admin from 'firebase-admin';
 import { WarehouseDbService } from './warehouse-db.service';
 
 type FirestoreDate = Date | string | { toDate?: () => Date } | undefined;
+type EtlStage =
+  | 'users'
+  | 'brands'
+  | 'vehicles'
+  | 'vehicleViews'
+  | 'favorites'
+  | 'comparisons'
+  | 'creditSimulations';
 
 export interface EtlProcessedCounts {
   users: number;
@@ -17,8 +25,24 @@ export interface EtlProcessedCounts {
 export interface EtlRunResult {
   success: boolean;
   processed: EtlProcessedCounts;
+  limit: number;
   startedAt: string;
   finishedAt: string;
+}
+
+export interface EtlStageResult {
+  success: boolean;
+  stage: EtlStage;
+  processed: number;
+  limit: number;
+  nextCursor: string | null;
+  startedAt: string;
+  finishedAt: string;
+}
+
+interface EtlBatchResult {
+  processed: number;
+  nextCursor: string | null;
 }
 
 interface VehicleDoc {
@@ -36,13 +60,15 @@ interface VehicleDoc {
 
 @Injectable()
 export class WarehouseEtlService {
+  private static readonly DEFAULT_BATCH_LIMIT = 100;
   private readonly db = admin.firestore();
   private lastRun: EtlRunResult | null = null;
   private lastError: string | null = null;
 
   constructor(private readonly warehouseDb: WarehouseDbService) {}
 
-  async run(): Promise<EtlRunResult> {
+  async run(limit = WarehouseEtlService.DEFAULT_BATCH_LIMIT): Promise<EtlRunResult> {
+    const batchLimit = this.normalizeLimit(limit);
     const startedAt = new Date();
     const processed: EtlProcessedCounts = {
       users: 0,
@@ -55,21 +81,52 @@ export class WarehouseEtlService {
     };
 
     try {
-      processed.users = await this.loadUsers();
-      processed.brands = await this.loadBrands();
-      processed.vehicles = await this.loadVehicles();
-      processed.vehicleViews = await this.loadVehicleViews();
-      processed.favorites = await this.loadFavorites();
-      processed.comparisons = await this.loadComparisons();
-      processed.creditSimulations = await this.loadCreditSimulations();
+      processed.users = (await this.loadUsers(batchLimit)).processed;
+      processed.brands = (await this.loadBrands(batchLimit)).processed;
+      processed.vehicles = (await this.loadVehicles(batchLimit)).processed;
+      processed.vehicleViews = (await this.loadVehicleViews(batchLimit)).processed;
+      processed.favorites = (await this.loadFavorites(batchLimit)).processed;
+      processed.comparisons = (await this.loadComparisons(batchLimit)).processed;
+      processed.creditSimulations = (await this.loadCreditSimulations(batchLimit)).processed;
 
       const result = {
         success: true,
         processed,
+        limit: batchLimit,
         startedAt: startedAt.toISOString(),
         finishedAt: new Date().toISOString(),
       };
       this.lastRun = result;
+      this.lastError = null;
+      return result;
+    } catch (error) {
+      this.lastError = error instanceof Error ? error.message : 'Unknown ETL error';
+      throw error;
+    }
+  }
+
+  async runStage(stage: EtlStage, limit = WarehouseEtlService.DEFAULT_BATCH_LIMIT, after?: string) {
+    const batchLimit = this.normalizeLimit(limit);
+    const startedAt = new Date();
+
+    try {
+      const batch = await this.runStageLoader(stage, batchLimit, after);
+      const result = {
+        success: true,
+        stage,
+        processed: batch.processed,
+        limit: batchLimit,
+        nextCursor: batch.nextCursor,
+        startedAt: startedAt.toISOString(),
+        finishedAt: new Date().toISOString(),
+      };
+      this.lastRun = {
+        success: true,
+        processed: this.processedCountsForStage(stage, batch.processed),
+        limit: batchLimit,
+        startedAt: result.startedAt,
+        finishedAt: result.finishedAt,
+      };
       this.lastError = null;
       return result;
     } catch (error) {
@@ -91,8 +148,9 @@ export class WarehouseEtlService {
     };
   }
 
-  private async loadUsers(): Promise<number> {
-    const snapshot = await this.db.collection('users').get();
+  private async loadUsers(limit: number, after?: string): Promise<EtlBatchResult> {
+    const query = this.paginatedCollection('users', limit, after);
+    const snapshot = await query.get();
     await Promise.all(
       snapshot.docs.map(async (doc) => {
         const data = doc.data();
@@ -104,28 +162,30 @@ export class WarehouseEtlService {
         );
       }),
     );
-    return snapshot.size;
+    return this.batchResult(snapshot, limit);
   }
 
-  private async loadBrands(): Promise<number> {
-    const snapshot = await this.db.collection('brands').get();
+  private async loadBrands(limit: number, after?: string): Promise<EtlBatchResult> {
+    const query = this.paginatedCollection('brands', limit, after);
+    const snapshot = await query.get();
     await Promise.all(
       snapshot.docs.map(async (doc) => {
         const data = doc.data();
         await this.getOrCreateBrandKey(doc.id, this.stringValue(data.name) ?? doc.id);
       }),
     );
-    return snapshot.size;
+    return this.batchResult(snapshot, limit);
   }
 
-  private async loadVehicles(): Promise<number> {
-    const snapshot = await this.db.collection('vehicles').get();
+  private async loadVehicles(limit: number, after?: string): Promise<EtlBatchResult> {
+    const query = this.paginatedCollection('vehicles', limit, after);
+    const snapshot = await query.get();
     await Promise.all(snapshot.docs.map((doc) => this.getOrCreateVehicleKey(doc.id)));
-    return snapshot.size;
+    return this.batchResult(snapshot, limit);
   }
 
-  private async loadVehicleViews(): Promise<number> {
-    const snapshot = await this.unsynced('vehicle_views').get();
+  private async loadVehicleViews(limit: number): Promise<EtlBatchResult> {
+    const snapshot = await this.unsynced('vehicle_views', limit).get();
 
     for (const doc of snapshot.docs) {
       const data = doc.data();
@@ -148,11 +208,11 @@ export class WarehouseEtlService {
       await this.markSynced('vehicle_views', doc.id);
     }
 
-    return snapshot.size;
+    return { processed: snapshot.size, nextCursor: null };
   }
 
-  private async loadFavorites(): Promise<number> {
-    const snapshot = await this.unsynced('favorites').get();
+  private async loadFavorites(limit: number): Promise<EtlBatchResult> {
+    const snapshot = await this.unsynced('favorites', limit).get();
 
     for (const doc of snapshot.docs) {
       const data = doc.data();
@@ -175,11 +235,11 @@ export class WarehouseEtlService {
       await this.markSynced('favorites', doc.id);
     }
 
-    return snapshot.size;
+    return { processed: snapshot.size, nextCursor: null };
   }
 
-  private async loadComparisons(): Promise<number> {
-    const snapshot = await this.unsynced('vehicle_comparisons').get();
+  private async loadComparisons(limit: number): Promise<EtlBatchResult> {
+    const snapshot = await this.unsynced('vehicle_comparisons', limit).get();
 
     for (const doc of snapshot.docs) {
       const data = doc.data();
@@ -224,11 +284,11 @@ export class WarehouseEtlService {
       await this.markSynced('vehicle_comparisons', doc.id);
     }
 
-    return snapshot.size;
+    return { processed: snapshot.size, nextCursor: null };
   }
 
-  private async loadCreditSimulations(): Promise<number> {
-    const snapshot = await this.unsynced('credit_simulations').get();
+  private async loadCreditSimulations(limit: number): Promise<EtlBatchResult> {
+    const snapshot = await this.unsynced('credit_simulations', limit).get();
 
     for (const doc of snapshot.docs) {
       const data = doc.data();
@@ -276,11 +336,11 @@ export class WarehouseEtlService {
       await this.markSynced('credit_simulations', doc.id);
     }
 
-    return snapshot.size;
+    return { processed: snapshot.size, nextCursor: null };
   }
 
-  private unsynced(collection: string) {
-    return this.db.collection(collection).where('syncedToWarehouse', '==', false);
+  private unsynced(collection: string, limit: number) {
+    return this.db.collection(collection).where('syncedToWarehouse', '==', false).limit(limit);
   }
 
   private async markSynced(collection: string, id: string) {
@@ -503,5 +563,69 @@ export class WarehouseEtlService {
     }
 
     return null;
+  }
+
+  private async runStageLoader(stage: EtlStage, limit: number, after?: string): Promise<EtlBatchResult> {
+    switch (stage) {
+      case 'users':
+        return this.loadUsers(limit, after);
+      case 'brands':
+        return this.loadBrands(limit, after);
+      case 'vehicles':
+        return this.loadVehicles(limit, after);
+      case 'vehicleViews':
+        return this.loadVehicleViews(limit);
+      case 'favorites':
+        return this.loadFavorites(limit);
+      case 'comparisons':
+        return this.loadComparisons(limit);
+      case 'creditSimulations':
+        return this.loadCreditSimulations(limit);
+    }
+  }
+
+  private normalizeLimit(limit: number): number {
+    if (!Number.isInteger(limit) || limit < 1) {
+      return WarehouseEtlService.DEFAULT_BATCH_LIMIT;
+    }
+
+    return Math.min(limit, 500);
+  }
+
+  private processedCountsForStage(stage: EtlStage, processed: number): EtlProcessedCounts {
+    return {
+      users: stage === 'users' ? processed : 0,
+      brands: stage === 'brands' ? processed : 0,
+      vehicles: stage === 'vehicles' ? processed : 0,
+      vehicleViews: stage === 'vehicleViews' ? processed : 0,
+      favorites: stage === 'favorites' ? processed : 0,
+      comparisons: stage === 'comparisons' ? processed : 0,
+      creditSimulations: stage === 'creditSimulations' ? processed : 0,
+    };
+  }
+
+  private paginatedCollection(collection: string, limit: number, after?: string) {
+    let query = this.db
+      .collection(collection)
+      .orderBy(admin.firestore.FieldPath.documentId())
+      .limit(limit);
+
+    if (after) {
+      query = query.startAfter(after);
+    }
+
+    return query;
+  }
+
+  private batchResult(
+    snapshot: admin.firestore.QuerySnapshot<admin.firestore.DocumentData>,
+    limit: number,
+  ): EtlBatchResult {
+    const lastDoc = snapshot.docs[snapshot.docs.length - 1];
+
+    return {
+      processed: snapshot.size,
+      nextCursor: snapshot.size === limit && lastDoc ? lastDoc.id : null,
+    };
   }
 }

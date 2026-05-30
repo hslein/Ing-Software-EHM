@@ -8,10 +8,12 @@ import VehicleCompareModal from '../components/VehicleCompareModal.vue';
 import VehicleGrid from '../components/VehicleGrid.vue';
 import VehicleModal from '../components/VehicleModal.vue';
 import { useAuth } from '../composables/useAuth';
+import { useInteractionEvents } from '../composables/useInteractionEvents';
 import { useVehicles } from '../composables/useVehicles';
 import type { Brand, Vehicle } from '../composables/useVehicles';
 
 const { currentUser } = useAuth();
+const { trackVehicleComparison, trackVehicleView } = useInteractionEvents();
 const { brands, error, fetchBrands, fetchVehiclesByBrand, loading, toggleFavorite, vehicles } =
   useVehicles();
 const route = useRoute();
@@ -117,9 +119,17 @@ const selectBrand = async (brand: Brand) => {
   });
 };
 
-const showVehicleDetail = (vehicle: Vehicle) => {
+const showVehicleDetail = async (vehicle: Vehicle) => {
   selectedVehicle.value = vehicle;
   showModal.value = true;
+
+  if (vehicle.id) {
+    try {
+      await trackVehicleView(vehicle.id);
+    } catch (err) {
+      console.error('Failed to track vehicle view:', err);
+    }
+  }
 };
 
 const toggleCompareVehicle = (vehicle: Vehicle) => {
@@ -149,6 +159,12 @@ const toggleCompareVehicle = (vehicle: Vehicle) => {
 
   if (selectedCompareVehicles.value.length === 2) {
     showCompareModal.value = true;
+    const [firstVehicle, secondVehicle] = selectedCompareVehicles.value;
+    if (firstVehicle.id && secondVehicle.id) {
+      void trackVehicleComparison(firstVehicle.id, secondVehicle.id).catch((err) => {
+        console.error('Failed to track vehicle comparison:', err);
+      });
+    }
   }
 };
 
@@ -170,7 +186,20 @@ const clearCompareVehicles = () => {
 
 const runBrandAction = (action: string, vehicle: Vehicle) => {
   if (action === 'Ver detalle') {
-    showVehicleDetail(vehicle);
+    void showVehicleDetail(vehicle);
+    return;
+  }
+
+  if (action === 'Cotizar' && vehicle.id) {
+    void router.push({
+      path: '/credit',
+      query: {
+        vehicleId: vehicle.id,
+        price: vehicle.price?.toString() ?? '',
+        model: vehicle.model,
+        brand: selectedBrand.value?.name ?? vehicle.brand ?? '',
+      },
+    });
     return;
   }
 

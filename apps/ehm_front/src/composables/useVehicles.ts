@@ -94,6 +94,12 @@ export const useVehicles = () => {
     }
   };
 
+  const fetchVehicleById = async (vehicleId: string) => {
+    error.value = null;
+    const result = (await apiFetch(`/vehicles/${encodeURIComponent(vehicleId)}`)) as Vehicle;
+    return result;
+  };
+
   // Fetch brands with their vehicles
   const fetchBrands = async () => {
     loading.value = true;
@@ -209,6 +215,7 @@ export const useVehicles = () => {
     loading: computed(() => loading.value),
     error: computed(() => error.value),
     fetchVehicles,
+    fetchVehicleById,
     fetchVehiclesByBrand,
     fetchBrands,
     subscribeToVehicles,

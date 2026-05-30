@@ -6,8 +6,25 @@
       <p class="eyebrow">Calcula tu plan de financiación y adquiere tu próximo vehículo con nosotros.</p>
     </section>
 
-    <div class="simulator-grid">
+    <section v-if="redirecting" class="selection-state">
+      Debes seleccionar un vehiculo antes de simular un credito. Te estamos llevando al catalogo.
+    </section>
+
+    <section v-else-if="loadingVehicle" class="selection-state">
+      Cargando vehiculo seleccionado...
+    </section>
+
+    <div v-else class="simulator-grid">
       <div class="config-panel">
+        <article v-if="selectedVehicle" class="selected-vehicle-card">
+          <img :src="selectedVehicle.image" :alt="vehicleTitle" />
+          <div>
+            <span>Vehiculo seleccionado</span>
+            <h2>{{ vehicleTitle }}</h2>
+            <p>{{ formatPrice(selectedVehicle.price || carPrice) }}</p>
+          </div>
+        </article>
+
         <h3 class="section-title">Personaliza tu inversión</h3>
         
         <div class="input-card">
@@ -19,9 +36,12 @@
               v-model="carPrice" 
               class="main-price-input"
               placeholder="0"
+              :readonly="Boolean(selectedVehicle)"
             />
           </div>
-          <p class="input-help">Ingresa el valor del vehículo que deseas en EHM.</p>
+          <p class="input-help">
+            {{ selectedVehicle ? 'Precio fijo del vehiculo seleccionado en inventario.' : 'Ingresa el valor del vehiculo que deseas en EHM.' }}
+          </p>
         </div>
 
         <div class="input-card">
@@ -99,14 +119,43 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import Chart from 'chart.js/auto';
+import { useInteractionEvents } from '../composables/useInteractionEvents';
+import { useVehicles } from '../composables/useVehicles';
 
-const carPrice = ref(110000000);
-const downPayment = ref(33000000);
+const route = useRoute();
+const router = useRouter();
+const { trackCreditSimulation } = useInteractionEvents();
+const { fetchVehicleById } = useVehicles();
+const routePrice = Number(route.query.price);
+const initialPrice = Number.isFinite(routePrice) && routePrice > 0 ? routePrice : 110000000;
+const selectedVehicleId = typeof route.query.vehicleId === 'string' ? route.query.vehicleId : '';
+const routeBrandName = typeof route.query.brand === 'string' ? route.query.brand : '';
+const routeModelName = typeof route.query.model === 'string' ? route.query.model : '';
+
+const carPrice = ref(initialPrice);
+const downPayment = ref(Math.round(initialPrice * 0.3));
 const months = ref(48);
 const interestRate = 0.0105; // Tasa EHM simulada
 const chartCanvas = ref(null);
+const selectedVehicle = ref(null);
+const loadingVehicle = ref(false);
+const redirecting = ref(false);
 let chartInstance = null;
+
+const vehicleTitle = computed(() => {
+  if (!selectedVehicle.value) {
+    return 'Vehiculo seleccionado';
+  }
+
+  return [
+    routeBrandName || selectedVehicle.value.brand,
+    routeModelName || selectedVehicle.value.model,
+  ]
+    .filter(Boolean)
+    .join(' ');
+});
 
 const monthlyPayment = computed(() => {
   const p = carPrice.value - downPayment.value;
@@ -163,7 +212,31 @@ watch([carPrice, downPayment, months], () => {
   updateChart();
 });
 
-onMounted(() => {
+onMounted(async () => {
+  if (!selectedVehicleId) {
+    redirecting.value = true;
+    window.alert('Debes seleccionar un vehiculo antes de simular un credito.');
+    await router.replace('/');
+    return;
+  }
+
+  loadingVehicle.value = true;
+
+  try {
+    selectedVehicle.value = await fetchVehicleById(selectedVehicleId);
+    if (selectedVehicle.value.price) {
+      carPrice.value = selectedVehicle.value.price;
+      downPayment.value = Math.round(selectedVehicle.value.price * 0.3);
+    }
+  } catch (err) {
+    console.error('Failed to load selected vehicle:', err);
+    window.alert('No pudimos cargar el vehiculo seleccionado. Intentalo de nuevo desde el catalogo.');
+    await router.replace('/');
+    return;
+  } finally {
+    loadingVehicle.value = false;
+  }
+
   updateChart();
 });
 
@@ -175,7 +248,23 @@ const formatPrice = (v) => {
   }).format(v);
 };
 
-const contactExpert = () => {
+const contactExpert = async () => {
+  if (selectedVehicleId) {
+    try {
+      await trackCreditSimulation({
+        vehicleId: selectedVehicleId,
+        vehiclePrice: carPrice.value,
+        downPayment: downPayment.value,
+        amountFinanced: carPrice.value - downPayment.value,
+        termMonths: months.value,
+        interestRate,
+        estimatedMonthlyPayment: monthlyPayment.value,
+      });
+    } catch (err) {
+      console.error('Failed to track credit simulation:', err);
+    }
+  }
+
   const msg = `Hola EHM! Usé el simulador web para un vehículo de ${formatPrice(carPrice.value)}. Mi inicial es ${formatPrice(downPayment.value)} a ${months.value} meses.`;
   window.open(`https://api.whatsapp.com/send?phone=573173250884&text=${encodeURIComponent(msg)}`, '_blank');
 };
@@ -201,6 +290,59 @@ const contactExpert = () => {
 
 .simulator-grid { display: grid; grid-template-columns: 1fr 420px; gap: 50px; }
 
+.selection-state {
+  background: #f8fafc;
+  border: 1px solid #d7e4ef;
+  border-radius: 8px;
+  color: #0a192f;
+  font-weight: 700;
+  padding: 24px;
+  text-align: center;
+}
+
+.selected-vehicle-card {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 18px;
+  align-items: center;
+  border: 1px solid #e5edf3;
+  border-radius: 8px;
+  margin-bottom: 28px;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.selected-vehicle-card img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+}
+
+.selected-vehicle-card div {
+  padding-right: 18px;
+}
+
+.selected-vehicle-card span {
+  color: #ff8e71;
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.selected-vehicle-card h2 {
+  color: #0a192f;
+  font-size: 22px;
+  margin: 6px 0;
+}
+
+.selected-vehicle-card p {
+  color: #555;
+  font-weight: 800;
+  margin: 0;
+}
+
 .section-title { 
   font-size: 16px; 
   text-transform: uppercase; 
@@ -218,6 +360,7 @@ const contactExpert = () => {
 .price-input-wrapper { display: flex; align-items: center; border-bottom: 2px solid #0a192f; padding-bottom: 5px; }
 .currency-symbol { font-size: 24px; font-weight: bold; margin-right: 10px; color: #0a192f; }
 .main-price-input { border: none; font-size: 32px; font-weight: bold; width: 100%; outline: none; background: transparent; color: #0a192f; }
+.main-price-input[readonly] { color: #334155; cursor: not-allowed; }
 .input-help { font-size: 12px; color: #999; margin-top: 8px; }
 
 .months-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
@@ -257,5 +400,9 @@ const contactExpert = () => {
 .btn-primary:hover { background: #e57d61; transform: translateY(-2px); }
 .legal-text { font-size: 10px; color: #8892b0; margin-top: 25px; line-height: 1.5; text-align: center; }
 
-@media (max-width: 950px) { .simulator-grid { grid-template-columns: 1fr; } }
+@media (max-width: 950px) {
+  .simulator-grid { grid-template-columns: 1fr; }
+  .selected-vehicle-card { grid-template-columns: 1fr; }
+  .selected-vehicle-card div { padding: 0 18px 18px; }
+}
 </style>

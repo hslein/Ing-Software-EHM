@@ -5,9 +5,16 @@ import { FirebaseModule } from './firebase/firebase.module';
 import { VehiclesModule } from './vehicles/vehicles.module';
 import { UsersDetailsModule } from './users-details/users-details.module';
 import { AdminModule } from './admin/admin.module';
+import { InteractionEventsModule } from './interaction-events/interaction-events.module';
 
 @Module({
-  imports: [FirebaseModule, VehiclesModule, UsersDetailsModule, AdminModule],
+  imports: [
+    FirebaseModule,
+    VehiclesModule,
+    UsersDetailsModule,
+    AdminModule,
+    InteractionEventsModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

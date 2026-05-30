@@ -38,6 +38,7 @@
             Sign In
           </RouterLink>
           <div v-else style="display:flex; gap:8px; align-items:center;">
+            <RouterLink v-if="isAdmin" to="/admin/dashboard" class="nav-link">Dashboard</RouterLink>
             <RouterLink v-if="isAdmin" to="/users" class="nav-link">Users</RouterLink>
             <RouterLink to="/user-details" class="nav-link">Profile</RouterLink>
             <button

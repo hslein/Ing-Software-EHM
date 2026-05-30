@@ -62,7 +62,7 @@ const loadCurrentUserRole = async (user: User) => {
   roleLoading.value = true;
   try {
     const token = await user.getIdToken();
-    const res = await fetch(`${apiBaseUrl}/users-details/me`, {
+    const res = await fetch(`${apiBaseUrl}/users/me`, {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${token}`,

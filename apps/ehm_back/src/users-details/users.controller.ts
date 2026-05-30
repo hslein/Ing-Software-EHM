@@ -28,6 +28,13 @@ export class UsersController {
   }
 
   @UseGuards(FirebaseAuthGuard)
+  @Get('me')
+  async getMe(@Req() req: any) {
+    const uid = req.user?.uid;
+    return this.service.getByUid(uid, uid);
+  }
+
+  @UseGuards(FirebaseAuthGuard)
   @Get(':uid')
   async getByUid(@Param('uid') uid: string, @Req() req: any) {
     const requester = req.user?.uid;

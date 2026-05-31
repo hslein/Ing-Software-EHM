@@ -4,6 +4,8 @@ import { WarehouseDbService } from './warehouse-db.service';
 interface DateRange {
   from?: string;
   to?: string;
+  brandKey?: number;
+  vehicleKey?: number;
 }
 
 @Injectable()
@@ -75,6 +77,7 @@ export class AdminStatsService {
       `
       SELECT
         v.vehicle_key AS "vehicleKey",
+        b.brand_key AS "brandKey",
         v.model,
         b.brand_name AS "brandName",
         v.type,
@@ -93,7 +96,7 @@ export class AdminStatsService {
       LEFT JOIN dim_brands b ON b.brand_key = v.brand_key
       LEFT JOIN fact_interactions fi ON fi.vehicle_key = v.vehicle_key
       LEFT JOIN fact_credit_simulations fcs ON fcs.vehicle_key = v.vehicle_key
-      GROUP BY v.vehicle_key, v.model, b.brand_name, v.type, v.price
+      GROUP BY v.vehicle_key, v.model, b.brand_key, b.brand_name, v.type, v.price
       ORDER BY "popularityScore" DESC, v.model ASC
       `,
     );
@@ -149,9 +152,26 @@ export class AdminStatsService {
   }
 
   async getInteractionsOverTime(range: DateRange) {
-    const params = [range.from ?? null, range.to ?? null];
+    const params = [
+      range.from ?? null,
+      range.to ?? null,
+      range.brandKey ?? null,
+      range.vehicleKey ?? null,
+    ];
     const result = await this.warehouseDb.query(
       `
+      WITH filtered_interactions AS (
+        SELECT *
+        FROM fact_interactions
+        WHERE ($3::bigint IS NULL OR brand_key = $3::bigint)
+          AND ($4::bigint IS NULL OR vehicle_key = $4::bigint)
+      ),
+      filtered_credit_simulations AS (
+        SELECT *
+        FROM fact_credit_simulations
+        WHERE ($3::bigint IS NULL OR brand_key = $3::bigint)
+          AND ($4::bigint IS NULL OR vehicle_key = $4::bigint)
+      )
       SELECT
         d.full_date AS "date",
         COALESCE(SUM(CASE WHEN fi.interaction_type = 'view' THEN fi.interaction_count ELSE 0 END), 0)::int AS "totalViews",
@@ -159,8 +179,8 @@ export class AdminStatsService {
         COALESCE(SUM(CASE WHEN fi.interaction_type = 'compare' THEN fi.interaction_count ELSE 0 END), 0)::int AS "totalComparisons",
         COUNT(DISTINCT fcs.simulation_key)::int AS "totalCreditSimulations"
       FROM dim_date d
-      LEFT JOIN fact_interactions fi ON fi.date_key = d.date_key
-      LEFT JOIN fact_credit_simulations fcs ON fcs.date_key = d.date_key
+      LEFT JOIN filtered_interactions fi ON fi.date_key = d.date_key
+      LEFT JOIN filtered_credit_simulations fcs ON fcs.date_key = d.date_key
       WHERE ($1::date IS NULL OR d.full_date >= $1::date)
         AND ($2::date IS NULL OR d.full_date <= $2::date)
       GROUP BY d.full_date
@@ -175,7 +195,7 @@ export class AdminStatsService {
     const result = await this.warehouseDb.query(
       `
       SELECT
-        COALESCE(v.type, 'unknown') AS type,
+        COALESCE(NULLIF(TRIM(v.type), ''), 'unknown') AS type,
         COALESCE(SUM(CASE WHEN fi.interaction_type = 'view' THEN fi.interaction_count ELSE 0 END), 0)::int AS "totalViews",
         COALESCE(SUM(CASE WHEN fi.interaction_type = 'compare' THEN fi.interaction_count ELSE 0 END), 0)::int AS "totalComparisons",
         COALESCE(SUM(CASE WHEN fi.interaction_type = 'favorite' THEN fi.interaction_count ELSE 0 END), 0)::int AS "totalFavorites",
@@ -189,7 +209,7 @@ export class AdminStatsService {
       FROM dim_vehicles v
       LEFT JOIN fact_interactions fi ON fi.vehicle_key = v.vehicle_key
       LEFT JOIN fact_credit_simulations fcs ON fcs.vehicle_key = v.vehicle_key
-      GROUP BY COALESCE(v.type, 'unknown')
+      GROUP BY COALESCE(NULLIF(TRIM(v.type), ''), 'unknown')
       ORDER BY "popularityScore" DESC, type ASC
       `,
     );

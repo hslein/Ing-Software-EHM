@@ -63,28 +63,74 @@
               <h2>Interacciones por fecha</h2>
               <LineChart :size="18" />
             </div>
+            <div class="filter-row">
+              <label>
+                Marca
+                <select v-model="selectedTimelineBrandKey">
+                  <option :value="null">Todas</option>
+                  <option
+                    v-for="brand in data.brandPopularity"
+                    :key="brand.brandKey"
+                    :value="brand.brandKey"
+                  >
+                    {{ brand.brandName }}
+                  </option>
+                </select>
+              </label>
+              <label>
+                Vehiculo
+                <select v-model="selectedTimelineVehicleKey" :disabled="!selectedTimelineBrandKey">
+                  <option :value="null">Todos</option>
+                  <option
+                    v-for="vehicle in timelineVehicleOptions"
+                    :key="vehicle.vehicleKey"
+                    :value="vehicle.vehicleKey"
+                  >
+                    {{ vehicle.model }}
+                  </option>
+                </select>
+              </label>
+            </div>
             <div class="chart-frame">
               <canvas ref="timelineCanvas"></canvas>
             </div>
           </article>
 
-          <article class="chart-panel">
+          <article class="chart-panel wide-panel">
             <div class="panel-heading">
-              <h2>Popularidad por marca</h2>
+              <div class="heading-with-info">
+                <h2>Popularidad por marca</h2>
+                <span
+                  class="info-icon"
+                  tabindex="0"
+                  title="Score = vistas x1 + comparaciones x3 + favoritos x4 + simulaciones de credito x5. Las acciones con mayor intencion de compra pesan mas."
+                >
+                  i
+                </span>
+              </div>
               <BarChart3 :size="18" />
             </div>
-            <div class="chart-frame">
-              <canvas ref="brandCanvas"></canvas>
-            </div>
-          </article>
-
-          <article class="chart-panel">
-            <div class="panel-heading">
-              <h2>Preferencia por tipo</h2>
-              <PieChart :size="18" />
-            </div>
-            <div class="chart-frame">
-              <canvas ref="typeCanvas"></canvas>
+            <div class="preference-layout">
+              <div class="chart-frame brand-popularity-frame">
+                <canvas ref="brandCanvas"></canvas>
+              </div>
+              <div class="preference-breakdown">
+                <div
+                  v-for="item in brandPopularityBreakdown"
+                  :key="item.brandKey"
+                  class="preference-row"
+                >
+                  <span class="preference-dot" :style="{ backgroundColor: item.color }"></span>
+                  <div>
+                    <strong>{{ item.brandName }}</strong>
+                    <small>
+                      Vistas {{ formatNumber(item.totalViews) }} ·
+                      Comparaciones {{ formatNumber(item.totalComparisons) }} ·
+                      Favoritos {{ formatNumber(item.totalFavorites) }}
+                    </small>
+                  </div>
+                </div>
+              </div>
             </div>
           </article>
         </section>
@@ -178,7 +224,6 @@ import {
   GitCompare,
   Heart,
   LineChart,
-  PieChart,
   RefreshCw,
   Users,
   WalletCards,
@@ -193,7 +238,6 @@ import {
   BarElement,
   CategoryScale,
   Chart,
-  DoughnutController,
   Filler,
   Legend,
   LinearScale,
@@ -207,7 +251,6 @@ Chart.register(
   BarController,
   BarElement,
   CategoryScale,
-  DoughnutController,
   Filler,
   Legend,
   LinearScale,
@@ -218,16 +261,23 @@ Chart.register(
 );
 
 const { isAdmin, loading: authLoading } = useAuth();
-const { loadDashboard, runWarehouseEtl, loading, refreshingWarehouse, error } = useAdminDashboard();
+const {
+  loadDashboard,
+  loadInteractionsOverTime,
+  runWarehouseEtl,
+  loading,
+  refreshingWarehouse,
+  error,
+} = useAdminDashboard();
 
 const data = ref<DashboardData | null>(null);
 const timelineCanvas = ref<HTMLCanvasElement | null>(null);
 const brandCanvas = ref<HTMLCanvasElement | null>(null);
-const typeCanvas = ref<HTMLCanvasElement | null>(null);
+const selectedTimelineBrandKey = ref<number | null>(null);
+const selectedTimelineVehicleKey = ref<number | null>(null);
 
 let timelineChart: Chart | null = null;
 let brandChart: Chart | null = null;
-let typeChart: Chart | null = null;
 
 const palette = {
   ink: '#1d2733',
@@ -265,6 +315,22 @@ const warehouseStatusLabel = computed(() => {
 
 const topVehicles = computed(() => data.value?.vehiclePopularity.slice(0, 8) ?? []);
 const activeUsers = computed(() => data.value?.userActivity.slice(0, 8) ?? []);
+const timelineVehicleOptions = computed(() => {
+  if (!data.value || !selectedTimelineBrandKey.value) {
+    return [];
+  }
+
+  return data.value.vehiclePopularity.filter(
+    (vehicle) => vehicle.brandKey === selectedTimelineBrandKey.value,
+  );
+});
+const preferenceColors = [palette.blue, palette.green, palette.amber, palette.rose, palette.cyan, palette.gray];
+const brandPopularityBreakdown = computed(() =>
+  (data.value?.brandPopularity.slice(0, 8) ?? []).map((item, index) => ({
+    ...item,
+    color: preferenceColors[index % preferenceColors.length],
+  })),
+);
 
 const toNumber = (value: string | number | null | undefined) => Number(value ?? 0);
 
@@ -301,13 +367,28 @@ const runEtl = async () => {
   await refreshData();
 };
 
+const refreshTimeline = async () => {
+  if (!data.value || !isAdmin.value) return;
+
+  const interactionsOverTime = await loadInteractionsOverTime({
+    brandKey: selectedTimelineBrandKey.value,
+    vehicleKey: selectedTimelineVehicleKey.value,
+  });
+
+  data.value = {
+    ...data.value,
+    interactionsOverTime,
+  };
+
+  await nextTick();
+  renderCharts();
+};
+
 const destroyCharts = () => {
   timelineChart?.destroy();
   brandChart?.destroy();
-  typeChart?.destroy();
   timelineChart = null;
   brandChart = null;
-  typeChart = null;
 };
 
 const renderCharts = () => {
@@ -365,37 +446,13 @@ const renderCharts = () => {
           },
         ],
       },
-      options: baseChartOptions(false),
+      options: {
+        ...baseChartOptions(false),
+        indexAxis: 'y',
+      },
     });
   }
 
-  if (typeCanvas.value) {
-    const types = data.value.vehicleTypePreferences.slice(0, 6);
-    typeChart = new Chart(typeCanvas.value, {
-      type: 'doughnut',
-      data: {
-        labels: types.map((item) => item.type),
-        datasets: [
-          {
-            data: types.map((item) => toNumber(item.popularityScore)),
-            backgroundColor: [palette.blue, palette.green, palette.amber, palette.rose, palette.cyan, palette.gray],
-            borderColor: '#ffffff',
-            borderWidth: 3,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: { boxWidth: 12, color: palette.ink },
-          },
-        },
-      },
-    });
-  }
 };
 
 const baseChartOptions = (showLegend = true) => ({
@@ -430,6 +487,15 @@ watch([authLoading, isAdmin], ([authIsLoading, admin]) => {
   if (!authIsLoading && admin && !data.value) {
     refreshData();
   }
+});
+
+watch(selectedTimelineBrandKey, () => {
+  selectedTimelineVehicleKey.value = null;
+  void refreshTimeline();
+});
+
+watch(selectedTimelineVehicleKey, () => {
+  void refreshTimeline();
 });
 
 onUnmounted(destroyCharts);
@@ -639,13 +705,117 @@ h2 {
   margin-bottom: 14px;
 }
 
+.heading-with-info {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.info-icon {
+  align-items: center;
+  background: #e9eef3;
+  border-radius: 999px;
+  color: #2563eb;
+  cursor: help;
+  display: inline-flex;
+  font-size: 0.76rem;
+  font-weight: 900;
+  height: 20px;
+  justify-content: center;
+  width: 20px;
+}
+
+.info-icon:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
 .panel-heading svg {
   color: #2563eb;
+}
+
+.filter-row {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 14px;
+}
+
+.filter-row label {
+  color: #64748b;
+  display: grid;
+  font-size: 0.78rem;
+  font-weight: 850;
+  gap: 6px;
+  text-transform: uppercase;
+}
+
+.filter-row select {
+  background: #ffffff;
+  border: 1px solid #d7e4ef;
+  border-radius: 6px;
+  color: #1d2733;
+  font-family: inherit;
+  font-size: 0.92rem;
+  min-height: 40px;
+  padding: 0 10px;
+  text-transform: none;
+}
+
+.filter-row select:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
 }
 
 .chart-frame {
   height: 300px;
   min-height: 300px;
+}
+
+.preference-layout {
+  align-items: center;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(520px, 1fr) minmax(300px, 380px);
+}
+
+.brand-popularity-frame {
+  height: 420px;
+  min-height: 420px;
+}
+
+.preference-breakdown {
+  display: grid;
+  gap: 10px;
+}
+
+.preference-row {
+  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 12px 1fr;
+  gap: 10px;
+}
+
+.preference-dot {
+  border-radius: 999px;
+  height: 12px;
+  margin-top: 4px;
+  width: 12px;
+}
+
+.preference-row strong,
+.preference-row small {
+  display: block;
+}
+
+.preference-row strong {
+  font-size: 0.9rem;
+}
+
+.preference-row small {
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 
 .table-wrap {
@@ -694,7 +864,9 @@ td {
   .insights-band,
   .credit-band,
   .charts-grid,
-  .tables-grid {
+  .tables-grid,
+  .filter-row,
+  .preference-layout {
     grid-template-columns: 1fr;
   }
 

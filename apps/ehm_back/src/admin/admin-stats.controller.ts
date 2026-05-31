@@ -29,8 +29,18 @@ export class AdminStatsController {
   }
 
   @Get('interactions-over-time')
-  getInteractionsOverTime(@Query('from') from?: string, @Query('to') to?: string) {
-    return this.adminStatsService.getInteractionsOverTime({ from, to });
+  getInteractionsOverTime(
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('brandKey') brandKey?: string,
+    @Query('vehicleKey') vehicleKey?: string,
+  ) {
+    return this.adminStatsService.getInteractionsOverTime({
+      from,
+      to,
+      brandKey: this.parseNumber(brandKey),
+      vehicleKey: this.parseNumber(vehicleKey),
+    });
   }
 
   @Get('vehicle-type-preferences')
@@ -41,5 +51,14 @@ export class AdminStatsController {
   @Get('user-activity')
   getUserActivity() {
     return this.adminStatsService.getUserActivity();
+  }
+
+  private parseNumber(value?: string): number | undefined {
+    if (!value) {
+      return undefined;
+    }
+
+    const parsedValue = Number(value);
+    return Number.isFinite(parsedValue) ? parsedValue : undefined;
   }
 }

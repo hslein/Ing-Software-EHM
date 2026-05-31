@@ -27,6 +27,7 @@ export interface BrandPopularity {
 
 export interface VehiclePopularity {
   vehicleKey: number;
+  brandKey: number | null;
   model: string;
   brandName: string | null;
   type: string | null;
@@ -103,6 +104,11 @@ export interface DashboardData {
   warehouseStatus: WarehouseStatus;
 }
 
+export interface InteractionFilters {
+  brandKey?: number | null;
+  vehicleKey?: number | null;
+}
+
 export const useAdminDashboard = () => {
   const { getIdToken } = useAuth();
   const loading = ref(false);
@@ -177,6 +183,23 @@ export const useAdminDashboard = () => {
     }
   };
 
+  const loadInteractionsOverTime = async (filters: InteractionFilters = {}) => {
+    const params = new URLSearchParams();
+
+    if (filters.brandKey) {
+      params.set('brandKey', String(filters.brandKey));
+    }
+
+    if (filters.vehicleKey) {
+      params.set('vehicleKey', String(filters.vehicleKey));
+    }
+
+    const query = params.toString();
+    return request<InteractionsOverTime[]>(
+      `/admin/stats/interactions-over-time${query ? `?${query}` : ''}`,
+    );
+  };
+
   const runWarehouseEtl = async () => {
     refreshingWarehouse.value = true;
     error.value = null;
@@ -193,6 +216,7 @@ export const useAdminDashboard = () => {
 
   return {
     loadDashboard,
+    loadInteractionsOverTime,
     runWarehouseEtl,
     loading,
     refreshingWarehouse,

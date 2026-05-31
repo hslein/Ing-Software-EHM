@@ -12,13 +12,25 @@
         <h2>{{ t('login.login') }}</h2>
         <form @submit.prevent="handleLogin">
           <div class="form-group">
-            <label for="email">Email</label>
-            <input id="email" v-model="email" type="email" placeholder="your@email.com" required />
+            <label for="email">{{ t('login.email') }}</label>
+            <input
+              id="email"
+              v-model="email"
+              type="email"
+              :placeholder="t('login.emailPlaceholder')"
+              required
+            />
           </div>
 
           <div class="form-group">
-            <label for="password">Password</label>
-            <input id="password" v-model="password" type="password" placeholder="********" required />
+            <label for="password">{{ t('login.password') }}</label>
+            <input
+              id="password"
+              v-model="password"
+              type="password"
+              :placeholder="t('login.passwordPlaceholder')"
+              required
+            />
           </div>
 
           <button type="submit" class="btn-submit" :disabled="loading">
@@ -40,8 +52,14 @@
         <h2>{{ t('login.register') }}</h2>
         <form @submit.prevent="handleRegister">
           <div class="form-group">
-            <label for="reg-email">Email</label>
-            <input id="reg-email" v-model="email" type="email" placeholder="your@email.com" required />
+            <label for="reg-email">{{ t('login.email') }}</label>
+            <input
+              id="reg-email"
+              v-model="email"
+              type="email"
+              :placeholder="t('login.emailPlaceholder')"
+              required
+            />
           </div>
 
           <div class="form-group">
@@ -50,7 +68,7 @@
               id="reg-password"
               v-model="password"
               type="password"
-              placeholder="********"
+              :placeholder="t('login.passwordPlaceholder')"
               required
               minlength="6"
             />
@@ -62,7 +80,7 @@
               id="confirm-password"
               v-model="confirmPassword"
               type="password"
-              placeholder="********"
+              :placeholder="t('login.passwordPlaceholder')"
               required
               minlength="6"
             />
@@ -117,7 +135,7 @@ const handleLogin = async () => {
     await login(email.value, password.value);
     router.push('/');
   } catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'Login failed';
+    error.value = err instanceof Error ? err.message : t('login.loginFailed');
   }
 };
 
@@ -138,7 +156,7 @@ const handleRegister = async () => {
     await register(email.value, password.value);
     router.push('/');
   } catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'Registration failed';
+    error.value = err instanceof Error ? err.message : t('login.registerFailed');
   }
 };
 </script>

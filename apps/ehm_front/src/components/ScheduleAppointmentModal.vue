@@ -1,7 +1,7 @@
 <template>
   <div v-if="showScheduleModal" class="modal-overlay" @click.self="handleClose">
     <div class="modal-box" role="dialog" aria-labelledby="schedule-title">
-      <button type="button" class="close-btn" @click="handleClose" aria-label="Close">
+      <button type="button" class="close-btn" @click="handleClose" :aria-label="t('common.close')">
         ×
       </button>
 

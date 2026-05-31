@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Vehicle } from '../composables/useVehicles';
+import { useI18n } from '../i18n';
 
 defineProps<{
   vehicles: Vehicle[];
@@ -10,9 +11,11 @@ defineEmits<{
   remove: [vehicle: Vehicle];
 }>();
 
+const { t } = useI18n();
+
 const formatVehicleType = (value?: string) => {
   if (!value) {
-    return 'Vehicle';
+    return t('vehicles.defaultType');
   }
 
   return value.charAt(0).toUpperCase() + value.slice(1);
@@ -20,7 +23,7 @@ const formatVehicleType = (value?: string) => {
 
 const formatPrice = (price?: number) => {
   if (!price) {
-    return 'Not available';
+    return t('common.notAvailable');
   }
 
   return `$${price.toLocaleString()}`;
@@ -28,7 +31,7 @@ const formatPrice = (price?: number) => {
 
 const formatMileage = (mileage?: number) => {
   if (mileage === undefined) {
-    return 'Not available';
+    return t('common.notAvailable');
   }
 
   return `${mileage.toLocaleString()} km`;
@@ -38,11 +41,18 @@ const formatMileage = (mileage?: number) => {
 <template>
   <div class="modal" @click="$emit('close')">
     <div class="modal-content" @click.stop>
-      <button class="close-btn" type="button" @click="$emit('close')">&times;</button>
+      <button
+        class="close-btn"
+        type="button"
+        :aria-label="t('common.close')"
+        @click="$emit('close')"
+      >
+        &times;
+      </button>
 
       <div class="modal-header">
-        <p class="eyebrow">Vehicle comparison</p>
-        <h2>Compare your selected vehicles</h2>
+        <p class="eyebrow">{{ t('modal.comparisonEyebrow') }}</p>
+        <h2>{{ t('modal.comparisonTitle') }}</h2>
       </div>
 
       <div class="compare-grid">
@@ -54,26 +64,26 @@ const formatMileage = (mileage?: number) => {
               <h3>{{ vehicle.model }}</h3>
             </div>
             <button class="remove-btn" type="button" @click="$emit('remove', vehicle)">
-              Remove
+              {{ t('modal.remove') }}
             </button>
           </div>
           <p class="description">{{ vehicle.description }}</p>
 
           <dl class="detail-list">
             <div>
-              <dt>Type</dt>
+              <dt>{{ t('modal.type').replace(':', '') }}</dt>
               <dd>{{ formatVehicleType(vehicle.type) }}</dd>
             </div>
             <div>
-              <dt>Year</dt>
-              <dd>{{ vehicle.year ?? 'Not available' }}</dd>
+              <dt>{{ t('modal.year').replace(':', '') }}</dt>
+              <dd>{{ vehicle.year ?? t('common.notAvailable') }}</dd>
             </div>
             <div>
-              <dt>Price</dt>
+              <dt>{{ t('modal.price').replace(':', '') }}</dt>
               <dd>{{ formatPrice(vehicle.price) }}</dd>
             </div>
             <div>
-              <dt>Mileage</dt>
+              <dt>{{ t('modal.mileage').replace(':', '') }}</dt>
               <dd>{{ formatMileage(vehicle.mileage) }}</dd>
             </div>
           </dl>

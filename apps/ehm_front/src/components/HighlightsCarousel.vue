@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import type { Highlight } from '../types/catalog.types';
+import { useI18n } from '../i18n';
 
 defineProps<{
   highlights: Highlight[];
 }>();
 
 const highlightsSection = ref<HTMLElement>();
+const { t } = useI18n();
 
 const scrollLeft = () => {
   const el = highlightsSection.value;
@@ -35,10 +37,10 @@ const scrollRight = () => {
 
 <template>
   <div class="highlights-container">
-    <button class="carousel-arrow left" @click="scrollLeft" aria-label="Previous highlights">
+    <button class="carousel-arrow left" @click="scrollLeft" :aria-label="t('highlights.previous')">
       &lt;
     </button>
-    <section ref="highlightsSection" class="highlights-section" aria-label="Beneficios del concesionario">
+    <section ref="highlightsSection" class="highlights-section" :aria-label="t('highlights.ariaLabel')">
       <article v-for="item in highlights" :key="item.title" class="highlight-card">
         <div class="highlight-image-container">
           <img :src="item.image" :alt="item.title" class="highlight-image" />
@@ -49,7 +51,7 @@ const scrollRight = () => {
         </div>
       </article>
     </section>
-    <button class="carousel-arrow right" @click="scrollRight" aria-label="Next highlights">
+    <button class="carousel-arrow right" @click="scrollRight" :aria-label="t('highlights.next')">
       &gt;
     </button>
   </div>

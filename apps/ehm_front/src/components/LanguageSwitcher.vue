@@ -5,24 +5,31 @@
       class="lang-btn"
       :class="{ active: locale === 'es' }"
       :aria-pressed="locale === 'es'"
+      :aria-label="t('lang.switchToSpanish')"
+      :title="t('lang.switchToSpanish')"
       @click="setLocale('es')"
     >
-      {{ t('lang.es') }}
+      <img class="flag" :src="spainFlag" :alt="t('lang.es')" width="18" height="18" />
+      <span class="lang-code">ES</span>
     </button>
-    <span class="lang-divider" aria-hidden="true">|</span>
     <button
       type="button"
       class="lang-btn"
       :class="{ active: locale === 'en' }"
       :aria-pressed="locale === 'en'"
+      :aria-label="t('lang.switchToEnglish')"
+      :title="t('lang.switchToEnglish')"
       @click="setLocale('en')"
     >
-      {{ t('lang.en') }}
+      <img class="flag" :src="usaFlag" :alt="t('lang.en')" width="18" height="18" />
+      <span class="lang-code">EN</span>
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
+import spainFlag from '../assets/spain.png';
+import usaFlag from '../assets/usa.png';
 import { useI18n } from '../i18n';
 
 const { locale, setLocale, t } = useI18n();
@@ -40,11 +47,14 @@ const { locale, setLocale, t } = useI18n();
 }
 
 .lang-btn {
+  align-items: center;
   border: none;
   background: transparent;
   color: #bdc3c7;
+  display: inline-flex;
   font-size: 0.78rem;
   font-weight: 700;
+  gap: 0.35rem;
   letter-spacing: 0.02em;
   padding: 0.35rem 0.65rem;
   border-radius: 999px;
@@ -62,9 +72,20 @@ const { locale, setLocale, t } = useI18n();
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
-.lang-divider {
-  color: rgba(255, 255, 255, 0.25);
-  font-size: 0.75rem;
-  user-select: none;
+.lang-btn .flag {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35);
+  display: block;
+  flex: 0 0 18px;
+  height: 18px;
+  max-height: 18px;
+  max-width: 18px;
+  object-fit: cover;
+  width: 18px;
+}
+
+.lang-code {
+  line-height: 1;
 }
 </style>

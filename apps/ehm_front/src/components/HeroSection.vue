@@ -1,9 +1,15 @@
 <template>
   <section class="hero">
-    <h1>Welcome to EHM Vehicles</h1>
-    <p class="hero-subtitle">Find your perfect vehicle with our comprehensive collection</p>
+    <h1>{{ t('hero.title') }}</h1>
+    <p class="hero-subtitle">{{ t('hero.subtitle') }}</p>
   </section>
 </template>
+
+<script setup lang="ts">
+import { useI18n } from '../i18n';
+
+const { t } = useI18n();
+</script>
 
 <style scoped>
 .hero {

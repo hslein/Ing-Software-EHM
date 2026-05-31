@@ -2,21 +2,21 @@
   <nav class="navbar">
     <div class="navbar-container">
       <div class="navbar-logo">
-        <RouterLink to="/" class="logo-link" @click="goHome">Concesionario EHM</RouterLink>
+        <RouterLink to="/" class="logo-link" @click="goHome">{{ t('nav.logo') }}</RouterLink>
       </div>
       <ul class="nav-menu">
         <li class="nav-item">
-          <RouterLink to="/" class="nav-link" @click="goHome">Home</RouterLink>
+          <RouterLink to="/" class="nav-link" @click="goHome">{{ t('nav.home') }}</RouterLink>
         </li>
         <li v-if="isAdmin" class="nav-item">
-          <RouterLink to="/inventory" class="nav-link">Inventory</RouterLink>
+          <RouterLink to="/inventory" class="nav-link">{{ t('nav.inventory') }}</RouterLink>
         </li>
         <li v-if="!isAdmin" class="nav-item">
-          <RouterLink to="/about" class="nav-link" @click="goAbout">About Us</RouterLink>
+          <RouterLink to="/about" class="nav-link" @click="goAbout">{{ t('nav.about') }}</RouterLink>
         </li>
 
         <li v-if="isAuthenticated && !isAdmin && brands.length" class="nav-item nav-brand-control">
-          <label for="brand" class="nav-label">Brand</label>
+          <label for="brand" class="nav-label">{{ t('nav.brand') }}</label>
           <select
             id="brand"
             class="brand-select"
@@ -34,19 +34,25 @@
         </li>
 
         <li class="nav-item">
+          <LanguageSwitcher />
+        </li>
+
+        <li class="nav-item">
           <RouterLink v-if="!isAuthenticated" to="/login" class="nav-link nav-link-btn">
-            Sign In
+            {{ t('nav.signIn') }}
           </RouterLink>
           <div v-else style="display:flex; gap:8px; align-items:center;">
-            <RouterLink v-if="isAdmin" to="/admin/dashboard" class="nav-link">Dashboard</RouterLink>
-            <RouterLink v-if="isAdmin" to="/users" class="nav-link">Users</RouterLink>
-            <RouterLink to="/user-details" class="nav-link">Profile</RouterLink>
+            <RouterLink v-if="isAdmin" to="/admin/dashboard" class="nav-link">
+              {{ t('nav.dashboard') }}
+            </RouterLink>
+            <RouterLink v-if="isAdmin" to="/users" class="nav-link">{{ t('nav.users') }}</RouterLink>
+            <RouterLink to="/user-details" class="nav-link">{{ t('nav.profile') }}</RouterLink>
             <button
               type="button"
               class="nav-link nav-link-btn nav-button"
               @click="handleLogout"
             >
-              Logout
+              {{ t('nav.logOut') }}
             </button>
           </div>
         </li>
@@ -62,6 +68,8 @@ import { computed, onMounted, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
 import { useVehicles } from '../composables/useVehicles';
+import { useI18n } from '../i18n';
+import LanguageSwitcher from './LanguageSwitcher.vue';
 
 defineOptions({
   name: 'NavBar',
@@ -76,6 +84,7 @@ const route = useRoute();
 const router = useRouter();
 const { isAuthenticated, isAdmin, logout } = useAuth();
 const { brands, fetchBrands } = useVehicles();
+const { t } = useI18n();
 
 const selectedBrandId = computed(() => {
   const brandId = route.query.brandId;

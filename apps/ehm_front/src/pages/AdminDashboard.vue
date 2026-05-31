@@ -3,8 +3,8 @@
     <section class="dashboard-shell">
       <header class="dashboard-header">
         <div>
-          <p class="eyebrow">Analitica EHM</p>
-          <h1>Tablero administrativo</h1>
+          <p class="eyebrow">{{ t('admin.eyebrow') }}</p>
+          <h1>{{ t('admin.title') }}</h1>
         </div>
         <div class="header-actions">
           <span class="status-pill" :class="`status-${data?.warehouseStatus.lastStatus ?? 'never_run'}`">
@@ -12,7 +12,7 @@
           </span>
           <button type="button" class="icon-button secondary" @click="refreshData" :disabled="loading">
             <RefreshCw :size="18" />
-            Actualizar
+            {{ t('admin.refresh') }}
           </button>
           <button
             type="button"
@@ -21,17 +21,17 @@
             :disabled="refreshingWarehouse"
           >
             <DatabaseZap :size="18" />
-            Sincronizar
+            {{ t('admin.sync') }}
           </button>
         </div>
       </header>
 
       <div v-if="!isAdmin && !authLoading" class="state-panel">
-        Esta vista esta disponible solo para administradores.
+        {{ t('admin.onlyAdmins') }}
       </div>
 
       <div v-else-if="error" class="state-panel error-panel">{{ error }}</div>
-      <div v-else-if="loading && !data" class="state-panel">Cargando metricas...</div>
+      <div v-else-if="loading && !data" class="state-panel">{{ t('admin.loadingMetrics') }}</div>
 
       <template v-else-if="data">
         <section class="kpi-grid">
@@ -44,15 +44,15 @@
 
         <section class="insights-band">
           <div class="insight-block">
-            <span>Marca lider</span>
-            <strong>{{ data.summary.topBrand ?? 'Sin datos' }}</strong>
+            <span>{{ t('admin.topBrand') }}</span>
+            <strong>{{ data.summary.topBrand ?? t('common.noData') }}</strong>
           </div>
           <div class="insight-block">
-            <span>Vehiculo lider</span>
-            <strong>{{ data.summary.topVehicle ?? 'Sin datos' }}</strong>
+            <span>{{ t('admin.topVehicle') }}</span>
+            <strong>{{ data.summary.topVehicle ?? t('common.noData') }}</strong>
           </div>
           <div class="insight-block">
-            <span>Ultima sincronizacion</span>
+            <span>{{ t('admin.lastSync') }}</span>
             <strong>{{ formatDateTime(data.warehouseStatus.lastRunAt) }}</strong>
           </div>
         </section>
@@ -60,7 +60,7 @@
         <section class="charts-grid">
           <article class="chart-panel wide-panel">
             <div class="panel-heading">
-              <h2>Interacciones por fecha</h2>
+              <h2>{{ t('admin.interactionsByDate') }}</h2>
               <LineChart :size="18" />
             </div>
             <div class="chart-frame">
@@ -70,7 +70,7 @@
 
           <article class="chart-panel">
             <div class="panel-heading">
-              <h2>Popularidad por marca</h2>
+              <h2>{{ t('admin.brandPopularity') }}</h2>
               <BarChart3 :size="18" />
             </div>
             <div class="chart-frame">
@@ -80,7 +80,7 @@
 
           <article class="chart-panel">
             <div class="panel-heading">
-              <h2>Preferencia por tipo</h2>
+              <h2>{{ t('admin.typePreference') }}</h2>
               <PieChart :size="18" />
             </div>
             <div class="chart-frame">
@@ -92,24 +92,24 @@
         <section class="tables-grid">
           <article class="table-panel">
             <div class="panel-heading">
-              <h2>Vehiculos mas consultados</h2>
+              <h2>{{ t('admin.topVehicles') }}</h2>
               <CarFront :size="18" />
             </div>
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>Modelo</th>
-                    <th>Marca</th>
-                    <th>Tipo</th>
-                    <th>Score</th>
+                    <th>{{ t('admin.model') }}</th>
+                    <th>{{ t('admin.brand') }}</th>
+                    <th>{{ t('admin.type') }}</th>
+                    <th>{{ t('admin.score') }}</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="vehicle in topVehicles" :key="vehicle.vehicleKey">
                     <td>{{ vehicle.model }}</td>
-                    <td>{{ vehicle.brandName ?? 'Sin marca' }}</td>
-                    <td>{{ vehicle.type ?? 'Sin tipo' }}</td>
+                    <td>{{ vehicle.brandName ?? t('admin.noBrand') }}</td>
+                    <td>{{ vehicle.type ?? t('admin.noType') }}</td>
                     <td>{{ formatNumber(vehicle.popularityScore) }}</td>
                   </tr>
                 </tbody>
@@ -119,22 +119,22 @@
 
           <article class="table-panel">
             <div class="panel-heading">
-              <h2>Actividad de usuarios</h2>
+              <h2>{{ t('admin.userActivity') }}</h2>
               <Users :size="18" />
             </div>
             <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
-                    <th>Usuario</th>
-                    <th>Vistas</th>
-                    <th>Favoritos</th>
-                    <th>Creditos</th>
+                    <th>{{ t('admin.user') }}</th>
+                    <th>{{ t('admin.views') }}</th>
+                    <th>{{ t('admin.favorites') }}</th>
+                    <th>{{ t('admin.credits') }}</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr v-for="user in activeUsers" :key="user.userKey">
-                    <td>{{ user.email ?? user.name ?? 'Usuario sin correo' }}</td>
+                    <td>{{ user.email ?? user.name ?? t('admin.userWithoutEmail') }}</td>
                     <td>{{ user.totalViews }}</td>
                     <td>{{ user.totalFavorites }}</td>
                     <td>{{ user.totalCreditSimulations }}</td>
@@ -147,19 +147,19 @@
 
         <section class="credit-band">
           <div>
-            <span>Simulaciones de credito</span>
+            <span>{{ t('admin.creditSimulations') }}</span>
             <strong>{{ formatNumber(data.creditSimulations.totalSimulations) }}</strong>
           </div>
           <div>
-            <span>Vehiculo promedio</span>
+            <span>{{ t('admin.averageVehicle') }}</span>
             <strong>{{ formatCurrency(data.creditSimulations.averageVehiclePrice) }}</strong>
           </div>
           <div>
-            <span>Valor financiado promedio</span>
+            <span>{{ t('admin.averageFinancedAmount') }}</span>
             <strong>{{ formatCurrency(data.creditSimulations.averageFinancedAmount) }}</strong>
           </div>
           <div>
-            <span>Cuota promedio</span>
+            <span>{{ t('admin.averageMonthlyPayment') }}</span>
             <strong>{{ formatCurrency(data.creditSimulations.averageMonthlyPayment) }}</strong>
           </div>
         </section>
@@ -188,6 +188,7 @@ import {
   useAdminDashboard,
 } from '../composables/useAdminDashboard';
 import { useAuth } from '../composables/useAuth';
+import { useI18n } from '../i18n';
 import {
   BarController,
   BarElement,
@@ -219,6 +220,7 @@ Chart.register(
 
 const { isAdmin, loading: authLoading } = useAuth();
 const { loadDashboard, runWarehouseEtl, loading, refreshingWarehouse, error } = useAdminDashboard();
+const { t, locale } = useI18n();
 
 const data = ref<DashboardData | null>(null);
 const timelineCanvas = ref<HTMLCanvasElement | null>(null);
@@ -243,13 +245,13 @@ const metrics = computed(() => {
   if (!data.value) return [];
 
   return [
-    { label: 'Usuarios', value: formatNumber(data.value.summary.totalUsers), icon: Users },
-    { label: 'Vehiculos', value: formatNumber(data.value.summary.totalVehicles), icon: CarFront },
-    { label: 'Vistas', value: formatNumber(data.value.summary.totalViews), icon: Eye },
-    { label: 'Favoritos', value: formatNumber(data.value.summary.totalFavorites), icon: Heart },
-    { label: 'Comparaciones', value: formatNumber(data.value.summary.totalComparisons), icon: GitCompare },
+    { label: t('admin.totalUsers'), value: formatNumber(data.value.summary.totalUsers), icon: Users },
+    { label: t('admin.totalVehicles'), value: formatNumber(data.value.summary.totalVehicles), icon: CarFront },
+    { label: t('admin.views'), value: formatNumber(data.value.summary.totalViews), icon: Eye },
+    { label: t('admin.favorites'), value: formatNumber(data.value.summary.totalFavorites), icon: Heart },
+    { label: t('admin.comparisons'), value: formatNumber(data.value.summary.totalComparisons), icon: GitCompare },
     {
-      label: 'Creditos',
+      label: t('admin.credits'),
       value: formatNumber(data.value.summary.totalCreditSimulations),
       icon: WalletCards,
     },
@@ -258,29 +260,30 @@ const metrics = computed(() => {
 
 const warehouseStatusLabel = computed(() => {
   const status = data.value?.warehouseStatus.lastStatus;
-  if (status === 'success') return 'Warehouse actualizado';
-  if (status === 'error') return 'Error en warehouse';
-  return 'Warehouse pendiente';
+  if (status === 'success') return t('admin.warehouseUpdated');
+  if (status === 'error') return t('admin.warehouseError');
+  return t('admin.warehousePending');
 });
 
 const topVehicles = computed(() => data.value?.vehiclePopularity.slice(0, 8) ?? []);
 const activeUsers = computed(() => data.value?.userActivity.slice(0, 8) ?? []);
 
 const toNumber = (value: string | number | null | undefined) => Number(value ?? 0);
+const intlLocale = computed(() => (locale.value === 'en' ? 'en-US' : 'es-CO'));
 
 const formatNumber = (value: string | number | null | undefined) =>
-  new Intl.NumberFormat('es-CO', { maximumFractionDigits: 0 }).format(toNumber(value));
+  new Intl.NumberFormat(intlLocale.value, { maximumFractionDigits: 0 }).format(toNumber(value));
 
 const formatCurrency = (value: string | number | null | undefined) =>
-  new Intl.NumberFormat('es-CO', {
+  new Intl.NumberFormat(intlLocale.value, {
     style: 'currency',
     currency: 'COP',
     maximumFractionDigits: 0,
   }).format(toNumber(value));
 
 const formatDateTime = (value: string | null) => {
-  if (!value) return 'Sin ejecuciones';
-  return new Date(value).toLocaleString('es-CO', {
+  if (!value) return t('admin.noRuns');
+  return new Date(value).toLocaleString(intlLocale.value, {
     dateStyle: 'medium',
     timeStyle: 'short',
   });
@@ -319,11 +322,11 @@ const renderCharts = () => {
       type: 'line',
       data: {
         labels: data.value.interactionsOverTime.map((item) =>
-          new Date(item.date).toLocaleDateString('es-CO', { month: 'short', day: 'numeric' }),
+          new Date(item.date).toLocaleDateString(intlLocale.value, { month: 'short', day: 'numeric' }),
         ),
         datasets: [
           {
-            label: 'Vistas',
+            label: t('admin.views'),
             data: data.value.interactionsOverTime.map((item) => item.totalViews),
             borderColor: palette.blue,
             backgroundColor: 'rgba(37, 99, 235, 0.12)',
@@ -331,14 +334,14 @@ const renderCharts = () => {
             tension: 0.35,
           },
           {
-            label: 'Favoritos',
+            label: t('admin.favorites'),
             data: data.value.interactionsOverTime.map((item) => item.totalFavorites),
             borderColor: palette.rose,
             backgroundColor: 'rgba(225, 29, 72, 0.08)',
             tension: 0.35,
           },
           {
-            label: 'Comparaciones',
+            label: t('admin.comparisons'),
             data: data.value.interactionsOverTime.map((item) => item.totalComparisons),
             borderColor: palette.amber,
             backgroundColor: 'rgba(217, 119, 6, 0.08)',
@@ -358,7 +361,7 @@ const renderCharts = () => {
         labels: brands.map((brand) => brand.brandName),
         datasets: [
           {
-            label: 'Score',
+            label: t('admin.score'),
             data: brands.map((brand) => toNumber(brand.popularityScore)),
             backgroundColor: palette.cyan,
             borderRadius: 6,
@@ -429,6 +432,12 @@ onMounted(() => {
 watch([authLoading, isAdmin], ([authIsLoading, admin]) => {
   if (!authIsLoading && admin && !data.value) {
     refreshData();
+  }
+});
+
+watch(locale, () => {
+  if (data.value) {
+    renderCharts();
   }
 });
 

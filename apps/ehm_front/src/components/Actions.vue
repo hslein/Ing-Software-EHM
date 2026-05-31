@@ -7,12 +7,12 @@
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
       </div>
-      <span class="text">Buscar</span>
+      <span class="text">{{ t('actions.search') }}</span>
     </div>
 
-    <a 
-      href="https://api.whatsapp.com/send?phone=573173250884&text=Hola!%20Estoy%20interesado%20en%20un%20vehículo%20de%20Concesionario%20EHM" 
-      target="_blank" 
+    <a
+      href="https://api.whatsapp.com/send?phone=573173250884&text=Hola!%20Estoy%20interesado%20en%20un%20vehiculo%20de%20Concesionario%20EHM"
+      target="_blank"
       class="item"
     >
       <div class="icon">
@@ -20,12 +20,12 @@
           <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
         </svg>
       </div>
-      <span class="text">WhatsApp</span>
+      <span class="text">{{ t('actions.whatsapp') }}</span>
     </a>
-    
-    <a 
-      href="http://googleusercontent.com/maps.google.com/search/Concesionario+EHM" 
-      target="_blank" 
+
+    <a
+      href="http://googleusercontent.com/maps.google.com/search/Concesionario+EHM"
+      target="_blank"
       class="item"
     >
       <div class="icon">
@@ -34,7 +34,7 @@
           <circle cx="12" cy="10" r="3"></circle>
         </svg>
       </div>
-      <span class="text">Ubicación</span>
+      <span class="text">{{ t('actions.location') }}</span>
     </a>
 
     <div class="item" @click="$emit('open-credit')">
@@ -44,7 +44,7 @@
           <line x1="1" y1="10" x2="23" y2="10"></line>
         </svg>
       </div>
-      <span class="text">Crédito</span>
+      <span class="text">{{ t('actions.credit') }}</span>
     </div>
 
     <div class="item" @click="scrollToFooter">
@@ -54,22 +54,26 @@
           <polyline points="22,6 12,13 2,6"></polyline>
         </svg>
       </div>
-      <span class="text">Contacto</span>
+      <span class="text">{{ t('actions.contact') }}</span>
     </div>
   </div>
 </template>
 
 <script setup>
+import { useI18n } from '../i18n';
+
 defineEmits(['open-credit']);
 
+const { t } = useI18n();
+
 const handleAction = (type) => {
-  console.log(`Acción: ${type}`);
+  console.log(`Accion: ${type}`);
 };
 
 const scrollToFooter = () => {
   window.scrollTo({
     top: document.documentElement.scrollHeight,
-    behavior: 'smooth'
+    behavior: 'smooth',
   });
 };
 </script>
@@ -77,7 +81,7 @@ const scrollToFooter = () => {
 <style scoped>
 .mazda-sidebar {
   position: fixed;
-  right: 0; /* Pegados al marco inicialmente */
+  right: 0;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -90,17 +94,14 @@ const scrollToFooter = () => {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  width: 50px; 
+  width: 50px;
   height: 50px;
   cursor: pointer;
   text-decoration: none;
   color: white;
   background: #0a192f;
-  
-  /* ESTADO INICIAL: Pegado al marco (derecha recta) */
-  border-radius: 25px 0 0 25px; 
-  margin-right: -2px; /* Un pequeño solapamiento para que no se vea luz en el borde */
-  
+  border-radius: 25px 0 0 25px;
+  margin-right: -2px;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -109,18 +110,16 @@ const scrollToFooter = () => {
 }
 
 .item:hover {
-  width: 170px; 
-  background: #ff8e71; 
-  
-  /* ESTADO ACTIVO: Se vuelve redondo y se separa del marco */
-  border-radius: 25px; 
-  margin-right: 15px; /* Se "aleja" del borde derecho al salir */
+  width: 170px;
+  background: #ff8e71;
+  border-radius: 25px;
+  margin-right: 15px;
   border-right: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
 
 .icon {
-  min-width: 50px; 
+  min-width: 50px;
   height: 50px;
   display: flex;
   align-items: center;

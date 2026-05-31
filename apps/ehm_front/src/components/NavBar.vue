@@ -2,41 +2,53 @@
   <nav class="navbar">
     <div class="navbar-container">
       <div class="navbar-logo">
-        <a href="/" @click.prevent="goHome">{{ t('nav.logo') }}</a>
+        <RouterLink to="/" class="logo-link" @click="goHome">Concesionario EHM</RouterLink>
       </div>
       <ul class="nav-menu">
         <li class="nav-item">
-          <a href="/" class="nav-link" @click.prevent="goHome">{{ t('nav.home') }}</a>
+          <RouterLink to="/" class="nav-link" @click="goHome">Home</RouterLink>
         </li>
-        <li v-if="isAuthenticated" class="nav-item">
-          <a href="/inventory" class="nav-link">{{ t('nav.inventory') }}</a>
+        <li v-if="isAdmin" class="nav-item">
+          <RouterLink to="/inventory" class="nav-link">Inventory</RouterLink>
         </li>
-        <li v-if="isAuthenticated" class="nav-item">
-          <a
-            href="#"
-            class="nav-link nav-link-accent"
-            @click.prevent="openScheduleModal"
+        <li v-if="!isAdmin" class="nav-item">
+          <RouterLink to="/about" class="nav-link" @click="goAbout">About Us</RouterLink>
+        </li>
+
+        <li v-if="isAuthenticated && !isAdmin && brands.length" class="nav-item nav-brand-control">
+          <label for="brand" class="nav-label">Brand</label>
+          <select
+            id="brand"
+            class="brand-select"
+            :value="selectedBrandId"
+            @change="selectBrand"
           >
-            {{ t('nav.scheduleAppointment') }}
-          </a>
+            <option
+              v-for="brand in brands"
+              :key="brand.id ?? brand.name"
+              :value="brand.id"
+            >
+              {{ brand.name }}
+            </option>
+          </select>
         </li>
+
         <li class="nav-item">
-          <a href="/about" class="nav-link">{{ t('nav.about') }}</a>
-        </li>
-        <li class="nav-item">
-          <a href="/contact" class="nav-link">{{ t('nav.contact') }}</a>
-        </li>
-        <li class="nav-item">
-          <LanguageSwitcher />
-        </li>
-        <li class="nav-item">
-          <a
-            href="#"
-            class="nav-link nav-link-btn"
-            @click.prevent="handleAuthClick"
-          >
-            {{ isAuthenticated ? t('nav.logOut') : t('nav.signIn') }}
-          </a>
+          <RouterLink v-if="!isAuthenticated" to="/login" class="nav-link nav-link-btn">
+            Sign In
+          </RouterLink>
+          <div v-else style="display:flex; gap:8px; align-items:center;">
+            <RouterLink v-if="isAdmin" to="/admin/dashboard" class="nav-link">Dashboard</RouterLink>
+            <RouterLink v-if="isAdmin" to="/users" class="nav-link">Users</RouterLink>
+            <RouterLink to="/user-details" class="nav-link">Profile</RouterLink>
+            <button
+              type="button"
+              class="nav-link nav-link-btn nav-button"
+              @click="handleLogout"
+            >
+              Logout
+            </button>
+          </div>
         </li>
       </ul>
     </div>
@@ -46,34 +58,77 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
-import LanguageSwitcher from './LanguageSwitcher.vue';
-import ScheduleAppointmentModal from './ScheduleAppointmentModal.vue';
+import { computed, onMounted, watch } from 'vue';
+import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
-import { useAppointments } from '../composables/useAppointments';
-import { useI18n } from '../i18n';
+import { useVehicles } from '../composables/useVehicles';
 
+defineOptions({
+  name: 'NavBar',
+});
+
+const emit = defineEmits<{
+  'go-about': [];
+  'go-home': [];
+}>();
+
+const route = useRoute();
 const router = useRouter();
-const { t } = useI18n();
-const { isAuthenticated, logout } = useAuth();
-const { openScheduleModal } = useAppointments();
+const { isAuthenticated, isAdmin, logout } = useAuth();
+const { brands, fetchBrands } = useVehicles();
 
-const goHome = () => {
-  router.push('/');
-};
+const selectedBrandId = computed(() => {
+  const brandId = route.query.brandId;
+  return typeof brandId === 'string' ? brandId : '';
+});
 
-const handleAuthClick = async () => {
-  if (isAuthenticated.value) {
-    try {
-      await logout();
-      router.push('/');
-    } catch (err) {
-      console.error('Logout failed:', err);
-    }
+const loadBrands = async () => {
+  if (!isAuthenticated.value || brands.value.length > 0) {
     return;
   }
+
+  try {
+    await fetchBrands();
+  } catch (err) {
+    console.error('Failed to load brands for navbar:', err);
+  }
+};
+
+const selectBrand = async (event: Event) => {
+  const brandId = (event.target as HTMLSelectElement).value;
+  if (!brandId) {
+    return;
+  }
+
+  await router.push({
+    path: '/',
+    query: {
+      ...route.query,
+      brandId,
+    },
+  });
+};
+
+const goHome = () => {
+  emit('go-home');
+};
+
+const goAbout = () => {
+  emit('go-about');
+};
+
+const handleLogout = async () => {
+  await logout();
   router.push('/login');
 };
+
+onMounted(loadBrands);
+
+watch(isAuthenticated, (authenticated) => {
+  if (authenticated) {
+    loadBrands();
+  }
+});
 </script>
 
 <style scoped>
@@ -96,11 +151,13 @@ const handleAuthClick = async () => {
   padding: 0 2rem;
 }
 
-.navbar-logo a {
+.logo-link {
+  color: white;
+  cursor: pointer;
   font-size: 1.5rem;
   font-weight: 700;
-  color: white;
   text-decoration: none;
+  text-shadow: 0 2px 10px rgba(255, 125, 102, 0.45);
 }
 
 .nav-menu {
@@ -118,13 +175,14 @@ const handleAuthClick = async () => {
 }
 
 .nav-link {
+  border-radius: 8px;
   color: #ecf0f1;
-  font-weight: 600;
+  cursor: pointer;
   font-size: 0.95rem;
+  font-weight: 600;
+  padding: 0.35rem 0.55rem;
   text-decoration: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  transition: color 0.2s ease, background-color 0.2s ease;
+  transition: color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .nav-link:hover {
@@ -141,18 +199,46 @@ const handleAuthClick = async () => {
 }
 
 .nav-link-btn:hover {
-  background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+  background: linear-gradient(135deg, #ff6f7a, #ffa36b);
+  box-shadow: 0 10px 22px rgba(255, 102, 102, 0.44);
   color: white;
 }
 
-.nav-link-accent {
-  background: rgba(52, 152, 219, 0.15);
-  border: 1px solid rgba(52, 152, 219, 0.4);
+.nav-label {
+  color: #dfe7ff;
+  margin-right: 0.4rem;
+  font-size: 0.86rem;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
-.nav-link-accent:hover {
-  background: rgba(52, 152, 219, 0.25);
-  color: #3498db;
+.brand-select {
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #1d2747;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+  padding: 0.34rem 0.65rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  outline: none;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.brand-select:focus {
+  border-color: #ff9c7f;
+  box-shadow: 0 0 0 3px rgba(255, 156, 127, 0.24);
+}
+
+.nav-brand-control {
+  background-color: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 0.3rem 0.45rem;
+}
+
+.nav-button {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
 }
 
 @media (max-width: 980px) {

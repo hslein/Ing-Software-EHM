@@ -4,10 +4,13 @@ import { useRouter } from 'vue-router';
 import NavBar from '../components/NavBar.vue';
 import { useAuth } from '../composables/useAuth';
 import { useVehicles } from '../composables/useVehicles';
+import { useI18n } from '../i18n';
 import type { Vehicle, Brand } from '../composables/useVehicles';
 
+const { t } = useI18n();
+
 const router = useRouter();
-const { currentUser, logout } = useAuth();
+const { currentUser } = useAuth();
 const { brands, fetchBrands } = useVehicles();
 
 const goToLogin = () => {
@@ -15,7 +18,7 @@ const goToLogin = () => {
 };
 
 const openChatbot = () => {
-  window.alert('Chatbot coming soon. Contact us on WhatsApp: +57 300 123 4567');
+  window.alert(t('alert.chatbot'));
 };
 
 const selectedBrand = ref<Brand | null>(null);
@@ -49,45 +52,48 @@ const runBrandAction = (action: string, vehicle: Vehicle) => {
     selectedVehicle.value = vehicle;
     showModal.value = true;
   } else {
-    window.alert(`${action} - ${selectedBrand.value?.name} ${vehicle.model}`);
+    window.alert(
+      t('alert.action', {
+        action,
+        brand: selectedBrand.value?.name ?? '',
+        model: vehicle.model,
+      })
+    );
   }
 };
 
 const viewInventory = () => {
-  window.alert(`Inventario de ${selectedBrand.value?.name}`);
+  window.alert(t('alert.inventory', { brand: selectedBrand.value?.name ?? '' }));
 };
 
 const scheduleTestDrive = () => {
-  window.alert(`Test drive para ${selectedBrand.value?.name}`);
+  window.alert(t('alert.testDrive', { brand: selectedBrand.value?.name ?? '' }));
 };
 
 const requestFinancing = () => {
-  window.alert(`Financiacion de ${selectedBrand.value?.name}`);
+  window.alert(t('alert.financing', { brand: selectedBrand.value?.name ?? '' }));
 };
 
-const infoSections = [
+const infoSections = computed(() => [
   {
-    title: 'Concesionario familiar y confiable',
-    description:
-      'EHM es un concesionario con años de experiencia, enfocado en ofrecer vehículos revisados, asesoría honesta y un servicio cercano para cada cliente.',
+    title: t('info.card1.title'),
+    description: t('info.card1.desc'),
     image:
       'https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=900&q=80',
   },
   {
-    title: 'Flota completa y marcas premium',
-    description:
-      'Encuentra desde SUVs y pickup hasta deportivos y sedanes; trabajamos con las mejores marcas para que tu próxima compra sea segura y adaptada a tu estilo.',
+    title: t('info.card2.title'),
+    description: t('info.card2.desc'),
     image:
       'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80',
   },
   {
-    title: 'Financiación y prueba de manejo',
-    description:
-      'Te apoyamos con opciones de financiación flexibles y agendamos tu test drive para que pruebes el auto antes de decidirte.',
+    title: t('info.card3.title'),
+    description: t('info.card3.desc'),
     image:
       'https://images.unsplash.com/photo-1519999482648-25049ddd37b1?auto=format&fit=crop&w=900&q=80',
   },
-];
+]);
 
 const toTitleCase = (value: string) => {
   return value.charAt(0).toUpperCase() + value.slice(1);
@@ -122,31 +128,24 @@ const scrollRight = () => {
   }
 };
 
-const handleLogout = async () => {
-  try {
-    await logout();
-  } catch (err) {
-    console.error('Logout failed:', err);
-  }
-};
 </script>
 
 <template>
   <div class="app">
-    <NavBar @openChatbot="openChatbot" />
+    <NavBar />
 
     <div class="content">
       <section class="hero">
-        <h1>Welcome to EHM Vehicles</h1>
-        <p>Find your perfect vehicle with our comprehensive collection</p>
+        <h1>{{ t('hero.title') }}</h1>
+        <p>{{ t('hero.subtitle') }}</p>
       </section>
 
       <section class="info-section">
         <div class="info-header">
-          <p class="eyebrow">Sobre nuestro concesionario</p>
-          <h2>Conoce por qué elegir EHM</h2>
+          <p class="eyebrow">{{ t('info.eyebrow') }}</p>
+          <h2>{{ t('info.title') }}</h2>
           <p class="info-description">
-            Cada vehículo pasa por una inspección detallada y nuestro equipo está listo para acompañarte en todo el proceso de compra.
+            {{ t('info.description') }}
           </p>
         </div>
 
@@ -163,7 +162,7 @@ const handleLogout = async () => {
 
       <!-- Brands Grid -->
       <section class="brands-section">
-        <h2>Popular Brands</h2>
+        <h2>{{ t('brands.title') }}</h2>
         <div class="brands-grid">
           <div
             v-for="brand in brands"
@@ -173,7 +172,7 @@ const handleLogout = async () => {
           >
             <img :src="brand.image" :alt="brand.name" class="brand-image" />
             <h3>{{ brand.name }}</h3>
-            <p>{{ brand.vehicles?.length || 0 }} vehicles</p>
+            <p>{{ t('brands.vehicles', { count: brand.vehicles?.length || 0 }) }}</p>
           </div>
         </div>
       </section>
@@ -181,11 +180,11 @@ const handleLogout = async () => {
       <!-- Selected Brand Vehicles -->
       <section v-if="showBrandVehicles && selectedBrand" class="vehicles-section">
         <div class="section-header">
-          <h2>{{ selectedBrand.name }} Vehicles</h2>
+          <h2>{{ t('vehicles.title', { brand: selectedBrand.name }) }}</h2>
           <div v-if="currentUser" class="action-buttons">
-            <button @click="viewInventory" class="btn-secondary">View Inventory</button>
-            <button @click="scheduleTestDrive" class="btn-secondary">Schedule Test Drive</button>
-            <button @click="requestFinancing" class="btn-secondary">Request Financing</button>
+            <button @click="viewInventory" class="btn-secondary">{{ t('vehicles.viewInventory') }}</button>
+            <button @click="scheduleTestDrive" class="btn-secondary">{{ t('vehicles.scheduleTestDrive') }}</button>
+            <button @click="requestFinancing" class="btn-secondary">{{ t('vehicles.requestFinancing') }}</button>
           </div>
         </div>
 
@@ -205,10 +204,10 @@ const handleLogout = async () => {
                 <p class="description">{{ vehicle.description }}</p>
                 <div class="vehicle-actions">
                   <button @click="runBrandAction('Ver detalle', vehicle)" class="btn-primary">
-                    View Details
+                    {{ t('vehicles.viewDetails') }}
                   </button>
                   <button @click="runBrandAction('Cotizar', vehicle)" class="btn-secondary">
-                    Quote
+                    {{ t('vehicles.quote') }}
                   </button>
                 </div>
               </div>
@@ -225,26 +224,26 @@ const handleLogout = async () => {
           <button @click="closeModal" class="close-btn">×</button>
           <img :src="selectedVehicle.image" :alt="selectedVehicle.model" />
           <h2>{{ selectedBrand?.name }} {{ selectedVehicle.model }}</h2>
-          <p class="type">Type: {{ toTitleCase(selectedVehicle.type) }}</p>
+          <p class="type">{{ t('modal.type') }} {{ toTitleCase(selectedVehicle.type) }}</p>
           <p class="description">{{ selectedVehicle.description }}</p>
           <div v-if="selectedVehicle.year" class="detail-row">
-            <span>Year:</span>
+            <span>{{ t('modal.year') }}</span>
             <strong>{{ selectedVehicle.year }}</strong>
           </div>
           <div v-if="selectedVehicle.price" class="detail-row">
-            <span>Price:</span>
+            <span>{{ t('modal.price') }}</span>
             <strong>${{ selectedVehicle.price.toLocaleString() }}</strong>
           </div>
           <div v-if="selectedVehicle.mileage !== undefined" class="detail-row">
-            <span>Mileage:</span>
+            <span>{{ t('modal.mileage') }}</span>
             <strong>{{ selectedVehicle.mileage?.toLocaleString() }} km</strong>
           </div>
           <div class="modal-actions">
             <button @click="runBrandAction('Cotizar', selectedVehicle)" class="btn-primary">
-              Request Quote
+              {{ t('modal.requestQuote') }}
             </button>
             <button @click="runBrandAction('Test Drive', selectedVehicle)" class="btn-secondary">
-              Schedule Test Drive
+              {{ t('modal.scheduleTestDrive') }}
             </button>
           </div>
         </div>
@@ -255,34 +254,34 @@ const handleLogout = async () => {
     <footer class="footer">
       <div class="footer-container">
         <div class="footer-section">
-          <h3>Concesionario EHM</h3>
-          <p>Your trusted vehicle dealership since 2024</p>
+          <h3>{{ t('footer.dealership') }}</h3>
+          <p>{{ t('footer.tagline') }}</p>
         </div>
         <div class="footer-section">
-          <h4>Contact Information</h4>
-          <p>📍 Address: Cra 45 #12-34, Bogotá, Colombia</p>
-          <p>📞 Phone: +57 (1) 555-0123</p>
-          <p>📱 WhatsApp: +57 300 123 4567</p>
-          <p>✉️ Email: info@consecionarioehm.com</p>
+          <h4>{{ t('footer.contact') }}</h4>
+          <p>{{ t('footer.address') }}</p>
+          <p>{{ t('footer.phone') }}</p>
+          <p>{{ t('footer.whatsapp') }}</p>
+          <p>{{ t('footer.email') }}</p>
         </div>
         <div class="footer-section">
-          <h4>Business Hours</h4>
-          <p>Monday - Friday: 9:00 AM - 6:00 PM</p>
-          <p>Saturday: 10:00 AM - 4:00 PM</p>
-          <p>Sunday: Closed</p>
+          <h4>{{ t('footer.hours') }}</h4>
+          <p>{{ t('footer.weekdays') }}</p>
+          <p>{{ t('footer.saturday') }}</p>
+          <p>{{ t('footer.sunday') }}</p>
         </div>
         <div class="footer-section">
-          <h4>Quick Links</h4>
+          <h4>{{ t('footer.quickLinks') }}</h4>
           <ul class="footer-links">
-            <li><a href="/">Home</a></li>
-            <li><a href="/inventory">Inventory</a></li>
-            <li><a href="/about">About Us</a></li>
-            <li><a href="/contact">Contact</a></li>
+            <li><a href="/">{{ t('nav.home') }}</a></li>
+            <li><a href="/inventory">{{ t('nav.inventory') }}</a></li>
+            <li><a href="/about">{{ t('nav.about') }}</a></li>
+            <li><a href="/contact">{{ t('nav.contact') }}</a></li>
           </ul>
         </div>
       </div>
       <div class="footer-bottom">
-        <p>&copy; 2024 Concesionario EHM. All rights reserved.</p>
+        <p>{{ t('footer.copyright') }}</p>
       </div>
     </footer>
   </div>

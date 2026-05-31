@@ -2,38 +2,77 @@
   <nav class="navbar">
     <div class="navbar-container">
       <div class="navbar-logo">
-        <a href="/" @click.prevent="goHome">Concesionario EHM</a>
+        <a href="/" @click.prevent="goHome">{{ t('nav.logo') }}</a>
       </div>
       <ul class="nav-menu">
         <li class="nav-item">
-          <a href="/" class="nav-link" @click.prevent="goHome">Home</a>
+          <a href="/" class="nav-link" @click.prevent="goHome">{{ t('nav.home') }}</a>
+        </li>
+        <li v-if="isAuthenticated" class="nav-item">
+          <a href="/inventory" class="nav-link">{{ t('nav.inventory') }}</a>
+        </li>
+        <li v-if="isAuthenticated" class="nav-item">
+          <a
+            href="#"
+            class="nav-link nav-link-accent"
+            @click.prevent="openScheduleModal"
+          >
+            {{ t('nav.scheduleAppointment') }}
+          </a>
         </li>
         <li class="nav-item">
-          <a href="/inventory" class="nav-link">Inventory</a>
+          <a href="/about" class="nav-link">{{ t('nav.about') }}</a>
         </li>
         <li class="nav-item">
-          <a href="/about" class="nav-link">About Us</a>
+          <a href="/contact" class="nav-link">{{ t('nav.contact') }}</a>
         </li>
         <li class="nav-item">
-          <a href="/contact" class="nav-link">Contact</a>
+          <LanguageSwitcher />
         </li>
         <li class="nav-item">
-          <a href="/login" class="nav-link nav-link-btn">Sign In</a>
+          <a
+            href="#"
+            class="nav-link nav-link-btn"
+            @click.prevent="handleAuthClick"
+          >
+            {{ isAuthenticated ? t('nav.logOut') : t('nav.signIn') }}
+          </a>
         </li>
       </ul>
     </div>
+
+    <ScheduleAppointmentModal />
   </nav>
 </template>
 
-<script>
-export default {
-  name: 'NavBar',
-  emits: ['go-home'],
-  methods: {
-    goHome() {
-      this.$emit('go-home');
-    },
-  },
+<script setup lang="ts">
+import { useRouter } from 'vue-router';
+import LanguageSwitcher from './LanguageSwitcher.vue';
+import ScheduleAppointmentModal from './ScheduleAppointmentModal.vue';
+import { useAuth } from '../composables/useAuth';
+import { useAppointments } from '../composables/useAppointments';
+import { useI18n } from '../i18n';
+
+const router = useRouter();
+const { t } = useI18n();
+const { isAuthenticated, logout } = useAuth();
+const { openScheduleModal } = useAppointments();
+
+const goHome = () => {
+  router.push('/');
+};
+
+const handleAuthClick = async () => {
+  if (isAuthenticated.value) {
+    try {
+      await logout();
+      router.push('/');
+    } catch (err) {
+      console.error('Logout failed:', err);
+    }
+    return;
+  }
+  router.push('/login');
 };
 </script>
 
@@ -104,6 +143,16 @@ export default {
 .nav-link-btn:hover {
   background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
   color: white;
+}
+
+.nav-link-accent {
+  background: rgba(52, 152, 219, 0.15);
+  border: 1px solid rgba(52, 152, 219, 0.4);
+}
+
+.nav-link-accent:hover {
+  background: rgba(52, 152, 219, 0.25);
+  color: #3498db;
 }
 
 @media (max-width: 980px) {

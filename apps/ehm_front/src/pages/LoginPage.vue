@@ -1,24 +1,40 @@
 <template>
   <div class="login-container">
     <div class="login-box">
-      <h1>EHM Vehicles</h1>
-      <p class="subtitle">Vehicle Management System</p>
+      <div class="login-lang">
+        <LanguageSwitcher
+         />
+      </div>
+      <h1>{{ t('login.title') }}</h1>
+      <p class="subtitle">{{ t('login.subtitle') }}</p>
 
       <div v-if="isLogin" class="form-section">
-        <h2>Login</h2>
+        <h2>{{ t('login.login') }}</h2>
         <form @submit.prevent="handleLogin">
           <div class="form-group">
-            <label for="email">Email</label>
-            <input id="email" v-model="email" type="email" placeholder="your@email.com" required />
+            <label for="email">{{ t('login.email') }}</label>
+            <input
+              id="email"
+              v-model="email"
+              type="email"
+              :placeholder="t('login.emailPlaceholder')"
+              required
+            />
           </div>
 
           <div class="form-group">
-            <label for="password">Password</label>
-            <input id="password" v-model="password" type="password" placeholder="********" required />
+            <label for="password">{{ t('login.password') }}</label>
+            <input
+              id="password"
+              v-model="password"
+              type="password"
+              :placeholder="t('login.passwordPlaceholder')"
+              required
+            />
           </div>
 
           <button type="submit" class="btn-submit" :disabled="loading">
-            {{ loading ? 'Logging in...' : 'Login' }}
+            {{ loading ? t('login.loggingIn') : t('login.login') }}
           </button>
 
           <div v-if="error" class="error-message">
@@ -26,46 +42,52 @@
           </div>
 
           <p class="toggle-form">
-            Don't have an account?
-            <button type="button" @click="toggleForm">Register</button>
+            {{ t('login.noAccount') }}
+            <button type="button" @click="toggleForm">{{ t('login.register') }}</button>
           </p>
         </form>
       </div>
 
       <div v-else class="form-section">
-        <h2>Register</h2>
+        <h2>{{ t('login.register') }}</h2>
         <form @submit.prevent="handleRegister">
           <div class="form-group">
-            <label for="reg-email">Email</label>
-            <input id="reg-email" v-model="email" type="email" placeholder="your@email.com" required />
+            <label for="reg-email">{{ t('login.email') }}</label>
+            <input
+              id="reg-email"
+              v-model="email"
+              type="email"
+              :placeholder="t('login.emailPlaceholder')"
+              required
+            />
           </div>
 
           <div class="form-group">
-            <label for="reg-password">Password</label>
+            <label for="reg-password">{{ t('login.password') }}</label>
             <input
               id="reg-password"
               v-model="password"
               type="password"
-              placeholder="********"
+              :placeholder="t('login.passwordPlaceholder')"
               required
               minlength="6"
             />
           </div>
 
           <div class="form-group">
-            <label for="confirm-password">Confirm Password</label>
+            <label for="confirm-password">{{ t('login.confirmPassword') }}</label>
             <input
               id="confirm-password"
               v-model="confirmPassword"
               type="password"
-              placeholder="********"
+              :placeholder="t('login.passwordPlaceholder')"
               required
               minlength="6"
             />
           </div>
 
           <button type="submit" class="btn-submit" :disabled="loading">
-            {{ loading ? 'Registering...' : 'Register' }}
+            {{ loading ? t('login.registering') : t('login.register') }}
           </button>
 
           <div v-if="error" class="error-message">
@@ -73,8 +95,8 @@
           </div>
 
           <p class="toggle-form">
-            Already have an account?
-            <button type="button" @click="toggleForm">Login</button>
+            {{ t('login.hasAccount') }}
+            <button type="button" @click="toggleForm">{{ t('login.login') }}</button>
           </p>
         </form>
       </div>
@@ -85,8 +107,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from '../i18n';
 import { useAuth } from '../composables/useAuth';
+import LanguageSwitcher from '../components/LanguageSwitcher.vue';
 
+const { t } = useI18n();
 const router = useRouter();
 const { login, register, loading } = useAuth();
 
@@ -110,7 +135,7 @@ const handleLogin = async () => {
     await login(email.value, password.value);
     router.push('/');
   } catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'Login failed';
+    error.value = err instanceof Error ? err.message : t('login.loginFailed');
   }
 };
 
@@ -118,12 +143,12 @@ const handleRegister = async () => {
   error.value = null;
 
   if (password.value !== confirmPassword.value) {
-    error.value = 'Passwords do not match';
+    error.value = t('login.passwordMismatch');
     return;
   }
 
   if (password.value.length < 6) {
-    error.value = 'Password must be at least 6 characters';
+    error.value = t('login.passwordMin');
     return;
   }
 
@@ -131,7 +156,7 @@ const handleRegister = async () => {
     await register(email.value, password.value);
     router.push('/');
   } catch (err: unknown) {
-    error.value = err instanceof Error ? err.message : 'Registration failed';
+    error.value = err instanceof Error ? err.message : t('login.registerFailed');
   }
 };
 </script>
@@ -154,6 +179,26 @@ const handleRegister = async () => {
   padding: 40px;
   width: 100%;
   max-width: 400px;
+  position: relative;
+}
+
+.login-lang {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.login-lang :deep(.lang-switcher) {
+  background: #f4f6f8;
+  border-color: #e1e8ed;
+}
+
+.login-lang :deep(.lang-btn) {
+  color: #7f8c8d;
+}
+
+.login-lang :deep(.lang-btn.active) {
+  color: #fff;
 }
 
 h1 {

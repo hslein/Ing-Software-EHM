@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Brand } from '../composables/useVehicles';
+import { useI18n } from '../i18n';
 
 defineProps<{
   brand: Brand;
@@ -10,14 +11,22 @@ defineEmits<{
   scheduleTestDrive: [];
   requestFinancing: [];
 }>();
+
+const { t } = useI18n();
 </script>
 
 <template>
-  <section class="brand-menu" :aria-label="`${brand.name} actions`">
+  <section class="brand-menu" :aria-label="t('brandMenu.ariaLabel', { brand: brand.name })">
     <div class="brand-menu-actions">
-      <button type="button" @click="$emit('viewInventory')">View Inventory</button>
-      <button type="button" @click="$emit('scheduleTestDrive')">Schedule Test Drive</button>
-      <button type="button" @click="$emit('requestFinancing')">Request Financing</button>
+      <button type="button" @click="$emit('viewInventory')">
+        {{ t('vehicles.viewInventory') }}
+      </button>
+      <button type="button" @click="$emit('scheduleTestDrive')">
+        {{ t('vehicles.scheduleTestDrive') }}
+      </button>
+      <button type="button" @click="$emit('requestFinancing')">
+        {{ t('vehicles.requestFinancing') }}
+      </button>
     </div>
   </section>
 </template>

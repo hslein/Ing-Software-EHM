@@ -2,6 +2,7 @@
 import { ref } from 'vue';
 import { Heart } from 'lucide-vue-next';
 import type { Vehicle } from '../composables/useVehicles';
+import { useI18n } from '../i18n';
 
 defineProps<{
   brandName: string;
@@ -17,10 +18,11 @@ defineEmits<{
 }>();
 
 const highlightsSection = ref<HTMLElement>();
+const { t } = useI18n();
 
 const formatVehicleType = (value?: string) => {
   if (!value) {
-    return 'Vehicle';
+    return t('vehicles.defaultType');
   }
 
   return value.charAt(0).toUpperCase() + value.slice(1);
@@ -58,7 +60,7 @@ const scrollRight = () => {
     </button>
 
     <p v-if="vehicles.length === 0" class="empty-message">
-      No vehicles found for {{ brandName }}.
+      {{ t('vehicles.emptyForBrand', { brand: brandName }) }}
     </p>
 
     <div v-else ref="highlightsSection" class="vehicles-grid">
@@ -71,8 +73,8 @@ const scrollRight = () => {
           class="favorite-toggle"
           :class="{ favorite: vehicle.isFavorite }"
           type="button"
-          :aria-label="vehicle.isFavorite ? 'Remove from favorites' : 'Add to favorites'"
-          :title="vehicle.isFavorite ? 'Remove from favorites' : 'Add to favorites'"
+          :aria-label="vehicle.isFavorite ? t('vehicles.removeFavorite') : t('vehicles.addFavorite')"
+          :title="vehicle.isFavorite ? t('vehicles.removeFavorite') : t('vehicles.addFavorite')"
           @click.stop="$emit('toggleFavorite', vehicle)"
         >
           <Heart :size="20" :fill="vehicle.isFavorite ? 'currentColor' : 'none'" />
@@ -88,14 +90,18 @@ const scrollRight = () => {
             type="button"
             @click="$emit('toggleCompare', vehicle)"
           >
-            {{ selectedCompareIds?.includes(vehicle.id ?? vehicle.model) ? 'Selected' : 'Compare' }}
+            {{
+              selectedCompareIds?.includes(vehicle.id ?? vehicle.model)
+                ? t('vehicles.selectedAction')
+                : t('vehicles.compare')
+            }}
           </button>
           <div class="vehicle-actions">
             <button class="btn-primary" type="button" @click="$emit('selectVehicle', vehicle)">
-              View Details
+              {{ t('vehicles.viewDetails') }}
             </button>
             <button class="btn-secondary" type="button" @click="$emit('quoteVehicle', vehicle)">
-              Quote
+              {{ t('vehicles.quote') }}
             </button>
           </div>
         </div>

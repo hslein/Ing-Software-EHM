@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import type { Brand } from '../composables/useVehicles';
+import { useI18n } from '../i18n';
 
 defineProps<{
   brands: Brand[];
@@ -12,6 +13,7 @@ defineEmits<{
 }>();
 
 const brandsSection = ref<HTMLElement>();
+const { t } = useI18n();
 
 const scrollLeft = () => {
   const el = brandsSection.value;
@@ -39,8 +41,8 @@ const scrollRight = () => {
 </script>
 
 <template>
-  <section class="brands-section" aria-label="Popular brands">
-    <h2>Popular Brands</h2>
+  <section class="brands-section" :aria-label="t('brands.ariaLabel')">
+    <h2>{{ t('brands.title') }}</h2>
     <div class="scroll-container">
       <button v-if="brands.length > 0" class="scroll-btn left-btn" type="button" @click="scrollLeft">
         &lt;

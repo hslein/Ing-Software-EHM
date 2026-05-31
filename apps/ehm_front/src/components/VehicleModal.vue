@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Vehicle } from '../composables/useVehicles';
+import { useI18n } from '../i18n';
 
 defineProps<{
   brandName: string;
@@ -12,6 +13,8 @@ defineEmits<{
   testDrive: [vehicle: Vehicle];
 }>();
 
+const { t } = useI18n();
+
 const toTitleCase = (value: string) => {
   return value.charAt(0).toUpperCase() + value.slice(1);
 };
@@ -20,29 +23,36 @@ const toTitleCase = (value: string) => {
 <template>
   <div v-if="vehicle" class="modal" @click="$emit('close')">
     <div class="modal-content" @click.stop>
-      <button class="close-btn" type="button" @click="$emit('close')">&times;</button>
+      <button
+        class="close-btn"
+        type="button"
+        :aria-label="t('common.close')"
+        @click="$emit('close')"
+      >
+        &times;
+      </button>
       <img :src="vehicle.image" :alt="`${brandName} ${vehicle.model}`" />
       <h2>{{ brandName }} {{ vehicle.model }}</h2>
-      <p class="type">Type: {{ toTitleCase(vehicle.type) }}</p>
+      <p class="type">{{ t('modal.type') }} {{ toTitleCase(vehicle.type) }}</p>
       <p class="description">{{ vehicle.description }}</p>
       <div v-if="vehicle.year" class="detail-row">
-        <span>Year:</span>
+        <span>{{ t('modal.year') }}</span>
         <strong>{{ vehicle.year }}</strong>
       </div>
       <div v-if="vehicle.price" class="detail-row">
-        <span>Price:</span>
+        <span>{{ t('modal.price') }}</span>
         <strong>${{ vehicle.price.toLocaleString() }}</strong>
       </div>
       <div v-if="vehicle.mileage !== undefined" class="detail-row">
-        <span>Mileage:</span>
+        <span>{{ t('modal.mileage') }}</span>
         <strong>{{ vehicle.mileage?.toLocaleString() }} km</strong>
       </div>
       <div class="modal-actions">
         <button class="btn-primary" type="button" @click="$emit('quote', vehicle)">
-          Request Quote
+          {{ t('modal.requestQuote') }}
         </button>
         <button class="btn-secondary" type="button" @click="$emit('testDrive', vehicle)">
-          Schedule Test Drive
+          {{ t('modal.scheduleTestDrive') }}
         </button>
       </div>
     </div>

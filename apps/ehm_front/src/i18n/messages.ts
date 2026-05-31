@@ -145,6 +145,14 @@ export const messages: Record<Locale, Record<string, string>> = {
     'admin.lastSync': 'Ultima sincronizacion',
     'admin.interactionsByDate': 'Interacciones por fecha',
     'admin.brandPopularity': 'Popularidad por marca',
+    'admin.brandFilter': 'Marca',
+    'admin.vehicleFilter': 'Vehiculo',
+    'admin.allBrands': 'Todas',
+    'admin.allVehicles': 'Todos',
+    'admin.popularityScoreHelp':
+      'Score = vistas x1 + comparaciones x3 + favoritos x4 + simulaciones de credito x5. Las acciones con mayor intencion de compra pesan mas.',
+    'admin.brandBreakdown':
+      'Vistas {views} - Comparaciones {comparisons} - Favoritos {favorites}',
     'admin.typePreference': 'Preferencia por tipo',
     'admin.topVehicles': 'Vehiculos mas consultados',
     'admin.userActivity': 'Actividad de usuarios',
@@ -341,6 +349,14 @@ export const messages: Record<Locale, Record<string, string>> = {
     'admin.lastSync': 'Last sync',
     'admin.interactionsByDate': 'Interactions by date',
     'admin.brandPopularity': 'Brand popularity',
+    'admin.brandFilter': 'Brand',
+    'admin.vehicleFilter': 'Vehicle',
+    'admin.allBrands': 'All',
+    'admin.allVehicles': 'All',
+    'admin.popularityScoreHelp':
+      'Score = views x1 + comparisons x3 + favorites x4 + credit simulations x5. Higher-intent purchase actions weigh more.',
+    'admin.brandBreakdown':
+      'Views {views} - Comparisons {comparisons} - Favorites {favorites}',
     'admin.typePreference': 'Type preference',
     'admin.topVehicles': 'Most viewed vehicles',
     'admin.userActivity': 'User activity',

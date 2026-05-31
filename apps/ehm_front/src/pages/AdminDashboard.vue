@@ -65,9 +65,9 @@
             </div>
             <div class="filter-row">
               <label>
-                Marca
+                {{ t('admin.brandFilter') }}
                 <select v-model="selectedTimelineBrandKey">
-                  <option :value="null">Todas</option>
+                  <option :value="null">{{ t('admin.allBrands') }}</option>
                   <option
                     v-for="brand in data.brandPopularity"
                     :key="brand.brandKey"
@@ -78,9 +78,9 @@
                 </select>
               </label>
               <label>
-                Vehiculo
+                {{ t('admin.vehicleFilter') }}
                 <select v-model="selectedTimelineVehicleKey" :disabled="!selectedTimelineBrandKey">
-                  <option :value="null">Todos</option>
+                  <option :value="null">{{ t('admin.allVehicles') }}</option>
                   <option
                     v-for="vehicle in timelineVehicleOptions"
                     :key="vehicle.vehicleKey"
@@ -99,11 +99,11 @@
           <article class="chart-panel wide-panel">
             <div class="panel-heading">
               <div class="heading-with-info">
-                <h2>Popularidad por marca</h2>
+                <h2>{{ t('admin.brandPopularity') }}</h2>
                 <span
                   class="info-icon"
                   tabindex="0"
-                  title="Score = vistas x1 + comparaciones x3 + favoritos x4 + simulaciones de credito x5. Las acciones con mayor intencion de compra pesan mas."
+                  :title="t('admin.popularityScoreHelp')"
                 >
                   i
                 </span>
@@ -124,9 +124,13 @@
                   <div>
                     <strong>{{ item.brandName }}</strong>
                     <small>
-                      Vistas {{ formatNumber(item.totalViews) }} ·
-                      Comparaciones {{ formatNumber(item.totalComparisons) }} ·
-                      Favoritos {{ formatNumber(item.totalFavorites) }}
+                      {{
+                        t('admin.brandBreakdown', {
+                          views: formatNumber(item.totalViews),
+                          comparisons: formatNumber(item.totalComparisons),
+                          favorites: formatNumber(item.totalFavorites),
+                        })
+                      }}
                     </small>
                   </div>
                 </div>
@@ -499,6 +503,8 @@ watch(selectedTimelineBrandKey, () => {
 
 watch(selectedTimelineVehicleKey, () => {
   void refreshTimeline();
+});
+
 watch(locale, () => {
   if (data.value) {
     renderCharts();

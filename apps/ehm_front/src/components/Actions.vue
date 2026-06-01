@@ -1,15 +1,5 @@
 <template>
   <div class="mazda-sidebar">
-    <div class="item search-special" @click="handleAction('busqueda')">
-      <div class="icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-      </div>
-      <span class="text">Buscar</span>
-    </div>
-
     <a 
       href="https://api.whatsapp.com/send?phone=573173250884&text=Hola!%20Estoy%20interesado%20en%20un%20vehículo%20de%20Concesionario%20EHM" 
       target="_blank" 
@@ -56,15 +46,35 @@
       </div>
       <span class="text">Contacto</span>
     </div>
+
+    <div class="item delivery-premium" @click="$emit('open-delivery')">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="1" y="3" width="15" height="13"></rect>
+          <polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon>
+          <circle cx="5.5" cy="18.5" r="2.5"></circle>
+          <circle cx="18.5" cy="18.5" r="2.5"></circle>
+        </svg>
+      </div>
+      <span class="text">Entrega</span>
+    </div>
+
+    <div class="item calculator-premium" @click="$emit('open-savings')">
+      <div class="icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+          <line x1="8" y1="6" x2="16" y2="6"></line>
+          <line x1="16" y1="14" x2="16" y2="18"></line>
+          <path d="M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M8 18h.01M12 18h.01"></path>
+        </svg>
+      </div>
+      <span class="text">Gastos</span>
+    </div>
   </div>
 </template>
 
 <script setup>
-defineEmits(['open-credit']);
-
-const handleAction = (type) => {
-  console.log(`Acción: ${type}`);
-};
+defineEmits(['open-credit', 'open-savings', 'open-delivery']);
 
 const scrollToFooter = () => {
   window.scrollTo({
@@ -77,7 +87,7 @@ const scrollToFooter = () => {
 <style scoped>
 .mazda-sidebar {
   position: fixed;
-  right: 0; /* Pegados al marco inicialmente */
+  right: 0;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
@@ -96,11 +106,8 @@ const scrollToFooter = () => {
   text-decoration: none;
   color: white;
   background: #0a192f;
-  
-  /* ESTADO INICIAL: Pegado al marco (derecha recta) */
   border-radius: 25px 0 0 25px; 
-  margin-right: -2px; /* Un pequeño solapamiento para que no se vea luz en el borde */
-  
+  margin-right: -2px;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -108,13 +115,12 @@ const scrollToFooter = () => {
   box-shadow: -4px 4px 10px rgba(0, 0, 0, 0.2);
 }
 
+/* EFECTO HOVER DE LOS BOTONES COMUNES (Se vuelven naranja coral) */
 .item:hover {
   width: 170px; 
   background: #ff8e71; 
-  
-  /* ESTADO ACTIVO: Se vuelve redondo y se separa del marco */
   border-radius: 25px; 
-  margin-right: 15px; /* Se "aleja" del borde derecho al salir */
+  margin-right: 15px; 
   border-right: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
@@ -148,12 +154,15 @@ const scrollToFooter = () => {
   opacity: 1;
 }
 
-.search-special {
-  background: #1c2c44;
+/* CONFIGURACIÓN PROPIA PARA BOTONES COMPLEMENTARIOS */
+.delivery-premium,
+.calculator-premium {
+  background: #0a192f; 
 }
 
-.search-special svg {
-  stroke: #ff8e71;
+.delivery-premium:hover,
+.calculator-premium:hover {
+  background: #ff8e71;
 }
 
 @media (max-width: 768px) {

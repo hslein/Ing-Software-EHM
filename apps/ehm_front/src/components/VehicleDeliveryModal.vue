@@ -1,69 +1,78 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue';
+import { useI18n } from '../i18n';
+
+const { t, locale } = useI18n();
 
 const isOpen = ref(false);
 
-// Control principal: Inmediata (No) o Configurar (Sí)
-const wantsCustom = ref('no'); 
+const wantsCustom = ref('no');
+const vehiclePriceCOP = ref(150000000);
+const engineType = ref('combustion');
+const bodyMaterial = ref('standard_paint');
+const interiorTrim = ref('standard_seats');
+const wheelType = ref('standard_wheels');
+const lightSystem = ref('standard_lights');
+const glassType = ref('standard_glass');
 
-// Parámetros de valor y motor
-const vehiclePriceCOP = ref(150000000); 
-const engineType = ref('combustion'); 
+const activeLocale = computed(() => (locale.value === 'es' ? 'es-CO' : 'en-US'));
 
-// --- Opciones de Personalización Sencillas ---
-const bodyMaterial = ref('standard_paint');  // Pintura
-const interiorTrim = ref('standard_seats');  // Habitáculo
-const wheelType = ref('standard_wheels');     // Rines
-const lightSystem = ref('standard_lights');   // Luces
-const glassType = ref('standard_glass');      // Vidrios
-
-// Formateo de moneda
 const formatCOP = (val: number) => {
-  return new Intl.NumberFormat('es-CO', {
-    style: 'currency', currency: 'COP', minimumFractionDigits: 0
+  return new Intl.NumberFormat(activeLocale.value, {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
   }).format(val);
 };
 
-// Lógica de cálculo de tiempo original
 const totalWeeksWait = computed(() => {
-  // Base por precio (Logística inicial)
-  let baseWeeks = 3; 
+  let baseWeeks = 3;
   if (vehiclePriceCOP.value >= 180000000 && vehiclePriceCOP.value < 500000000) baseWeeks = 6;
   else if (vehiclePriceCOP.value >= 500000000) baseWeeks = 12;
 
-  // Recargo por tecnología eléctrica
-  if (engineType.value === 'electric') baseWeeks += 2; 
+  if (engineType.value === 'electric') baseWeeks += 2;
 
   if (wantsCustom.value === 'no') return baseWeeks;
 
-  // Suma de personalización simple
   let customWeeks = 0;
-  
-  // 1. Pintura
-  if (bodyMaterial.value === 'special_paint') customWeeks += 4; 
-  if (bodyMaterial.value === 'exclusive_paint') customWeeks += 8; 
 
-  // 2. Interior
-  if (interiorTrim.value === 'custom_interior') customWeeks += 5; 
-  if (interiorTrim.value === 'performance_interior') customWeeks += 9; 
+  if (bodyMaterial.value === 'special_paint') customWeeks += 4;
+  if (bodyMaterial.value === 'exclusive_paint') customWeeks += 8;
 
-  // 3. Rines
-  if (wheelType.value === 'premium_wheels') customWeeks += 3; 
-  if (wheelType.value === 'forged_wheels') customWeeks += 6; 
+  if (interiorTrim.value === 'custom_interior') customWeeks += 5;
+  if (interiorTrim.value === 'performance_interior') customWeeks += 9;
 
-  // 4. Luces
-  if (lightSystem.value === 'matrix_lights') customWeeks += 2; 
-  if (lightSystem.value === 'laser_lights') customWeeks += 4; 
+  if (wheelType.value === 'premium_wheels') customWeeks += 3;
+  if (wheelType.value === 'forged_wheels') customWeeks += 6;
 
-  // 5. Vidrios
-  if (glassType.value === 'privacy_glass') customWeeks += 1; 
-  if (glassType.value === 'armor_glass') customWeeks += 5; 
+  if (lightSystem.value === 'matrix_lights') customWeeks += 2;
+  if (lightSystem.value === 'laser_lights') customWeeks += 4;
+
+  if (glassType.value === 'privacy_glass') customWeeks += 1;
+  if (glassType.value === 'armor_glass') customWeeks += 5;
 
   return baseWeeks + customWeeks;
 });
 
-const openModal = () => { isOpen.value = true; };
-const closeModal = () => { isOpen.value = false; };
+const importRoute = computed(() =>
+  vehiclePriceCOP.value < 500000000
+    ? t('delivery.route.regular')
+    : t('delivery.route.vip')
+);
+
+const priorityStatus = computed(() =>
+  wantsCustom.value === 'no'
+    ? t('delivery.priority.stock')
+    : t('delivery.priority.factory')
+);
+
+const openModal = () => {
+  isOpen.value = true;
+};
+
+const closeModal = () => {
+  isOpen.value = false;
+};
 
 defineExpose({ openModal });
 </script>
@@ -72,18 +81,18 @@ defineExpose({ openModal });
   <div v-if="isOpen" class="modal-overlay" @click.self="closeModal">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>EHM CONCIERGE &middot; PLANIFICACIÓN DE ENTREGA</h3>
-        <button class="close-btn" @click="closeModal">&times;</button>
+        <h3>{{ t('delivery.title') }}</h3>
+        <button class="close-btn" @click="closeModal" :aria-label="t('common.close')">&times;</button>
       </div>
 
       <div class="modal-body">
         <p class="intro-text">
-          Configure las variables de su vehículo para proyectar el tiempo de importación y alistamiento final.
+          {{ t('delivery.intro') }}
         </p>
 
         <div class="input-group">
           <div class="label-row">
-            <label class="section-label">Precio estimado (COP)</label>
+            <label class="section-label">{{ t('delivery.estimatedPrice') }}</label>
             <span class="price-display">{{ formatCOP(vehiclePriceCOP) }}</span>
           </div>
           <div class="slider-container">
@@ -93,117 +102,113 @@ defineExpose({ openModal });
         </div>
 
         <div class="input-group">
-          <label class="section-label">Tecnología de Motorización</label>
+          <label class="section-label">{{ t('delivery.engineTechnology') }}</label>
           <div class="toggle-selector">
             <label :class="{ active: engineType === 'combustion' }">
               <input type="radio" value="combustion" v-model="engineType" />
-              <span>Combustión (Gasolina)</span>
+              <span>{{ t('delivery.engine.combustion') }}</span>
             </label>
             <label :class="{ active: engineType === 'electric' }">
               <input type="radio" value="electric" v-model="engineType" />
-              <span>100% Eléctrico / Híbrido</span>
+              <span>{{ t('delivery.engine.electric') }}</span>
             </label>
           </div>
         </div>
-        
+
         <div class="input-group">
-          <label class="section-label">¿Desea personalizar el vehículo de fábrica?</label>
+          <label class="section-label">{{ t('delivery.customQuestion') }}</label>
           <div class="toggle-selector-main">
             <label :class="{ active: wantsCustom === 'no' }">
               <input type="radio" value="no" v-model="wantsCustom" />
-              <span>No (Entrega Inmediata)</span>
+              <span>{{ t('delivery.custom.no') }}</span>
             </label>
             <label :class="{ active: wantsCustom === 'si' }">
               <input type="radio" value="si" v-model="wantsCustom" />
-              <span>Sí (Configurar)</span>
+              <span>{{ t('delivery.custom.yes') }}</span>
             </label>
           </div>
         </div>
 
         <div v-if="wantsCustom === 'si'" class="customization-section">
-          
           <div class="input-group-simple">
-            <label>Color y Pintura</label>
+            <label>{{ t('delivery.paint.label') }}</label>
             <select v-model="bodyMaterial" class="premium-select">
-              <option value="standard_paint">Color de serie (+0 sem)</option>
-              <option value="special_paint">Pintura Mate / Satinada (+4 sem)</option>
-              <option value="exclusive_paint">Color de edición limitada (+8 sem)</option>
+              <option value="standard_paint">{{ t('delivery.paint.standard') }}</option>
+              <option value="special_paint">{{ t('delivery.paint.special') }}</option>
+              <option value="exclusive_paint">{{ t('delivery.paint.exclusive') }}</option>
             </select>
           </div>
 
           <div class="input-group-simple">
-            <label>Interior y Confort</label>
+            <label>{{ t('delivery.interior.label') }}</label>
             <select v-model="interiorTrim" class="premium-select">
-              <option value="standard_seats">Configuración original (+0 sem)</option>
-              <option value="custom_interior">Cuero Premium Nappa (+5 sem)</option>
-              <option value="performance_interior">Detalles en Fibra de Carbono (+9 sem)</option>
+              <option value="standard_seats">{{ t('delivery.interior.standard') }}</option>
+              <option value="custom_interior">{{ t('delivery.interior.custom') }}</option>
+              <option value="performance_interior">{{ t('delivery.interior.performance') }}</option>
             </select>
           </div>
 
           <div class="input-group-simple">
-            <label>Diseño de Rines</label>
+            <label>{{ t('delivery.wheels.label') }}</label>
             <select v-model="wheelType" class="premium-select">
-              <option value="standard_wheels">Rines de aleación estándar (+0 sem)</option>
-              <option value="premium_wheels">Rines de diseño deportivo (+3 sem)</option>
-              <option value="forged_wheels">Rines forjados ultra-ligeros (+6 sem)</option>
+              <option value="standard_wheels">{{ t('delivery.wheels.standard') }}</option>
+              <option value="premium_wheels">{{ t('delivery.wheels.premium') }}</option>
+              <option value="forged_wheels">{{ t('delivery.wheels.forged') }}</option>
             </select>
           </div>
 
           <div class="input-group-simple">
-            <label>Sistema de Luces</label>
+            <label>{{ t('delivery.lights.label') }}</label>
             <select v-model="lightSystem" class="premium-select">
-              <option value="standard_lights">Ópticas LED de serie (+0 sem)</option>
-              <option value="matrix_lights">Faros Matrix Inteligentes (+2 sem)</option>
-              <option value="laser_lights">Iluminación Láser High-Beam (+4 sem)</option>
+              <option value="standard_lights">{{ t('delivery.lights.standard') }}</option>
+              <option value="matrix_lights">{{ t('delivery.lights.matrix') }}</option>
+              <option value="laser_lights">{{ t('delivery.lights.laser') }}</option>
             </select>
           </div>
 
           <div class="input-group-simple/full">
-            <label>Tipo de Vidrios</label>
+            <label>{{ t('delivery.glass.label') }}</label>
             <select v-model="glassType" class="premium-select">
-              <option value="standard_glass">Cristales de serie (+0 sem)</option>
-              <option value="privacy_glass">Vidrios con oscurecido de privacidad (+1 sem)</option>
-              <option value="armor_glass">Vidrios con Blindaje Certificado (+5 sem)</option>
+              <option value="standard_glass">{{ t('delivery.glass.standard') }}</option>
+              <option value="privacy_glass">{{ t('delivery.glass.privacy') }}</option>
+              <option value="armor_glass">{{ t('delivery.glass.armor') }}</option>
             </select>
           </div>
-
         </div>
 
         <div class="results-panel">
           <div class="result-row highlight">
-            <span>Plazo total estimado:</span>
-            <strong>{{ totalWeeksWait }} semanas</strong>
+            <span>{{ t('delivery.totalDeadline') }}</span>
+            <strong>{{ t('delivery.weeks', { count: totalWeeksWait }) }}</strong>
           </div>
           <div class="divider-line"></div>
           <div class="result-row font-serif-row">
-            <span>Importación:</span>
-            <span class="text-value">{{ vehiclePriceCOP < 500000000 ? 'Ruta Logística Regular' : 'Envío Protegido VIP' }}</span>
+            <span>{{ t('delivery.import') }}</span>
+            <span class="text-value">{{ importRoute }}</span>
           </div>
           <div class="result-row font-serif-row">
-            <span>Prioridad:</span>
+            <span>{{ t('delivery.priority') }}</span>
             <span class="text-status" :class="{ 'fast-track': wantsCustom === 'no' }">
-              {{ wantsCustom === 'no' ? 'Despacho Inmediato de Stock' : 'Cupo Reservado en Fábrica' }}
+              {{ priorityStatus }}
             </span>
           </div>
         </div>
       </div>
-      
+
       <div class="modal-footer">
-        <button class="action-btn" @click="closeModal">AVANZAR CON LA RESERVA</button>
+        <button class="action-btn" @click="closeModal">{{ t('delivery.cta') }}</button>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* Fondo de desenfoque de ambiente boutique */
 .modal-overlay {
   position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
   background: rgba(8, 13, 24, 0.45); backdrop-filter: blur(8px);
   display: flex; justify-content: center; align-items: center; z-index: 11000; padding: 16px;
 }
 
-/* Caja de diseño minimalista con bordes milimétricos */
 .modal-card {
   background: #ffffff; border-radius: 12px; width: 100%; max-width: 420px;
   max-height: 94vh; box-shadow: 0 30px 60px rgba(15, 23, 42, 0.15); overflow: hidden;
@@ -225,10 +230,9 @@ defineExpose({ openModal });
 
 .input-group { margin-bottom: 14px; display: flex; flex-direction: column; }
 
-/* Etiquetas premium con tracking ejecutivo */
-.section-label { 
-  font-size: 0.65rem; font-weight: 700; margin-bottom: 6px; display: block; 
-  color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; 
+.section-label {
+  font-size: 0.65rem; font-weight: 700; margin-bottom: 6px; display: block;
+  color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;
 }
 
 .input-group-simple { display: flex; flex-direction: column; }
@@ -237,14 +241,12 @@ defineExpose({ openModal });
 .label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
 .price-display { font-size: 0.82rem; font-weight: 700; color: #ffffff; background: #090d16; padding: 2px 8px; border-radius: 5px; font-variant-numeric: tabular-nums; }
 
-/* Ajuste del Deslizador */
 .slider-container { padding: 0 2px; }
 .premium-slider { -webkit-appearance: none; width: 100%; height: 3px; background: #e2e8f0; border-radius: 2px; outline: none; margin: 6px 0 4px 0; }
 .premium-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #090d16; cursor: pointer; transition: transform 0.1s; }
 .premium-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
 .slider-legends { display: flex; justify-content: space-between; font-size: 0.65rem; color: #94a3b8; font-weight: 600; }
 
-/* Selectores de Radio tipo Botones de lujo */
 .toggle-selector, .toggle-selector-main { display: flex; gap: 6px; }
 .toggle-selector label, .toggle-selector-main label {
   flex: 1; padding: 8px; border: 1px solid #e2e8f0; border-radius: 6px; text-align: center;
@@ -254,21 +256,18 @@ defineExpose({ openModal });
 .toggle-selector label.active, .toggle-selector-main label.active { background: #090d16; color: #ffffff; border-color: #090d16; font-weight: 600; }
 .toggle-selector label:not(.active):hover, .toggle-selector-main label:not(.active):hover { background: #f8fafc; border-color: #cbd5e1; }
 
-/* Menús desplegables integrados estéticamente */
-.premium-select { 
-  padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.78rem; 
+.premium-select {
+  padding: 8px 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 0.78rem;
   color: #0f172a; background-color: #ffffff; outline: none; transition: border 0.2s;
 }
 .premium-select:focus { border-color: #94a3b8; }
 
-/* Contenedor de personalización organizado en rejilla sutil */
-.customization-section { 
-  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; 
+.customization-section {
+  background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
   padding: 12px; margin-bottom: 16px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
 }
 .input-group-simple\/full { grid-column: span 2; display: flex; flex-direction: column; }
 
-/* Panel de Resultados de alta gama */
 .results-panel { background: #f8fafc; border-top: 1px dashed #cbd5e1; padding: 12px 0 0 0; margin-top: 16px; }
 .result-row { display: flex; justify-content: space-between; font-size: 0.78rem; margin: 4px 0; align-items: center; color: #475569; }
 .result-row.highlight { font-size: 0.78rem; font-weight: 700; color: #0f172a; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.3px; }
@@ -280,10 +279,9 @@ defineExpose({ openModal });
 .divider-line { border-top: 1px solid #e2e8f0; margin: 6px 0; }
 .modal-footer { padding: 4px 24px 16px 24px; flex-shrink: 0; }
 
-/* Botón de acción maestro */
-.action-btn { 
-  background: #090d16; color: #ffffff; border: none; padding: 12px; border-radius: 6px; 
-  cursor: pointer; font-weight: 700; width: 100%; font-size: 0.76rem; letter-spacing: 1px; transition: background 0.2s; 
+.action-btn {
+  background: #090d16; color: #ffffff; border: none; padding: 12px; border-radius: 6px;
+  cursor: pointer; font-weight: 700; width: 100%; font-size: 0.76rem; letter-spacing: 1px; transition: background 0.2s;
 }
 .action-btn:hover { background: #1e293b; }
 </style>

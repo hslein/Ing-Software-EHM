@@ -10,12 +10,12 @@
           <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
         </svg>
       </div>
-      <span class="text">WhatsApp</span>
+      <span class="text">{{ t('actions.whatsapp') }}</span>
     </a>
-    
-    <a 
-      href="http://googleusercontent.com/maps.google.com/search/Concesionario+EHM" 
-      target="_blank" 
+
+    <a
+      href="http://googleusercontent.com/maps.google.com/search/Concesionario+EHM"
+      target="_blank"
       class="item"
     >
       <div class="icon">
@@ -24,7 +24,7 @@
           <circle cx="12" cy="10" r="3"></circle>
         </svg>
       </div>
-      <span class="text">Ubicación</span>
+      <span class="text">{{ t('actions.location') }}</span>
     </a>
 
     <div class="item" @click="$emit('open-credit')">
@@ -34,7 +34,7 @@
           <line x1="1" y1="10" x2="23" y2="10"></line>
         </svg>
       </div>
-      <span class="text">Crédito</span>
+      <span class="text">{{ t('actions.credit') }}</span>
     </div>
 
     <div class="item" @click="scrollToFooter">
@@ -44,7 +44,7 @@
           <polyline points="22,6 12,13 2,6"></polyline>
         </svg>
       </div>
-      <span class="text">Contacto</span>
+      <span class="text">{{ t('actions.contact') }}</span>
     </div>
 
     <div class="item delivery-premium" @click="$emit('open-delivery')">
@@ -56,7 +56,7 @@
           <circle cx="18.5" cy="18.5" r="2.5"></circle>
         </svg>
       </div>
-      <span class="text">Entrega</span>
+      <span class="text">{{ t('actions.delivery') }}</span>
     </div>
 
     <div class="item calculator-premium" @click="$emit('open-savings')">
@@ -68,18 +68,22 @@
           <path d="M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M8 18h.01M12 18h.01"></path>
         </svg>
       </div>
-      <span class="text">Gastos</span>
+      <span class="text">{{ t('actions.expenses') }}</span>
     </div>
   </div>
 </template>
 
 <script setup>
+import { useI18n } from '../i18n';
+
 defineEmits(['open-credit', 'open-savings', 'open-delivery']);
+
+const { t } = useI18n();
 
 const scrollToFooter = () => {
   window.scrollTo({
     top: document.documentElement.scrollHeight,
-    behavior: 'smooth'
+    behavior: 'smooth',
   });
 };
 </script>
@@ -100,7 +104,7 @@ const scrollToFooter = () => {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  width: 50px; 
+  width: 50px;
   height: 50px;
   cursor: pointer;
   text-decoration: none;
@@ -126,7 +130,7 @@ const scrollToFooter = () => {
 }
 
 .icon {
-  min-width: 50px; 
+  min-width: 50px;
   height: 50px;
   display: flex;
   align-items: center;

@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { useI18n } from '../i18n';
+
+const { t, locale } = useI18n();
 
 const isOpen = ref(false);
 
-// Variables reactivas
 const vehicleUsage = ref('urbano');
 const monthlyKm = ref(2000);
 const engineConfig = ref('turbo');
@@ -26,8 +28,13 @@ watch(vehicleUsage, (newUsage) => {
   else if (newUsage === 'viajes') monthlyKm.value = 3500;
 });
 
-const openModal = () => { isOpen.value = true; };
-const closeModal = () => { isOpen.value = false; };
+const openModal = () => {
+  isOpen.value = true;
+};
+
+const closeModal = () => {
+  isOpen.value = false;
+};
 
 const currentCoveragePriceMonth = computed(() => {
   if (coveragePlan.value === 'basico') return 180000;
@@ -36,9 +43,9 @@ const currentCoveragePriceMonth = computed(() => {
 });
 
 const currentCoverageName = computed(() => {
-  if (coveragePlan.value === 'basico') return 'Esencial';
-  if (coveragePlan.value === 'platinum') return 'Platinum VIP Shield';
-  return 'EHM Care Premium';
+  if (coveragePlan.value === 'basico') return t('fuel.coverage.basicName');
+  if (coveragePlan.value === 'platinum') return t('fuel.coverage.platinumName');
+  return t('fuel.coverage.premiumName');
 });
 
 const currentSoatPrice = computed(() => {
@@ -49,21 +56,27 @@ const currentSoatPrice = computed(() => {
 
 const totalOperatingCostMonth = computed(() => {
   let costPerKm = 2688;
-  if (engineConfig.value === 'competicion') costPerKm = 4150; 
-  else if (engineConfig.value === 'electrico') costPerKm = 950;  
-  
-  return (costPerKm * monthlyKm.value) + currentCoveragePriceMonth.value;
+  if (engineConfig.value === 'competicion') costPerKm = 4150;
+  else if (engineConfig.value === 'electrico') costPerKm = 950;
+
+  return costPerKm * monthlyKm.value + currentCoveragePriceMonth.value;
 });
 
 const totalOperatingCostWeek = computed(() => Math.round(totalOperatingCostMonth.value / 4.33));
 const totalOperatingCostYear = computed(() => totalOperatingCostMonth.value * 12);
 
+const activeLocale = computed(() => (locale.value === 'es' ? 'es-CO' : 'en-US'));
+
 const formatCOP = (val: number) => {
-  return new Intl.NumberFormat('es-CO', {
+  return new Intl.NumberFormat(activeLocale.value, {
     style: 'currency',
     currency: 'COP',
-    minimumFractionDigits: 0
+    minimumFractionDigits: 0,
   }).format(val);
+};
+
+const formatNumber = (val: number) => {
+  return new Intl.NumberFormat(activeLocale.value).format(val);
 };
 
 defineExpose({ openModal });
@@ -73,67 +86,66 @@ defineExpose({ openModal });
   <div v-if="isOpen" class="modal-overlay" @click.self="closeModal">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>EHM PROYECCIONES &middot; GASTO OPERATIVO</h3>
-        <button class="close-btn" @click="closeModal">&times;</button>
+        <h3>{{ t('fuel.title') }}</h3>
+        <button class="close-btn" @click="closeModal" :aria-label="t('common.close')">&times;</button>
       </div>
 
       <div class="modal-body">
-        
         <div class="input-group">
-          <label class="section-label">Uso Proyectado</label>
+          <label class="section-label">{{ t('fuel.projectedUse') }}</label>
           <div class="grid-two-columns">
             <button class="selector-btn" :class="{ active: vehicleUsage === 'urbano' }" @click="vehicleUsage = 'urbano'">
-              Urbano Diario
+              {{ t('fuel.use.urban') }}
             </button>
             <button class="selector-btn" :class="{ active: vehicleUsage === 'trabajo_uni' }" @click="vehicleUsage = 'trabajo_uni'">
-              Rutina Ejecutiva
+              {{ t('fuel.use.executive') }}
             </button>
             <button class="selector-btn span-two" :class="{ active: vehicleUsage === 'viajes' }" @click="vehicleUsage = 'viajes'">
-              Largas Distancias / Viajes
+              {{ t('fuel.use.travel') }}
             </button>
           </div>
         </div>
 
         <div class="input-group">
           <div class="slider-label-row">
-            <label class="section-label">Recorrido Estimado</label>
-            <div class="value-box">{{ monthlyKm.toLocaleString('es-CO') }} km</div>
+            <label class="section-label">{{ t('fuel.estimatedDistance') }}</label>
+            <div class="value-box">{{ formatNumber(monthlyKm) }} km</div>
           </div>
           <div class="slider-container">
             <input type="range" min="500" max="5000" step="100" v-model.number="monthlyKm" class="premium-slider" />
             <div class="slider-ticks">
               <span>500 km</span>
-              <span>5.000 km</span>
+              <span>{{ formatNumber(5000) }} km</span>
             </div>
           </div>
         </div>
 
         <div class="input-group">
-          <label class="section-label">Ingeniería de Motor</label>
+          <label class="section-label">{{ t('fuel.engineEngineering') }}</label>
           <div class="grid-two-columns">
             <button class="selector-btn" :class="{ active: engineConfig === 'turbo' }" @click="engineConfig = 'turbo'">
-              V6 / V8 Turbo
+              {{ t('fuel.engine.turbo') }}
             </button>
             <button class="selector-btn" :class="{ active: engineConfig === 'competicion' }" @click="engineConfig = 'competicion'">
-              Competición
+              {{ t('fuel.engine.competition') }}
             </button>
             <button class="selector-btn span-two" :class="{ active: engineConfig === 'electrico' }" @click="engineConfig = 'electrico'">
-              100% Eléctrico / Híbrido
+              {{ t('fuel.engine.electric') }}
             </button>
           </div>
         </div>
 
         <div class="input-group">
-          <label class="section-label">Plan de Respaldo</label>
+          <label class="section-label">{{ t('fuel.supportPlan') }}</label>
           <div class="grid-three-columns">
             <button class="selector-btn text-xs" :class="{ active: coveragePlan === 'basico' }" @click="coveragePlan = 'basico'">
-              Básico
+              {{ t('fuel.plan.basic') }}
             </button>
             <button class="selector-btn text-xs" :class="{ active: coveragePlan === 'premium' }" @click="coveragePlan = 'premium'">
-              Care Premium
+              {{ t('fuel.plan.premium') }}
             </button>
             <button class="selector-btn text-xs" :class="{ active: coveragePlan === 'platinum' }" @click="coveragePlan = 'platinum'">
-              Platinum VIP
+              {{ t('fuel.plan.platinum') }}
             </button>
           </div>
         </div>
@@ -141,63 +153,63 @@ defineExpose({ openModal });
         <div class="highlight-slider-box">
           <div class="slider-label-row">
             <div class="insurance-info-left">
-              <label class="section-label no-margin font-medium text-slate">Presupuesto de Cobertura</label>
+              <label class="section-label no-margin font-medium text-slate">{{ t('fuel.coverageBudget') }}</label>
               <span class="insurance-subtext">{{ currentCoverageName }}</span>
             </div>
-            <div class="value-box insurance-value">{{ formatCOP(currentCoveragePriceMonth) }}<span class="per-month">/mes</span></div>
+            <div class="value-box insurance-value">
+              {{ formatCOP(currentCoveragePriceMonth) }}<span class="per-month">{{ t('fuel.perMonth') }}</span>
+            </div>
           </div>
-          
+
           <div class="slider-container">
             <input type="range" min="0" max="2" step="1" v-model.number="insuranceSliderIndex" class="premium-slider" />
             <div class="slider-ticks font-serif">
-              <span :class="{ 'tick-active': coveragePlan === 'basico' }">Básico</span>
-              <span :class="{ 'tick-active': coveragePlan === 'premium' }">Premium</span>
-              <span :class="{ 'tick-active': coveragePlan === 'platinum' }">Platinum</span>
+              <span :class="{ 'tick-active': coveragePlan === 'basico' }">{{ t('fuel.plan.basic') }}</span>
+              <span :class="{ 'tick-active': coveragePlan === 'premium' }">{{ t('fuel.plan.premiumShort') }}</span>
+              <span :class="{ 'tick-active': coveragePlan === 'platinum' }">{{ t('fuel.plan.platinumShort') }}</span>
             </div>
           </div>
-          
+
           <div class="soat-legal-row">
-            <span>SOAT Obligatorio (Tasa Anual Legal):</span>
+            <span>{{ t('fuel.soat') }}</span>
             <strong>{{ formatCOP(currentSoatPrice) }} COP</strong>
           </div>
         </div>
 
         <div class="results-panel">
-          <span class="panel-title">ESTIMACIÓN TOTAL DE INVERSIÓN OPERATIVA</span>
-          
+          <span class="panel-title">{{ t('fuel.totalEstimate') }}</span>
+
           <div class="result-row line-item">
-            <span>Proyección Semanal</span>
+            <span>{{ t('fuel.weeklyProjection') }}</span>
             <span class="value-text">{{ formatCOP(totalOperatingCostWeek) }} COP</span>
           </div>
 
           <div class="result-row line-item">
-            <span>Proyección Mensual</span>
+            <span>{{ t('fuel.monthlyProjection') }}</span>
             <span class="value-text font-semibold">{{ formatCOP(totalOperatingCostMonth) }} COP</span>
           </div>
 
           <div class="result-row highlight-year">
-            <span>Inversión Total Anual</span>
+            <span>{{ t('fuel.annualInvestment') }}</span>
             <strong>{{ formatCOP(totalOperatingCostYear) }} COP</strong>
           </div>
         </div>
       </div>
-      
+
       <div class="modal-footer">
-        <button class="action-btn" @click="closeModal">AGENDAR TEST DRIVE DISPONIBLE</button>
+        <button class="action-btn" @click="closeModal">{{ t('fuel.cta') }}</button>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* Transfondo sutil, emulando una galería de arte o boutique */
 .modal-overlay {
   position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
   background: rgba(8, 13, 24, 0.45); backdrop-filter: blur(8px);
   display: flex; justify-content: center; align-items: center; z-index: 11000; padding: 16px;
 }
 
-/* Caja del modal con líneas ultra-delgadas y limpias */
 .modal-card {
   background: #ffffff; border-radius: 12px; width: 100%; max-width: 410px;
   max-height: 92vh; box-shadow: 0 30px 60px rgba(15, 23, 42, 0.15); overflow: hidden;
@@ -218,20 +230,17 @@ defineExpose({ openModal });
 .modal-body { padding: 16px 24px; overflow-y: auto; flex: 1; }
 .input-group { margin-bottom: 14px; }
 
-/* Tipografía de etiquetas sofisticadas (Tracking elegante) */
-.section-label { 
-  font-size: 0.65rem; font-weight: 700; margin-bottom: 6px; display: block; 
-  color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; 
+.section-label {
+  font-size: 0.65rem; font-weight: 700; margin-bottom: 6px; display: block;
+  color: #64748b; text-transform: uppercase; letter-spacing: 0.8px;
 }
 
-/* Grillas limpias que reducen espacio vertical */
 .grid-two-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .grid-three-columns { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; }
 .span-two { grid-column: span 2; }
 
-/* Botones con estilo sutil, sobrio y esquinas pulidas */
-.selector-btn { 
-  width: 100%; padding: 8px 10px; border-radius: 6px; font-weight: 500; 
+.selector-btn {
+  width: 100%; padding: 8px 10px; border-radius: 6px; font-weight: 500;
   font-size: 0.76rem; cursor: pointer; text-align: center; transition: all 0.2s ease;
   letter-spacing: 0.1px;
 }
@@ -244,7 +253,6 @@ defineExpose({ openModal });
 .slider-label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
 .value-box { padding: 2px 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 5px; font-weight: 700; font-size: 0.78rem; color: #0f172a; font-variant-numeric: tabular-nums; }
 
-/* Deslizadores Premium Minimalistas */
 .slider-container { padding: 0 2px; }
 .premium-slider { -webkit-appearance: none; width: 100%; height: 3px; background: #e2e8f0; border-radius: 2px; outline: none; margin: 6px 0 4px 0; }
 .premium-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; border-radius: 50%; background: #0f172a; cursor: pointer; transition: transform 0.1s; }
@@ -253,7 +261,6 @@ defineExpose({ openModal });
 .slider-ticks { display: flex; justify-content: space-between; font-size: 0.65rem; color: #94a3b8; font-weight: 500; letter-spacing: 0.2px; }
 .tick-active { color: #090d16; font-weight: 600; }
 
-/* Tarjeta Destacada de Coberturas */
 .highlight-slider-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-top: 14px; }
 .insurance-info-left { display: flex; flex-direction: column; }
 .font-medium { font-weight: 600; }
@@ -266,14 +273,12 @@ defineExpose({ openModal });
 .soat-legal-row { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 8px; border-top: 1px dashed #e2e8f0; font-size: 0.72rem; color: #64748b; }
 .soat-legal-row strong { color: #0f172a; font-variant-numeric: tabular-nums; }
 
-/* Bloque de Resultados Finales */
 .results-panel { background: #f8fafc; border-top: 1px dashed #cbd5e1; padding: 12px 0 0 0; margin-top: 14px; display: flex; flex-direction: column; gap: 4px; }
 .panel-title { font-size: 0.6rem; font-weight: 700; color: #94a3b8; letter-spacing: 1px; padding-bottom: 4px; }
 .line-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; color: #475569; }
 .value-text { color: #0f172a; font-variant-numeric: tabular-nums; }
 .font-semibold { font-weight: 600; }
 
-/* Resaltado Ejecutivo Final con toques dorados */
 .highlight-year { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 6px; margin-top: 2px; }
 .highlight-year span { font-size: 0.78rem; font-weight: 700; color: #0f172a; text-transform: uppercase; letter-spacing: 0.3px; }
 .highlight-year strong { color: #090d16; font-size: 1.15rem; font-weight: 700; border-bottom: 2px solid #b45309; font-variant-numeric: tabular-nums; white-space: nowrap; }

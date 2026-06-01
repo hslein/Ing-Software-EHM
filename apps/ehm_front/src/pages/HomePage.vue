@@ -11,8 +11,10 @@ import { useAuth } from '../composables/useAuth';
 import { useInteractionEvents } from '../composables/useInteractionEvents';
 import { useVehicles } from '../composables/useVehicles';
 import type { Brand, Vehicle } from '../composables/useVehicles';
+import { useI18n } from '../i18n';
 
 const { currentUser } = useAuth();
+const { t } = useI18n();
 const { trackVehicleComparison, trackVehicleView } = useInteractionEvents();
 const { brands, error, fetchBrands, fetchVehiclesByBrand, loading, toggleFavorite, vehicles } =
   useVehicles();
@@ -184,13 +186,13 @@ const clearCompareVehicles = () => {
   showCompareModal.value = false;
 };
 
-const runBrandAction = (action: string, vehicle: Vehicle) => {
-  if (action === 'Ver detalle') {
+const runBrandAction = (action: 'details' | 'quote' | 'testDrive', vehicle: Vehicle) => {
+  if (action === 'details') {
     void showVehicleDetail(vehicle);
     return;
   }
 
-  if (action === 'Cotizar' && vehicle.id) {
+  if (action === 'quote' && vehicle.id) {
     void router.push({
       path: '/credit',
       query: {
@@ -203,27 +205,35 @@ const runBrandAction = (action: string, vehicle: Vehicle) => {
     return;
   }
 
-  window.alert(`${action} - ${selectedBrand.value?.name} ${vehicle.model}`);
+  const actionLabel =
+    action === 'testDrive' ? t('vehicles.scheduleTestDrive') : t('vehicles.viewDetails');
+  window.alert(
+    t('alert.action', {
+      action: actionLabel,
+      brand: selectedBrand.value?.name ?? '',
+      model: vehicle.model,
+    }),
+  );
 };
 
 const toggleVehicleFavorite = async (vehicle: Vehicle) => {
   try {
     await toggleFavorite(vehicle);
   } catch (err: any) {
-    window.alert(err.message || 'No se pudo actualizar el favorito.');
+    window.alert(err.message || t('alert.favoriteFailed'));
   }
 };
 
 const viewInventory = () => {
-  window.alert(`Inventario de ${selectedBrand.value?.name}`);
+  window.alert(t('alert.inventory', { brand: selectedBrand.value?.name ?? '' }));
 };
 
 const scheduleTestDrive = () => {
-  window.alert(`Test drive para ${selectedBrand.value?.name}`);
+  window.alert(t('alert.testDrive', { brand: selectedBrand.value?.name ?? '' }));
 };
 
 const requestFinancing = () => {
-  window.alert(`Financiacion de ${selectedBrand.value?.name}`);
+  window.alert(t('alert.financing', { brand: selectedBrand.value?.name ?? '' }));
 };
 
 const closeModal = () => {
@@ -239,11 +249,10 @@ const closeModal = () => {
 
       <section class="info-section">
         <div class="info-header">
-          <p class="eyebrow">Sobre nuestro concesionario</p>
-          <h2>Conoce por que elegir EHM</h2>
+          <p class="eyebrow">{{ t('info.eyebrow') }}</p>
+          <h2>{{ t('info.title') }}</h2>
           <p class="info-description">
-            Cada vehiculo pasa por una inspeccion detallada y nuestro equipo esta listo para
-            acompaniarte en todo el proceso de compra.
+            {{ t('info.description') }}
           </p>
         </div>
 
@@ -251,51 +260,44 @@ const closeModal = () => {
           <article class="info-card">
             <img
               src="https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&w=900&q=80"
-              alt="Concesionario familiar y confiable"
+              :alt="t('info.card1.title')"
               class="info-image"
             />
             <div class="info-content">
-              <h3>Concesionario familiar y confiable</h3>
-              <p>
-                EHM tiene anos de experiencia, vehiculos revisados, asesoria honesta y un servicio
-                cercano para cada cliente.
-              </p>
+              <h3>{{ t('info.card1.title') }}</h3>
+              <p>{{ t('info.card1.desc') }}</p>
             </div>
           </article>
 
           <article class="info-card">
             <img
               src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=900&q=80"
-              alt="Flota completa y marcas premium"
+              :alt="t('info.card2.title')"
               class="info-image"
             />
             <div class="info-content">
-              <h3>Flota completa y marcas premium</h3>
-              <p>
-                Encuentra SUVs, pickups, deportivos y sedanes de marcas confiables para comprar con
-                seguridad.
-              </p>
+              <h3>{{ t('info.card2.title') }}</h3>
+              <p>{{ t('info.card2.desc') }}</p>
             </div>
           </article>
 
           <article class="info-card">
             <img
               src="https://images.unsplash.com/photo-1519999482648-25049ddd37b1?auto=format&fit=crop&w=900&q=80"
-              alt="Financiacion y prueba de manejo"
+              :alt="t('info.card3.title')"
               class="info-image"
             />
             <div class="info-content">
-              <h3>Financiacion y prueba de manejo</h3>
-              <p>
-                Te apoyamos con opciones flexibles y agendamos tu test drive para que decidas con
-                tranquilidad.
-              </p>
+              <h3>{{ t('info.card3.title') }}</h3>
+              <p>{{ t('info.card3.desc') }}</p>
             </div>
           </article>
         </div>
       </section>
 
-      <p v-if="loading && !brands.length" class="status-message">Loading brands...</p>
+      <p v-if="loading && !brands.length" class="status-message">
+        {{ t('vehicles.loadingBrands') }}
+      </p>
       <p v-else-if="error" class="status-message error">{{ error }}</p>
 
       <BrandSwitcher
@@ -308,24 +310,24 @@ const closeModal = () => {
       <section v-if="showBrandVehicles && selectedBrand" class="vehicles-section">
         <div class="section-header">
           <div class="section-title">
-            <h2>{{ selectedBrand.name }} Vehicles</h2>
+            <h2>{{ t('vehicles.title', { brand: selectedBrand.name }) }}</h2>
             <span v-if="loadingVehicles" class="inline-loader" aria-live="polite">
               <span class="loader-dot"></span>
-              Loading vehicles...
+              {{ t('vehicles.loadingVehicles') }}
             </span>
           </div>
           <div v-if="selectedCompareVehicles.length" class="compare-actions">
-            <span>{{ selectedCompareVehicles.length }}/2 selected</span>
+            <span>{{ t('vehicles.selected', { count: selectedCompareVehicles.length }) }}</span>
             <button
               class="compare-open-btn"
               type="button"
               :disabled="selectedCompareVehicles.length < 2"
               @click="showCompareModal = true"
             >
-              Compare
+              {{ t('vehicles.compare') }}
             </button>
             <button class="compare-clear-btn" type="button" @click="clearCompareVehicles">
-              Clear
+              {{ t('vehicles.clear') }}
             </button>
           </div>
           <BrandMenu
@@ -339,7 +341,7 @@ const closeModal = () => {
 
         <div v-if="loadingVehicles" class="vehicles-loader" aria-live="polite">
           <div class="loader-spinner" aria-hidden="true"></div>
-          <span>Loading {{ selectedBrand.name }} vehicles...</span>
+          <span>{{ t('vehicles.loadingBrandVehicles', { brand: selectedBrand.name }) }}</span>
         </div>
 
         <VehicleGrid
@@ -348,7 +350,7 @@ const closeModal = () => {
           :selected-compare-ids="selectedCompareIds"
           :vehicles="vehiclesByBrand"
           @select-vehicle="showVehicleDetail"
-          @quote-vehicle="runBrandAction('Cotizar', $event)"
+          @quote-vehicle="runBrandAction('quote', $event)"
           @toggle-compare="toggleCompareVehicle"
           @toggle-favorite="toggleVehicleFavorite"
         />
@@ -360,8 +362,8 @@ const closeModal = () => {
       :brand-name="selectedBrand?.name ?? ''"
       :vehicle="selectedVehicle"
       @close="closeModal"
-      @quote="runBrandAction('Cotizar', $event)"
-      @test-drive="runBrandAction('Test Drive', $event)"
+      @quote="runBrandAction('quote', $event)"
+      @test-drive="runBrandAction('testDrive', $event)"
     />
 
     <VehicleCompareModal

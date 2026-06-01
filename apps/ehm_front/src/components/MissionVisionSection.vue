@@ -1,24 +1,28 @@
 <script setup lang="ts">
+import { useI18n } from '../i18n';
+
 defineProps<{
   image: string;
   mission: string;
   vision: string;
 }>();
+
+const { t } = useI18n();
 </script>
 
 <template>
   <section class="mission-vision-section">
     <div class="mission-vision-container">
       <div class="mission-vision-image">
-        <img :src="image" alt="Nuestra empresa" />
+        <img :src="image" :alt="t('mission.imageAlt')" />
       </div>
       <div class="mission-vision-content">
         <div class="mission">
-          <h3>Nuestra MisiÃ³n</h3>
+          <h3>{{ t('mission.title') }}</h3>
           <p>{{ mission }}</p>
         </div>
         <div class="vision">
-          <h3>Nuestra VisiÃ³n</h3>
+          <h3>{{ t('vision.title') }}</h3>
           <p>{{ vision }}</p>
         </div>
       </div>

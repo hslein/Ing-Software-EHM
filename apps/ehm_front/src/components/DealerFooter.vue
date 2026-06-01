@@ -1,28 +1,29 @@
 <script setup lang="ts">
 import { DEALER_CONTACT } from '../constants/dealer.constants';
-// Importamos iconos sofisticados de Lucide
-import { 
-  MapPin, 
-  Phone, 
-  Mail, 
-  Clock, 
-  Facebook, 
-  Instagram, 
-  Twitter,
+import {
+  Calculator,
   ChevronRight,
-  Calculator // Añadimos icono de calculadora para el simulador
+  Clock,
+  Facebook,
+  Instagram,
+  Mail,
+  MapPin,
+  Phone,
+  Twitter,
 } from 'lucide-vue-next';
+import { useI18n } from '../i18n';
+
+const { t } = useI18n();
 </script>
 
 <template>
   <footer class="footer">
     <div class="footer-container">
       <div class="footer-grid">
-        
         <div class="footer-brand">
-          <h2 class="logo-text">EHM <span>PREMIUM</span></h2>
+          <h2 class="logo-text">EHM <span>{{ t('footer.premium') }}</span></h2>
           <p class="brand-description">
-            Curaduría de vehículos de alto nivel. Definimos el estándar de excelencia en la industria automotriz global.
+            {{ t('footer.brandDescription') }}
           </p>
           <div class="social-links">
             <a href="#" class="social-icon"><Facebook :size="18" /></a>
@@ -32,21 +33,27 @@ import {
         </div>
 
         <div class="footer-nav">
-          <h4>Navegación</h4>
+          <h4>{{ t('footer.navigation') }}</h4>
           <ul>
-            <li><a href="/"><ChevronRight :size="14" class="arrow" /> Inicio</a></li>
-            <li><a href="/inventory"><ChevronRight :size="14" class="arrow" /> Inventario</a></li>
-            <li><a href="/about"><ChevronRight :size="14" class="arrow" /> Sobre Nosotros</a></li>
+            <li>
+              <a href="/"><ChevronRight :size="14" class="arrow" /> {{ t('nav.home') }}</a>
+            </li>
+            <li>
+              <a href="/inventory"><ChevronRight :size="14" class="arrow" /> {{ t('nav.inventory') }}</a>
+            </li>
+            <li>
+              <a href="/about"><ChevronRight :size="14" class="arrow" /> {{ t('footer.about') }}</a>
+            </li>
             <li>
               <a href="/credit" class="highlight-link">
-                <Calculator :size="14" class="icon-link" /> Simulador de Crédito
+                <Calculator :size="14" class="icon-link" /> {{ t('footer.creditSimulator') }}
               </a>
             </li>
           </ul>
         </div>
 
         <div class="footer-nav">
-          <h4>Marcas Aliadas</h4>
+          <h4>{{ t('footer.partnerBrands') }}</h4>
           <ul>
             <li>Toyota</li>
             <li>Mazda</li>
@@ -56,7 +63,7 @@ import {
         </div>
 
         <div class="footer-contact">
-          <h4>Contacto Oficial</h4>
+          <h4>{{ t('footer.officialContact') }}</h4>
           <div class="contact-item">
             <MapPin :size="18" class="contact-icon" />
             <p>{{ DEALER_CONTACT.address }}</p>
@@ -74,11 +81,10 @@ import {
             <p>{{ DEALER_CONTACT.schedule }}</p>
           </div>
         </div>
-
       </div>
 
       <div class="footer-bottom">
-        <p>&copy; {{ new Date().getFullYear() }} CONCESIONARIO EHM. OPERACIONES DE ALTA GAMA.</p>
+        <p>&copy; {{ new Date().getFullYear() }} {{ t('footer.bottom') }}</p>
       </div>
     </div>
   </footer>
@@ -162,7 +168,6 @@ ul li a {
   transition: all 0.3s ease;
 }
 
-/* Estilo especial para el enlace del simulador */
 .highlight-link {
   color: #ff8e71 !important;
   font-weight: 600;
@@ -235,10 +240,15 @@ ul li a:hover {
 }
 
 @media (max-width: 992px) {
-  .footer-grid { grid-template-columns: 1fr 1fr; }
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 @media (max-width: 600px) {
-  .footer-grid { grid-template-columns: 1fr; gap: 3rem; }
+  .footer-grid {
+    grid-template-columns: 1fr;
+    gap: 3rem;
+  }
 }
 </style>

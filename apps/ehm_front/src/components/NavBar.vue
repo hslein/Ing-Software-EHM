@@ -8,7 +8,7 @@
         <li class="nav-item">
           <RouterLink to="/" class="nav-link" @click="goHome">{{ t('nav.home') }}</RouterLink>
         </li>
-        <li v-if="isAdmin" class="nav-item">
+        <li v-if="isAuthenticated" class="nav-item">
           <RouterLink to="/inventory" class="nav-link">{{ t('nav.inventory') }}</RouterLink>
         </li>
         <li v-if="!isAdmin" class="nav-item">
@@ -35,6 +35,16 @@
 
         <li class="nav-item">
           <LanguageSwitcher />
+        </li>
+
+        <li v-if="isAuthenticated" class="nav-item">
+          <button
+            type="button"
+            class="nav-link nav-link-btn nav-button"
+            @click="openScheduleModal"
+          >
+            {{ t('nav.scheduleAppointment') }}
+          </button>
         </li>
 
         <li class="nav-item">
@@ -67,9 +77,11 @@
 import { computed, onMounted, watch } from 'vue';
 import { RouterLink, useRoute, useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
+import { useAppointments } from '../composables/useAppointments';
 import { useVehicles } from '../composables/useVehicles';
 import { useI18n } from '../i18n';
 import LanguageSwitcher from './LanguageSwitcher.vue';
+import ScheduleAppointmentModal from './ScheduleAppointmentModal.vue';
 
 defineOptions({
   name: 'NavBar',
@@ -83,6 +95,7 @@ const emit = defineEmits<{
 const route = useRoute();
 const router = useRouter();
 const { isAuthenticated, isAdmin, logout } = useAuth();
+const { openScheduleModal } = useAppointments();
 const { brands, fetchBrands } = useVehicles();
 const { t } = useI18n();
 

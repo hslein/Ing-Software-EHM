@@ -13,7 +13,7 @@ import { useVehicles } from '../composables/useVehicles';
 import type { Brand, Vehicle } from '../composables/useVehicles';
 import { useI18n } from '../i18n';
 
-const { currentUser } = useAuth();
+const { currentUser, loading: authLoading } = useAuth();
 const { t } = useI18n();
 const { trackVehicleComparison, trackVehicleView } = useInteractionEvents();
 const { brands, error, fetchBrands, fetchVehiclesByBrand, loading, toggleFavorite, vehicles } =
@@ -31,6 +31,7 @@ const loadingVehicles = ref(false);
 let vehicleRequestId = 0;
 
 const vehiclesByBrand = computed(() => vehicles.value);
+const canViewCatalog = computed(() => Boolean(currentUser.value));
 const selectedCompareIds = computed(() =>
   selectedCompareVehicles.value.map((vehicle) => vehicle.id ?? vehicle.model)
 );
@@ -70,7 +71,7 @@ const setSelectedBrand = async (brand: Brand) => {
 };
 
 const syncSelectedBrandFromRoute = async () => {
-  if (brands.value.length === 0) {
+  if (!canViewCatalog.value || brands.value.length === 0) {
     return;
   }
 
@@ -88,7 +89,20 @@ const syncSelectedBrandFromRoute = async () => {
   }
 };
 
-onMounted(async () => {
+const resetCatalogState = () => {
+  selectedBrand.value = null;
+  showBrandVehicles.value = false;
+  showModal.value = false;
+  selectedVehicle.value = null;
+  clearCompareVehicles();
+};
+
+const loadCatalog = async () => {
+  if (authLoading.value || !canViewCatalog.value) {
+    resetCatalogState();
+    return;
+  }
+
   await fetchBrands();
 
   if (brands.value.length > 0) {
@@ -96,10 +110,22 @@ onMounted(async () => {
   } else {
     console.error("No brands found in Firestore. Check collection name 'brands'.");
   }
+};
+
+onMounted(async () => {
+  await loadCatalog();
 });
 
 watch(routeBrandId, () => {
   void syncSelectedBrandFromRoute();
+});
+
+watch(currentUser, () => {
+  void loadCatalog();
+});
+
+watch(authLoading, () => {
+  void loadCatalog();
 });
 
 const selectBrand = async (brand: Brand) => {
@@ -295,70 +321,71 @@ const closeModal = () => {
         </div>
       </section>
 
-      <p v-if="loading && !brands.length" class="status-message">
-        {{ t('vehicles.loadingBrands') }}
-      </p>
-      <p v-else-if="error" class="status-message error">{{ error }}</p>
+      <template v-if="canViewCatalog">
+        <p v-if="loading && !brands.length" class="status-message">
+          {{ t('vehicles.loadingBrands') }}
+        </p>
+        <p v-else-if="error" class="status-message error">{{ error }}</p>
 
-      <BrandSwitcher
-        v-if="brands.length"
-        :brands="brands"
-        :selected-brand-name="selectedBrand?.name ?? ''"
-        @select="selectBrand"
-      />
-
-      <section v-if="showBrandVehicles && selectedBrand" class="vehicles-section">
-        <div class="section-header">
-          <div class="section-title">
-            <h2>{{ t('vehicles.title', { brand: selectedBrand.name }) }}</h2>
-            <span v-if="loadingVehicles" class="inline-loader" aria-live="polite">
-              <span class="loader-dot"></span>
-              {{ t('vehicles.loadingVehicles') }}
-            </span>
-          </div>
-          <div v-if="selectedCompareVehicles.length" class="compare-actions">
-            <span>{{ t('vehicles.selected', { count: selectedCompareVehicles.length }) }}</span>
-            <button
-              class="compare-open-btn"
-              type="button"
-              :disabled="selectedCompareVehicles.length < 2"
-              @click="showCompareModal = true"
-            >
-              {{ t('vehicles.compare') }}
-            </button>
-            <button class="compare-clear-btn" type="button" @click="clearCompareVehicles">
-              {{ t('vehicles.clear') }}
-            </button>
-          </div>
-          <BrandMenu
-            v-if="currentUser"
-            :brand="selectedBrand"
-            @view-inventory="viewInventory"
-            @schedule-test-drive="scheduleTestDrive"
-            @request-financing="requestFinancing"
-          />
-        </div>
-
-        <div v-if="loadingVehicles" class="vehicles-loader" aria-live="polite">
-          <div class="loader-spinner" aria-hidden="true"></div>
-          <span>{{ t('vehicles.loadingBrandVehicles', { brand: selectedBrand.name }) }}</span>
-        </div>
-
-        <VehicleGrid
-          v-else
-          :brand-name="selectedBrand.name"
-          :selected-compare-ids="selectedCompareIds"
-          :vehicles="vehiclesByBrand"
-          @select-vehicle="showVehicleDetail"
-          @quote-vehicle="runBrandAction('quote', $event)"
-          @toggle-compare="toggleCompareVehicle"
-          @toggle-favorite="toggleVehicleFavorite"
+        <BrandSwitcher
+          v-if="brands.length"
+          :brands="brands"
+          :selected-brand-name="selectedBrand?.name ?? ''"
+          @select="selectBrand"
         />
-      </section>
+
+        <section v-if="showBrandVehicles && selectedBrand" class="vehicles-section">
+          <div class="section-header">
+            <div class="section-title">
+              <h2>{{ t('vehicles.title', { brand: selectedBrand.name }) }}</h2>
+              <span v-if="loadingVehicles" class="inline-loader" aria-live="polite">
+                <span class="loader-dot"></span>
+                {{ t('vehicles.loadingVehicles') }}
+              </span>
+            </div>
+            <div v-if="selectedCompareVehicles.length" class="compare-actions">
+              <span>{{ t('vehicles.selected', { count: selectedCompareVehicles.length }) }}</span>
+              <button
+                class="compare-open-btn"
+                type="button"
+                :disabled="selectedCompareVehicles.length < 2"
+                @click="showCompareModal = true"
+              >
+                {{ t('vehicles.compare') }}
+              </button>
+              <button class="compare-clear-btn" type="button" @click="clearCompareVehicles">
+                {{ t('vehicles.clear') }}
+              </button>
+            </div>
+            <BrandMenu
+              :brand="selectedBrand"
+              @view-inventory="viewInventory"
+              @schedule-test-drive="scheduleTestDrive"
+              @request-financing="requestFinancing"
+            />
+          </div>
+
+          <div v-if="loadingVehicles" class="vehicles-loader" aria-live="polite">
+            <div class="loader-spinner" aria-hidden="true"></div>
+            <span>{{ t('vehicles.loadingBrandVehicles', { brand: selectedBrand.name }) }}</span>
+          </div>
+
+          <VehicleGrid
+            v-else
+            :brand-name="selectedBrand.name"
+            :selected-compare-ids="selectedCompareIds"
+            :vehicles="vehiclesByBrand"
+            @select-vehicle="showVehicleDetail"
+            @quote-vehicle="runBrandAction('quote', $event)"
+            @toggle-compare="toggleCompareVehicle"
+            @toggle-favorite="toggleVehicleFavorite"
+          />
+        </section>
+      </template>
     </div>
 
     <VehicleModal
-      v-if="showModal"
+      v-if="canViewCatalog && showModal"
       :brand-name="selectedBrand?.name ?? ''"
       :vehicle="selectedVehicle"
       @close="closeModal"
@@ -367,7 +394,7 @@ const closeModal = () => {
     />
 
     <VehicleCompareModal
-      v-if="showCompareModal"
+      v-if="canViewCatalog && showCompareModal"
       :vehicles="selectedCompareVehicles"
       @close="showCompareModal = false"
       @remove="removeCompareVehicle"

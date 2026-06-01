@@ -4,6 +4,8 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onIdTokenChanged,
+  browserLocalPersistence,
+  setPersistence,
   User,
 } from 'firebase/auth';
 import {
@@ -22,6 +24,7 @@ const loading = ref(true);
 const roleLoading = ref(false);
 const error = ref<string | null>(null);
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000/api';
+const authPersistenceReady = setPersistence(auth, browserLocalPersistence);
 
 const ensureUserDocument = async (user: User) => {
   if (!user) return;
@@ -116,6 +119,7 @@ export const useAuth = () => {
   const register = async (email: string, password: string) => {
     error.value = null;
     try {
+      await authPersistenceReady;
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await ensureUserDocument(userCredential.user);
       return userCredential.user;
@@ -128,6 +132,7 @@ export const useAuth = () => {
   const login = async (email: string, password: string) => {
     error.value = null;
     try {
+      await authPersistenceReady;
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       await ensureUserDocument(userCredential.user);
       return userCredential.user;

@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue';
 import type { Vehicle } from '../composables/useVehicles';
 import { useI18n } from '../i18n';
 
-defineProps<{
+const props = defineProps<{
   vehicles: Vehicle[];
 }>();
 
@@ -12,6 +13,26 @@ defineEmits<{
 }>();
 
 const { t } = useI18n();
+const showCreditComparison = ref(false);
+const downPaymentPercent = ref(30);
+const months = ref(48);
+const interestRate = 0.0105;
+
+const comparedCredits = computed(() =>
+  props.vehicles.map((vehicle) => {
+    const price = vehicle.price ?? 0;
+    const downPayment = Math.round(price * (downPaymentPercent.value / 100));
+    const financedAmount = Math.max(price - downPayment, 0);
+    const monthlyPayment = calculateMonthlyPayment(financedAmount, months.value);
+
+    return {
+      vehicle,
+      downPayment,
+      financedAmount,
+      monthlyPayment,
+    };
+  }),
+);
 
 const formatVehicleType = (value?: string) => {
   if (!value) {
@@ -21,8 +42,18 @@ const formatVehicleType = (value?: string) => {
   return value.charAt(0).toUpperCase() + value.slice(1);
 };
 
+const calculateMonthlyPayment = (amount: number, termMonths: number) => {
+  if (amount <= 0) {
+    return 0;
+  }
+
+  return Math.round(
+    (amount * interestRate) / (1 - Math.pow(1 + interestRate, -termMonths)),
+  );
+};
+
 const formatPrice = (price?: number) => {
-  if (!price) {
+  if (price === undefined || price === null) {
     return t('common.notAvailable');
   }
 
@@ -75,10 +106,6 @@ const formatMileage = (mileage?: number) => {
               <dd>{{ formatVehicleType(vehicle.type) }}</dd>
             </div>
             <div>
-              <dt>{{ t('modal.year').replace(':', '') }}</dt>
-              <dd>{{ vehicle.year ?? t('common.notAvailable') }}</dd>
-            </div>
-            <div>
               <dt>{{ t('modal.price').replace(':', '') }}</dt>
               <dd>{{ formatPrice(vehicle.price) }}</dd>
             </div>
@@ -89,6 +116,67 @@ const formatMileage = (mileage?: number) => {
           </dl>
         </article>
       </div>
+
+      <div class="credit-toggle-row">
+        <button class="credit-toggle" type="button" @click="showCreditComparison = !showCreditComparison">
+          {{ showCreditComparison ? t('modal.hideCreditComparison') : t('modal.compareCredits') }}
+        </button>
+      </div>
+
+      <section v-if="showCreditComparison" class="credit-comparison">
+        <div class="credit-header">
+          <div>
+            <p class="eyebrow">{{ t('modal.creditEyebrow') }}</p>
+            <h3>{{ t('modal.creditTitle') }}</h3>
+          </div>
+          <p>{{ t('modal.creditRateNote') }}</p>
+        </div>
+
+        <div class="credit-controls">
+          <label class="range-control">
+            <span>
+              {{ t('modal.downPayment') }}
+              <strong>{{ downPaymentPercent }}%</strong>
+            </span>
+            <input v-model.number="downPaymentPercent" type="range" min="20" max="90" step="5" />
+            <small>{{ t('modal.downPaymentRange') }}</small>
+          </label>
+
+          <label class="range-control">
+            <span>
+              {{ t('modal.months') }}
+              <strong>{{ months }}</strong>
+            </span>
+            <input v-model.number="months" type="range" min="12" max="72" step="12" />
+            <small>{{ t('modal.monthsRange') }}</small>
+          </label>
+        </div>
+
+        <div class="credit-results">
+          <article
+            v-for="credit in comparedCredits"
+            :key="`credit-${credit.vehicle.id ?? credit.vehicle.model}`"
+            class="credit-card"
+          >
+            <p class="brand-name">{{ credit.vehicle.brand }}</p>
+            <h4>{{ credit.vehicle.model }}</h4>
+            <dl>
+              <div>
+                <dt>{{ t('modal.downPaymentAmount') }}</dt>
+                <dd>{{ formatPrice(credit.downPayment) }}</dd>
+              </div>
+              <div>
+                <dt>{{ t('modal.financedAmount') }}</dt>
+                <dd>{{ formatPrice(credit.financedAmount) }}</dd>
+              </div>
+              <div class="monthly-row">
+                <dt>{{ t('modal.monthlyPayment') }}</dt>
+                <dd>{{ formatPrice(credit.monthlyPayment) }}</dd>
+              </div>
+            </dl>
+          </article>
+        </div>
+      </section>
     </div>
   </div>
 </template>
@@ -145,6 +233,28 @@ const formatMileage = (mileage?: number) => {
   margin: 0;
   color: #2c3e50;
   font-size: 24px;
+}
+
+.credit-toggle-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+.credit-toggle {
+  background: #0a192f;
+  color: #fff;
+  border: 1px solid #0a192f;
+  border-radius: 4px;
+  padding: 11px 14px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.credit-toggle:hover {
+  background: #153252;
 }
 
 .compare-grid {
@@ -237,13 +347,145 @@ const formatMileage = (mileage?: number) => {
   text-align: right;
 }
 
+.credit-comparison {
+  margin-top: 24px;
+  border: 1px solid #dbe7ef;
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: 22px;
+}
+
+.credit-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.credit-header h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 20px;
+}
+
+.credit-header > p {
+  max-width: 280px;
+  margin: 0;
+  color: #667783;
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: right;
+}
+
+.credit-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.range-control {
+  display: grid;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #e5edf3;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.range-control span {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #566774;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.range-control strong {
+  color: #0a192f;
+}
+
+.range-control input {
+  width: 100%;
+  accent-color: #0a192f;
+}
+
+.range-control small {
+  color: #7d8d99;
+  font-size: 11px;
+}
+
+.credit-results {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.credit-card {
+  background: #fff;
+  border: 1px solid #e5edf3;
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.credit-card h4 {
+  margin: 0 0 14px;
+  color: #2c3e50;
+  font-size: 18px;
+}
+
+.credit-card dl {
+  margin: 0;
+}
+
+.credit-card dl div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 0;
+  border-top: 1px solid #edf2f6;
+}
+
+.credit-card dt {
+  color: #667783;
+  font-size: 13px;
+}
+
+.credit-card dd {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 13px;
+  font-weight: 800;
+  text-align: right;
+}
+
+.credit-card .monthly-row dd {
+  color: #ff7f63;
+  font-size: 16px;
+}
+
 @media (max-width: 760px) {
   .modal-content {
     padding: 22px;
   }
 
-  .compare-grid {
+  .compare-grid,
+  .credit-controls,
+  .credit-results {
     grid-template-columns: 1fr;
+  }
+
+  .credit-header {
+    display: block;
+  }
+
+  .credit-header > p {
+    max-width: none;
+    margin-top: 10px;
+    text-align: left;
   }
 }
 </style>

@@ -61,7 +61,6 @@ const setSelectedBrand = async (brand: Brand) => {
   }
 
   selectedBrand.value = brand;
-  clearCompareVehicles();
   await loadVehiclesForBrand(brand);
 };
 

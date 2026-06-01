@@ -70,6 +70,7 @@ import { useAuth } from '../composables/useAuth';
 import { useVehicles } from '../composables/useVehicles';
 import { useI18n } from '../i18n';
 import LanguageSwitcher from './LanguageSwitcher.vue';
+import ScheduleAppointmentModal from './ScheduleAppointmentModal.vue';
 
 defineOptions({
   name: 'NavBar',

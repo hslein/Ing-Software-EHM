@@ -242,4 +242,222 @@ export class AdminStatsService {
     );
     return result.rows;
   }
+
+  async getBusinessInsights() {
+    const funnel = await this.warehouseDb.query(
+      `
+      SELECT 'Vistas' AS stage, COALESCE(SUM(interaction_count), 0)::int AS total, 1 AS sort_order
+      FROM fact_interactions
+      WHERE interaction_type = 'view'
+      UNION ALL
+      SELECT 'Comparaciones' AS stage, COALESCE(SUM(interaction_count), 0)::int AS total, 2 AS sort_order
+      FROM fact_interactions
+      WHERE interaction_type = 'compare'
+      UNION ALL
+      SELECT 'Favoritos' AS stage, COALESCE(SUM(interaction_count), 0)::int AS total, 3 AS sort_order
+      FROM fact_interactions
+      WHERE interaction_type = 'favorite'
+      UNION ALL
+      SELECT 'Creditos' AS stage, COUNT(*)::int AS total, 4 AS sort_order
+      FROM fact_credit_simulations
+      ORDER BY sort_order
+      `,
+    );
+
+    const conversionByBrand = await this.warehouseDb.query(
+      `
+      WITH interactions AS (
+        SELECT
+          brand_key,
+          COALESCE(SUM(CASE WHEN interaction_type = 'view' THEN interaction_count ELSE 0 END), 0) AS total_views,
+          COALESCE(SUM(CASE WHEN interaction_type = 'favorite' THEN interaction_count ELSE 0 END), 0) AS total_favorites,
+          COALESCE(SUM(CASE WHEN interaction_type = 'compare' THEN interaction_count ELSE 0 END), 0) AS total_comparisons
+        FROM fact_interactions
+        GROUP BY brand_key
+      ),
+      credits AS (
+        SELECT brand_key, COUNT(*) AS total_credit_simulations
+        FROM fact_credit_simulations
+        GROUP BY brand_key
+      )
+      SELECT
+        b.brand_key AS "brandKey",
+        b.brand_name AS "brandName",
+        COALESCE(i.total_views, 0)::int AS "totalViews",
+        COALESCE(i.total_comparisons, 0)::int AS "totalComparisons",
+        COALESCE(i.total_favorites, 0)::int AS "totalFavorites",
+        COALESCE(c.total_credit_simulations, 0)::int AS "totalCreditSimulations",
+        ROUND(
+          COALESCE(c.total_credit_simulations, 0)::numeric /
+          NULLIF(COALESCE(i.total_views, 0), 0) * 100,
+          2
+        ) AS "viewToCreditRate",
+        ROUND(
+          COALESCE(c.total_credit_simulations, 0)::numeric /
+          NULLIF(COALESCE(i.total_favorites, 0), 0) * 100,
+          2
+        ) AS "favoriteToCreditRate"
+      FROM dim_brands b
+      LEFT JOIN interactions i ON i.brand_key = b.brand_key
+      LEFT JOIN credits c ON c.brand_key = b.brand_key
+      ORDER BY "viewToCreditRate" DESC NULLS LAST, "totalCreditSimulations" DESC, b.brand_name ASC
+      LIMIT 8
+      `,
+    );
+
+    const priceRangeInsights = await this.warehouseDb.query(
+      `
+      WITH vehicle_ranges AS (
+        SELECT
+          vehicle_key,
+          CASE
+            WHEN price IS NULL THEN 'Sin precio'
+            WHEN price < 50000000 THEN 'Menos de 50M'
+            WHEN price < 100000000 THEN '50M - 100M'
+            WHEN price < 150000000 THEN '100M - 150M'
+            ELSE '150M+'
+          END AS price_range,
+          CASE
+            WHEN price IS NULL THEN 5
+            WHEN price < 50000000 THEN 1
+            WHEN price < 100000000 THEN 2
+            WHEN price < 150000000 THEN 3
+            ELSE 4
+          END AS sort_order
+        FROM dim_vehicles
+      ),
+      interactions AS (
+        SELECT
+          vr.price_range,
+          vr.sort_order,
+          COALESCE(SUM(CASE WHEN fi.interaction_type = 'view' THEN fi.interaction_count ELSE 0 END), 0) AS total_views,
+          COALESCE(SUM(CASE WHEN fi.interaction_type = 'favorite' THEN fi.interaction_count ELSE 0 END), 0) AS total_favorites
+        FROM vehicle_ranges vr
+        LEFT JOIN fact_interactions fi ON fi.vehicle_key = vr.vehicle_key
+        GROUP BY vr.price_range, vr.sort_order
+      ),
+      credits AS (
+        SELECT
+          vr.price_range,
+          COUNT(fcs.simulation_key) AS total_credit_simulations,
+          COALESCE(AVG(fcs.estimated_monthly_payment), 0) AS average_monthly_payment
+        FROM vehicle_ranges vr
+        LEFT JOIN fact_credit_simulations fcs ON fcs.vehicle_key = vr.vehicle_key
+        GROUP BY vr.price_range
+      )
+      SELECT
+        i.price_range AS "priceRange",
+        i.total_views::int AS "totalViews",
+        i.total_favorites::int AS "totalFavorites",
+        COALESCE(c.total_credit_simulations, 0)::int AS "totalCreditSimulations",
+        COALESCE(c.average_monthly_payment, 0) AS "averageMonthlyPayment"
+      FROM interactions i
+      LEFT JOIN credits c ON c.price_range = i.price_range
+      ORDER BY i.sort_order
+      `,
+    );
+
+    const leadScores = await this.warehouseDb.query(
+      `
+      WITH user_interactions AS (
+        SELECT
+          user_key,
+          COALESCE(SUM(CASE WHEN interaction_type = 'view' THEN interaction_count ELSE 0 END), 0) AS total_views,
+          COALESCE(SUM(CASE WHEN interaction_type = 'compare' THEN interaction_count ELSE 0 END), 0) AS total_comparisons,
+          COALESCE(SUM(CASE WHEN interaction_type = 'favorite' THEN interaction_count ELSE 0 END), 0) AS total_favorites,
+          MAX(event_timestamp) AS last_interaction_at
+        FROM fact_interactions
+        GROUP BY user_key
+      ),
+      user_credits AS (
+        SELECT
+          user_key,
+          COUNT(*) AS total_credit_simulations,
+          MAX(simulated_at) AS last_credit_at
+        FROM fact_credit_simulations
+        GROUP BY user_key
+      ),
+      brand_interest AS (
+        SELECT DISTINCT ON (user_key)
+          user_key,
+          brand_name AS top_brand
+        FROM (
+          SELECT
+            fi.user_key,
+            b.brand_name,
+            SUM(fi.interaction_count) AS interaction_total
+          FROM fact_interactions fi
+          LEFT JOIN dim_brands b ON b.brand_key = fi.brand_key
+          GROUP BY fi.user_key, b.brand_name
+        ) ranked
+        ORDER BY user_key, interaction_total DESC, brand_name ASC
+      )
+      SELECT
+        u.user_key AS "userKey",
+        u.name,
+        u.email,
+        COALESCE(ui.total_views, 0)::int AS "totalViews",
+        COALESCE(ui.total_comparisons, 0)::int AS "totalComparisons",
+        COALESCE(ui.total_favorites, 0)::int AS "totalFavorites",
+        COALESCE(uc.total_credit_simulations, 0)::int AS "totalCreditSimulations",
+        (
+          COALESCE(ui.total_views, 0) * 1 +
+          COALESCE(ui.total_comparisons, 0) * 3 +
+          COALESCE(ui.total_favorites, 0) * 4 +
+          COALESCE(uc.total_credit_simulations, 0) * 5
+        )::int AS "leadScore",
+        bi.top_brand AS "topBrand",
+        GREATEST(ui.last_interaction_at, uc.last_credit_at) AS "lastInteractionDate"
+      FROM dim_users u
+      LEFT JOIN user_interactions ui ON ui.user_key = u.user_key
+      LEFT JOIN user_credits uc ON uc.user_key = u.user_key
+      LEFT JOIN brand_interest bi ON bi.user_key = u.user_key
+      ORDER BY "leadScore" DESC, "lastInteractionDate" DESC NULLS LAST
+      LIMIT 8
+      `,
+    );
+
+    const nonConvertingVehicles = await this.warehouseDb.query(
+      `
+      WITH vehicle_views AS (
+        SELECT vehicle_key, COALESCE(SUM(interaction_count), 0) AS total_views
+        FROM fact_interactions
+        WHERE interaction_type = 'view'
+        GROUP BY vehicle_key
+      ),
+      vehicle_credits AS (
+        SELECT vehicle_key, COUNT(*) AS total_credit_simulations
+        FROM fact_credit_simulations
+        GROUP BY vehicle_key
+      )
+      SELECT
+        v.vehicle_key AS "vehicleKey",
+        v.model,
+        b.brand_name AS "brandName",
+        COALESCE(vv.total_views, 0)::int AS "totalViews",
+        COALESCE(vc.total_credit_simulations, 0)::int AS "totalCreditSimulations",
+        ROUND(
+          COALESCE(vc.total_credit_simulations, 0)::numeric /
+          NULLIF(COALESCE(vv.total_views, 0), 0) * 100,
+          2
+        ) AS "viewToCreditRate",
+        (COALESCE(vv.total_views, 0) - COALESCE(vc.total_credit_simulations, 0) * 3)::int AS "opportunityScore"
+      FROM dim_vehicles v
+      LEFT JOIN dim_brands b ON b.brand_key = v.brand_key
+      LEFT JOIN vehicle_views vv ON vv.vehicle_key = v.vehicle_key
+      LEFT JOIN vehicle_credits vc ON vc.vehicle_key = v.vehicle_key
+      WHERE COALESCE(vv.total_views, 0) > 0
+      ORDER BY "opportunityScore" DESC, "totalViews" DESC
+      LIMIT 8
+      `,
+    );
+
+    return {
+      funnel: funnel.rows,
+      conversionByBrand: conversionByBrand.rows,
+      priceRangeInsights: priceRangeInsights.rows,
+      leadScores: leadScores.rows,
+      nonConvertingVehicles: nonConvertingVehicles.rows,
+    };
+  }
 }

@@ -57,6 +57,30 @@
           </div>
         </section>
 
+        <section class="funnel-panel">
+          <div class="panel-heading">
+            <div>
+              <h2>{{ t('admin.purchaseFunnel') }}</h2>
+              <p>{{ t('admin.purchaseFunnelDesc') }}</p>
+            </div>
+            <GitCompare :size="18" />
+          </div>
+          <div class="funnel-grid">
+            <article
+              v-for="stage in funnelStages"
+              :key="stage.stage"
+              class="funnel-step"
+            >
+              <span>{{ stage.stage }}</span>
+              <strong>{{ formatNumber(stage.total) }}</strong>
+              <div class="funnel-track">
+                <div class="funnel-fill" :style="{ width: `${stage.percent}%` }"></div>
+              </div>
+              <small>{{ formatPercent(stage.percent) }} {{ t('admin.ofTopFunnel') }}</small>
+            </article>
+          </div>
+        </section>
+
         <section class="charts-grid">
           <article class="chart-panel wide-panel">
             <div class="panel-heading">
@@ -188,6 +212,121 @@
                     <td>{{ user.totalViews }}</td>
                     <td>{{ user.totalFavorites }}</td>
                     <td>{{ user.totalCreditSimulations }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <section class="tables-grid">
+          <article class="table-panel">
+            <div class="panel-heading">
+              <h2>{{ t('admin.brandConversion') }}</h2>
+              <BarChart3 :size="18" />
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{{ t('admin.brand') }}</th>
+                    <th>{{ t('admin.views') }}</th>
+                    <th>{{ t('admin.credits') }}</th>
+                    <th>{{ t('admin.viewToCredit') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="brand in data.businessInsights.conversionByBrand" :key="brand.brandKey">
+                    <td>{{ brand.brandName }}</td>
+                    <td>{{ formatNumber(brand.totalViews) }}</td>
+                    <td>{{ formatNumber(brand.totalCreditSimulations) }}</td>
+                    <td>{{ formatPercent(brand.viewToCreditRate) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="table-panel">
+            <div class="panel-heading">
+              <h2>{{ t('admin.priceRangeDemand') }}</h2>
+              <WalletCards :size="18" />
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{{ t('admin.priceRange') }}</th>
+                    <th>{{ t('admin.views') }}</th>
+                    <th>{{ t('admin.credits') }}</th>
+                    <th>{{ t('admin.averageMonthlyPayment') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="range in data.businessInsights.priceRangeInsights" :key="range.priceRange">
+                    <td>{{ range.priceRange }}</td>
+                    <td>{{ formatNumber(range.totalViews) }}</td>
+                    <td>{{ formatNumber(range.totalCreditSimulations) }}</td>
+                    <td>{{ formatCurrency(range.averageMonthlyPayment) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <section class="tables-grid">
+          <article class="table-panel">
+            <div class="panel-heading">
+              <h2>{{ t('admin.highIntentUsers') }}</h2>
+              <Users :size="18" />
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{{ t('admin.user') }}</th>
+                    <th>{{ t('admin.topBrand') }}</th>
+                    <th>{{ t('admin.leadScore') }}</th>
+                    <th>{{ t('admin.lastInteraction') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="lead in data.businessInsights.leadScores" :key="lead.userKey">
+                    <td>{{ lead.email ?? lead.name ?? t('admin.userWithoutEmail') }}</td>
+                    <td>{{ lead.topBrand ?? t('common.noData') }}</td>
+                    <td>{{ formatNumber(lead.leadScore) }}</td>
+                    <td>{{ formatDateTime(lead.lastInteractionDate) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="table-panel">
+            <div class="panel-heading">
+              <h2>{{ t('admin.viewedNotConverted') }}</h2>
+              <Eye :size="18" />
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{{ t('admin.model') }}</th>
+                    <th>{{ t('admin.views') }}</th>
+                    <th>{{ t('admin.credits') }}</th>
+                    <th>{{ t('admin.viewToCredit') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="vehicle in data.businessInsights.nonConvertingVehicles"
+                    :key="vehicle.vehicleKey"
+                  >
+                    <td>{{ vehicle.brandName ? `${vehicle.brandName} ${vehicle.model}` : vehicle.model }}</td>
+                    <td>{{ formatNumber(vehicle.totalViews) }}</td>
+                    <td>{{ formatNumber(vehicle.totalCreditSimulations) }}</td>
+                    <td>{{ formatPercent(vehicle.viewToCreditRate) }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -337,6 +476,15 @@ const brandPopularityBreakdown = computed(() =>
     color: preferenceColors[index % preferenceColors.length],
   })),
 );
+const funnelMax = computed(() =>
+  Math.max(...(data.value?.businessInsights.funnel.map((stage) => stage.total) ?? [0]), 1),
+);
+const funnelStages = computed(() =>
+  (data.value?.businessInsights.funnel ?? []).map((stage) => ({
+    ...stage,
+    percent: (stage.total / funnelMax.value) * 100,
+  })),
+);
 
 const toNumber = (value: string | number | null | undefined) => Number(value ?? 0);
 const intlLocale = computed(() => (locale.value === 'en' ? 'en-US' : 'es-CO'));
@@ -350,6 +498,11 @@ const formatCurrency = (value: string | number | null | undefined) =>
     currency: 'COP',
     maximumFractionDigits: 0,
   }).format(toNumber(value));
+
+const formatPercent = (value: string | number | null | undefined) =>
+  `${new Intl.NumberFormat(intlLocale.value, {
+    maximumFractionDigits: 1,
+  }).format(toNumber(value))}%`;
 
 const formatDateTime = (value: string | null) => {
   if (!value) return t('admin.noRuns');
@@ -529,6 +682,7 @@ onUnmounted(destroyCharts);
 
 .dashboard-header,
 .insights-band,
+.funnel-panel,
 .credit-band,
 .chart-panel,
 .table-panel,
@@ -675,6 +829,62 @@ h2 {
   gap: 16px;
   margin-top: 18px;
   padding: 20px 24px;
+}
+
+.funnel-panel {
+  margin-top: 18px;
+  padding: 18px;
+}
+
+.panel-heading p {
+  color: #64748b;
+  font-size: 0.86rem;
+  margin: 4px 0 0;
+}
+
+.funnel-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.funnel-step {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.funnel-step span,
+.funnel-step small {
+  color: #64748b;
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.funnel-step strong {
+  color: #1d2733;
+  display: block;
+  font-size: 1.5rem;
+  margin: 4px 0 10px;
+}
+
+.funnel-track {
+  background: #e2e8f0;
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.funnel-fill {
+  background: #2563eb;
+  border-radius: inherit;
+  height: 100%;
+}
+
+.funnel-step small {
+  margin-top: 8px;
 }
 
 .insights-band {
@@ -875,6 +1085,7 @@ td {
 
   .kpi-grid,
   .insights-band,
+  .funnel-grid,
   .credit-band,
   .charts-grid,
   .tables-grid,

@@ -53,6 +53,11 @@ export class AdminStatsController {
     return this.adminStatsService.getUserActivity();
   }
 
+  @Get('business-insights')
+  getBusinessInsights() {
+    return this.adminStatsService.getBusinessInsights();
+  }
+
   private parseNumber(value?: string): number | undefined {
     if (!value) {
       return undefined;

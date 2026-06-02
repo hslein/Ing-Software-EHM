@@ -57,34 +57,108 @@
           </div>
         </section>
 
+        <section class="funnel-panel">
+          <div class="panel-heading">
+            <div>
+              <h2>{{ t('admin.purchaseFunnel') }}</h2>
+              <p>{{ t('admin.purchaseFunnelDesc') }}</p>
+            </div>
+            <GitCompare :size="18" />
+          </div>
+          <div class="funnel-grid">
+            <article
+              v-for="stage in funnelStages"
+              :key="stage.stage"
+              class="funnel-step"
+            >
+              <span>{{ stage.stage }}</span>
+              <strong>{{ formatNumber(stage.total) }}</strong>
+              <div class="funnel-track">
+                <div class="funnel-fill" :style="{ width: `${stage.percent}%` }"></div>
+              </div>
+              <small>{{ formatPercent(stage.percent) }} {{ t('admin.ofTopFunnel') }}</small>
+            </article>
+          </div>
+        </section>
+
         <section class="charts-grid">
           <article class="chart-panel wide-panel">
             <div class="panel-heading">
               <h2>{{ t('admin.interactionsByDate') }}</h2>
               <LineChart :size="18" />
             </div>
+            <div class="filter-row">
+              <label>
+                {{ t('admin.brandFilter') }}
+                <select v-model="selectedTimelineBrandKey">
+                  <option :value="null">{{ t('admin.allBrands') }}</option>
+                  <option
+                    v-for="brand in data.brandPopularity"
+                    :key="brand.brandKey"
+                    :value="brand.brandKey"
+                  >
+                    {{ brand.brandName }}
+                  </option>
+                </select>
+              </label>
+              <label>
+                {{ t('admin.vehicleFilter') }}
+                <select v-model="selectedTimelineVehicleKey" :disabled="!selectedTimelineBrandKey">
+                  <option :value="null">{{ t('admin.allVehicles') }}</option>
+                  <option
+                    v-for="vehicle in timelineVehicleOptions"
+                    :key="vehicle.vehicleKey"
+                    :value="vehicle.vehicleKey"
+                  >
+                    {{ vehicle.model }}
+                  </option>
+                </select>
+              </label>
+            </div>
             <div class="chart-frame">
               <canvas ref="timelineCanvas"></canvas>
             </div>
           </article>
 
-          <article class="chart-panel">
+          <article class="chart-panel wide-panel">
             <div class="panel-heading">
-              <h2>{{ t('admin.brandPopularity') }}</h2>
+              <div class="heading-with-info">
+                <h2>{{ t('admin.brandPopularity') }}</h2>
+                <span
+                  class="info-icon"
+                  tabindex="0"
+                  :title="t('admin.popularityScoreHelp')"
+                >
+                  i
+                </span>
+              </div>
               <BarChart3 :size="18" />
             </div>
-            <div class="chart-frame">
-              <canvas ref="brandCanvas"></canvas>
-            </div>
-          </article>
-
-          <article class="chart-panel">
-            <div class="panel-heading">
-              <h2>{{ t('admin.typePreference') }}</h2>
-              <PieChart :size="18" />
-            </div>
-            <div class="chart-frame">
-              <canvas ref="typeCanvas"></canvas>
+            <div class="preference-layout">
+              <div class="chart-frame brand-popularity-frame">
+                <canvas ref="brandCanvas"></canvas>
+              </div>
+              <div class="preference-breakdown">
+                <div
+                  v-for="item in brandPopularityBreakdown"
+                  :key="item.brandKey"
+                  class="preference-row"
+                >
+                  <span class="preference-dot" :style="{ backgroundColor: item.color }"></span>
+                  <div>
+                    <strong>{{ item.brandName }}</strong>
+                    <small>
+                      {{
+                        t('admin.brandBreakdown', {
+                          views: formatNumber(item.totalViews),
+                          comparisons: formatNumber(item.totalComparisons),
+                          favorites: formatNumber(item.totalFavorites),
+                        })
+                      }}
+                    </small>
+                  </div>
+                </div>
+              </div>
             </div>
           </article>
         </section>
@@ -145,6 +219,121 @@
           </article>
         </section>
 
+        <section class="tables-grid">
+          <article class="table-panel">
+            <div class="panel-heading">
+              <h2>{{ t('admin.brandConversion') }}</h2>
+              <BarChart3 :size="18" />
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{{ t('admin.brand') }}</th>
+                    <th>{{ t('admin.views') }}</th>
+                    <th>{{ t('admin.credits') }}</th>
+                    <th>{{ t('admin.viewToCredit') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="brand in data.businessInsights.conversionByBrand" :key="brand.brandKey">
+                    <td>{{ brand.brandName }}</td>
+                    <td>{{ formatNumber(brand.totalViews) }}</td>
+                    <td>{{ formatNumber(brand.totalCreditSimulations) }}</td>
+                    <td>{{ formatPercent(brand.viewToCreditRate) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="table-panel">
+            <div class="panel-heading">
+              <h2>{{ t('admin.priceRangeDemand') }}</h2>
+              <WalletCards :size="18" />
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{{ t('admin.priceRange') }}</th>
+                    <th>{{ t('admin.views') }}</th>
+                    <th>{{ t('admin.credits') }}</th>
+                    <th>{{ t('admin.averageMonthlyPayment') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="range in data.businessInsights.priceRangeInsights" :key="range.priceRange">
+                    <td>{{ range.priceRange }}</td>
+                    <td>{{ formatNumber(range.totalViews) }}</td>
+                    <td>{{ formatNumber(range.totalCreditSimulations) }}</td>
+                    <td>{{ formatCurrency(range.averageMonthlyPayment) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
+        <section class="tables-grid">
+          <article class="table-panel">
+            <div class="panel-heading">
+              <h2>{{ t('admin.highIntentUsers') }}</h2>
+              <Users :size="18" />
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{{ t('admin.user') }}</th>
+                    <th>{{ t('admin.topBrand') }}</th>
+                    <th>{{ t('admin.leadScore') }}</th>
+                    <th>{{ t('admin.lastInteraction') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="lead in data.businessInsights.leadScores" :key="lead.userKey">
+                    <td>{{ lead.email ?? lead.name ?? t('admin.userWithoutEmail') }}</td>
+                    <td>{{ lead.topBrand ?? t('common.noData') }}</td>
+                    <td>{{ formatNumber(lead.leadScore) }}</td>
+                    <td>{{ formatDateTime(lead.lastInteractionDate) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="table-panel">
+            <div class="panel-heading">
+              <h2>{{ t('admin.viewedNotConverted') }}</h2>
+              <Eye :size="18" />
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>{{ t('admin.model') }}</th>
+                    <th>{{ t('admin.views') }}</th>
+                    <th>{{ t('admin.credits') }}</th>
+                    <th>{{ t('admin.viewToCredit') }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    v-for="vehicle in data.businessInsights.nonConvertingVehicles"
+                    :key="vehicle.vehicleKey"
+                  >
+                    <td>{{ vehicle.brandName ? `${vehicle.brandName} ${vehicle.model}` : vehicle.model }}</td>
+                    <td>{{ formatNumber(vehicle.totalViews) }}</td>
+                    <td>{{ formatNumber(vehicle.totalCreditSimulations) }}</td>
+                    <td>{{ formatPercent(vehicle.viewToCreditRate) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </article>
+        </section>
+
         <section class="credit-band">
           <div>
             <span>{{ t('admin.creditSimulations') }}</span>
@@ -178,7 +367,6 @@ import {
   GitCompare,
   Heart,
   LineChart,
-  PieChart,
   RefreshCw,
   Users,
   WalletCards,
@@ -194,7 +382,6 @@ import {
   BarElement,
   CategoryScale,
   Chart,
-  DoughnutController,
   Filler,
   Legend,
   LinearScale,
@@ -208,7 +395,6 @@ Chart.register(
   BarController,
   BarElement,
   CategoryScale,
-  DoughnutController,
   Filler,
   Legend,
   LinearScale,
@@ -219,17 +405,24 @@ Chart.register(
 );
 
 const { isAdmin, loading: authLoading } = useAuth();
-const { loadDashboard, runWarehouseEtl, loading, refreshingWarehouse, error } = useAdminDashboard();
+const {
+  loadDashboard,
+  loadInteractionsOverTime,
+  runWarehouseEtl,
+  loading,
+  refreshingWarehouse,
+  error,
+} = useAdminDashboard();
 const { t, locale } = useI18n();
 
 const data = ref<DashboardData | null>(null);
 const timelineCanvas = ref<HTMLCanvasElement | null>(null);
 const brandCanvas = ref<HTMLCanvasElement | null>(null);
-const typeCanvas = ref<HTMLCanvasElement | null>(null);
+const selectedTimelineBrandKey = ref<number | null>(null);
+const selectedTimelineVehicleKey = ref<number | null>(null);
 
 let timelineChart: Chart | null = null;
 let brandChart: Chart | null = null;
-let typeChart: Chart | null = null;
 
 const palette = {
   ink: '#1d2733',
@@ -267,6 +460,31 @@ const warehouseStatusLabel = computed(() => {
 
 const topVehicles = computed(() => data.value?.vehiclePopularity.slice(0, 8) ?? []);
 const activeUsers = computed(() => data.value?.userActivity.slice(0, 8) ?? []);
+const timelineVehicleOptions = computed(() => {
+  if (!data.value || !selectedTimelineBrandKey.value) {
+    return [];
+  }
+
+  return data.value.vehiclePopularity.filter(
+    (vehicle) => vehicle.brandKey === selectedTimelineBrandKey.value,
+  );
+});
+const preferenceColors = [palette.blue, palette.green, palette.amber, palette.rose, palette.cyan, palette.gray];
+const brandPopularityBreakdown = computed(() =>
+  (data.value?.brandPopularity.slice(0, 8) ?? []).map((item, index) => ({
+    ...item,
+    color: preferenceColors[index % preferenceColors.length],
+  })),
+);
+const funnelMax = computed(() =>
+  Math.max(...(data.value?.businessInsights.funnel.map((stage) => stage.total) ?? [0]), 1),
+);
+const funnelStages = computed(() =>
+  (data.value?.businessInsights.funnel ?? []).map((stage) => ({
+    ...stage,
+    percent: (stage.total / funnelMax.value) * 100,
+  })),
+);
 
 const toNumber = (value: string | number | null | undefined) => Number(value ?? 0);
 const intlLocale = computed(() => (locale.value === 'en' ? 'en-US' : 'es-CO'));
@@ -280,6 +498,11 @@ const formatCurrency = (value: string | number | null | undefined) =>
     currency: 'COP',
     maximumFractionDigits: 0,
   }).format(toNumber(value));
+
+const formatPercent = (value: string | number | null | undefined) =>
+  `${new Intl.NumberFormat(intlLocale.value, {
+    maximumFractionDigits: 1,
+  }).format(toNumber(value))}%`;
 
 const formatDateTime = (value: string | null) => {
   if (!value) return t('admin.noRuns');
@@ -304,13 +527,28 @@ const runEtl = async () => {
   await refreshData();
 };
 
+const refreshTimeline = async () => {
+  if (!data.value || !isAdmin.value) return;
+
+  const interactionsOverTime = await loadInteractionsOverTime({
+    brandKey: selectedTimelineBrandKey.value,
+    vehicleKey: selectedTimelineVehicleKey.value,
+  });
+
+  data.value = {
+    ...data.value,
+    interactionsOverTime,
+  };
+
+  await nextTick();
+  renderCharts();
+};
+
 const destroyCharts = () => {
   timelineChart?.destroy();
   brandChart?.destroy();
-  typeChart?.destroy();
   timelineChart = null;
   brandChart = null;
-  typeChart = null;
 };
 
 const renderCharts = () => {
@@ -368,37 +606,13 @@ const renderCharts = () => {
           },
         ],
       },
-      options: baseChartOptions(false),
+      options: {
+        ...baseChartOptions(false),
+        indexAxis: 'y',
+      },
     });
   }
 
-  if (typeCanvas.value) {
-    const types = data.value.vehicleTypePreferences.slice(0, 6);
-    typeChart = new Chart(typeCanvas.value, {
-      type: 'doughnut',
-      data: {
-        labels: types.map((item) => item.type),
-        datasets: [
-          {
-            data: types.map((item) => toNumber(item.popularityScore)),
-            backgroundColor: [palette.blue, palette.green, palette.amber, palette.rose, palette.cyan, palette.gray],
-            borderColor: '#ffffff',
-            borderWidth: 3,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: { boxWidth: 12, color: palette.ink },
-          },
-        },
-      },
-    });
-  }
 };
 
 const baseChartOptions = (showLegend = true) => ({
@@ -435,6 +649,15 @@ watch([authLoading, isAdmin], ([authIsLoading, admin]) => {
   }
 });
 
+watch(selectedTimelineBrandKey, () => {
+  selectedTimelineVehicleKey.value = null;
+  void refreshTimeline();
+});
+
+watch(selectedTimelineVehicleKey, () => {
+  void refreshTimeline();
+});
+
 watch(locale, () => {
   if (data.value) {
     renderCharts();
@@ -459,6 +682,7 @@ onUnmounted(destroyCharts);
 
 .dashboard-header,
 .insights-band,
+.funnel-panel,
 .credit-band,
 .chart-panel,
 .table-panel,
@@ -607,6 +831,62 @@ h2 {
   padding: 20px 24px;
 }
 
+.funnel-panel {
+  margin-top: 18px;
+  padding: 18px;
+}
+
+.panel-heading p {
+  color: #64748b;
+  font-size: 0.86rem;
+  margin: 4px 0 0;
+}
+
+.funnel-grid {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.funnel-step {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.funnel-step span,
+.funnel-step small {
+  color: #64748b;
+  display: block;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.funnel-step strong {
+  color: #1d2733;
+  display: block;
+  font-size: 1.5rem;
+  margin: 4px 0 10px;
+}
+
+.funnel-track {
+  background: #e2e8f0;
+  border-radius: 999px;
+  height: 8px;
+  overflow: hidden;
+}
+
+.funnel-fill {
+  background: #2563eb;
+  border-radius: inherit;
+  height: 100%;
+}
+
+.funnel-step small {
+  margin-top: 8px;
+}
+
 .insights-band {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -648,13 +928,117 @@ h2 {
   margin-bottom: 14px;
 }
 
+.heading-with-info {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.info-icon {
+  align-items: center;
+  background: #e9eef3;
+  border-radius: 999px;
+  color: #2563eb;
+  cursor: help;
+  display: inline-flex;
+  font-size: 0.76rem;
+  font-weight: 900;
+  height: 20px;
+  justify-content: center;
+  width: 20px;
+}
+
+.info-icon:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
 .panel-heading svg {
   color: #2563eb;
+}
+
+.filter-row {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 14px;
+}
+
+.filter-row label {
+  color: #64748b;
+  display: grid;
+  font-size: 0.78rem;
+  font-weight: 850;
+  gap: 6px;
+  text-transform: uppercase;
+}
+
+.filter-row select {
+  background: #ffffff;
+  border: 1px solid #d7e4ef;
+  border-radius: 6px;
+  color: #1d2733;
+  font-family: inherit;
+  font-size: 0.92rem;
+  min-height: 40px;
+  padding: 0 10px;
+  text-transform: none;
+}
+
+.filter-row select:disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
 }
 
 .chart-frame {
   height: 300px;
   min-height: 300px;
+}
+
+.preference-layout {
+  align-items: center;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(520px, 1fr) minmax(300px, 380px);
+}
+
+.brand-popularity-frame {
+  height: 420px;
+  min-height: 420px;
+}
+
+.preference-breakdown {
+  display: grid;
+  gap: 10px;
+}
+
+.preference-row {
+  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 12px 1fr;
+  gap: 10px;
+}
+
+.preference-dot {
+  border-radius: 999px;
+  height: 12px;
+  margin-top: 4px;
+  width: 12px;
+}
+
+.preference-row strong,
+.preference-row small {
+  display: block;
+}
+
+.preference-row strong {
+  font-size: 0.9rem;
+}
+
+.preference-row small {
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 
 .table-wrap {
@@ -701,9 +1085,12 @@ td {
 
   .kpi-grid,
   .insights-band,
+  .funnel-grid,
   .credit-band,
   .charts-grid,
-  .tables-grid {
+  .tables-grid,
+  .filter-row,
+  .preference-layout {
     grid-template-columns: 1fr;
   }
 

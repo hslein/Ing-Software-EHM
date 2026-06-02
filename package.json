@@ -6,7 +6,10 @@
   "scripts": {
     "start": "nx run-many --target=serve --projects=ehm_front,ehm_back --parallel",
     "front": "nx serve ehm_front",
-    "back": "nx serve ehm_back"
+    "back": "nx serve ehm_back",
+    "build:front": "nx build @org/ehm_front",
+    "build:back": "nx build @org/ehm_back",
+    "start:back:render": "node dist/apps/ehm_back/src/main.js"
   },
   "devDependencies": {
     "@nx/js": "22.6.4",

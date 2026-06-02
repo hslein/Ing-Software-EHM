@@ -27,6 +27,7 @@ export interface BrandPopularity {
 
 export interface VehiclePopularity {
   vehicleKey: number;
+  brandKey: number | null;
   model: string;
   brandName: string | null;
   type: string | null;
@@ -92,6 +93,62 @@ export interface WarehouseStatus {
   lastError: string | null;
 }
 
+export interface PurchaseFunnelStage {
+  stage: string;
+  total: number;
+  sort_order: number;
+}
+
+export interface BrandConversion {
+  brandKey: number;
+  brandName: string;
+  totalViews: number;
+  totalComparisons: number;
+  totalFavorites: number;
+  totalCreditSimulations: number;
+  viewToCreditRate: string | number | null;
+  favoriteToCreditRate: string | number | null;
+}
+
+export interface PriceRangeInsight {
+  priceRange: string;
+  totalViews: number;
+  totalFavorites: number;
+  totalCreditSimulations: number;
+  averageMonthlyPayment: string | number;
+}
+
+export interface LeadScore {
+  userKey: number;
+  name: string | null;
+  email: string | null;
+  totalViews: number;
+  totalComparisons: number;
+  totalFavorites: number;
+  totalCreditSimulations: number;
+  leadScore: number;
+  topBrand: string | null;
+  lastInteractionDate: string | null;
+}
+
+export interface NonConvertingVehicle {
+  vehicleKey: number;
+  model: string;
+  brandName: string | null;
+  totalViews: number;
+  totalCreditSimulations: number;
+  viewToCreditRate: string | number | null;
+  opportunityScore: number;
+}
+
+export interface BusinessInsights {
+  funnel: PurchaseFunnelStage[];
+  conversionByBrand: BrandConversion[];
+  priceRangeInsights: PriceRangeInsight[];
+  leadScores: LeadScore[];
+  nonConvertingVehicles: NonConvertingVehicle[];
+}
+
 export interface DashboardData {
   summary: AdminSummary;
   brandPopularity: BrandPopularity[];
@@ -100,7 +157,13 @@ export interface DashboardData {
   interactionsOverTime: InteractionsOverTime[];
   vehicleTypePreferences: VehicleTypePreference[];
   userActivity: UserActivity[];
+  businessInsights: BusinessInsights;
   warehouseStatus: WarehouseStatus;
+}
+
+export interface InteractionFilters {
+  brandKey?: number | null;
+  vehicleKey?: number | null;
 }
 
 export const useAdminDashboard = () => {
@@ -147,6 +210,7 @@ export const useAdminDashboard = () => {
         interactionsOverTime,
         vehicleTypePreferences,
         userActivity,
+        businessInsights,
         warehouseStatus,
       ] = await Promise.all([
         request<AdminSummary>('/admin/stats/summary'),
@@ -156,6 +220,7 @@ export const useAdminDashboard = () => {
         request<InteractionsOverTime[]>('/admin/stats/interactions-over-time'),
         request<VehicleTypePreference[]>('/admin/stats/vehicle-type-preferences'),
         request<UserActivity[]>('/admin/stats/user-activity'),
+        request<BusinessInsights>('/admin/stats/business-insights'),
         request<WarehouseStatus>('/admin/warehouse/status'),
       ]);
 
@@ -167,6 +232,7 @@ export const useAdminDashboard = () => {
         interactionsOverTime,
         vehicleTypePreferences,
         userActivity,
+        businessInsights,
         warehouseStatus,
       };
     } catch (err: any) {
@@ -175,6 +241,23 @@ export const useAdminDashboard = () => {
     } finally {
       loading.value = false;
     }
+  };
+
+  const loadInteractionsOverTime = async (filters: InteractionFilters = {}) => {
+    const params = new URLSearchParams();
+
+    if (filters.brandKey) {
+      params.set('brandKey', String(filters.brandKey));
+    }
+
+    if (filters.vehicleKey) {
+      params.set('vehicleKey', String(filters.vehicleKey));
+    }
+
+    const query = params.toString();
+    return request<InteractionsOverTime[]>(
+      `/admin/stats/interactions-over-time${query ? `?${query}` : ''}`,
+    );
   };
 
   const runWarehouseEtl = async () => {
@@ -193,6 +276,7 @@ export const useAdminDashboard = () => {
 
   return {
     loadDashboard,
+    loadInteractionsOverTime,
     runWarehouseEtl,
     loading,
     refreshingWarehouse,

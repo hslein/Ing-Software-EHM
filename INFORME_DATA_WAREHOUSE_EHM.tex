@@ -1,0 +1,567 @@
+\documentclass[12pt,letterpaper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{float}
+
+\geometry{margin=2.5cm}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue,
+    citecolor=blue
+}
+
+\lstdefinestyle{sqlstyle}{
+    language=SQL,
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!8},
+    keywordstyle=\color{blue!70!black}\bfseries,
+    commentstyle=\color{green!40!black},
+    stringstyle=\color{red!60!black}
+}
+
+\lstdefinestyle{textstyle}{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{gray!8}
+}
+
+\title{\textbf{Informe del Proyecto Final}\\
+Arquitectura de Data Warehouse para Analítica de Vehículos}
+\author{
+Asignatura: Bases de Datos 2\\
+Proyecto: EHM - Plataforma de consulta y análisis de vehículos
+}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+El presente informe describe el diseño e implementación de una solución integral de bases de datos para una plataforma de consulta de vehículos. El enfoque principal del proyecto corresponde a una arquitectura de \textit{Data Warehouse}, donde una base operacional en Firebase/Firestore almacena la actividad diaria de la aplicación y una bodega de datos en Supabase/PostgreSQL organiza la información para análisis, tableros administrativos y toma de decisiones. El documento se centra en el origen de los datos, el modelo dimensional, los procesos ETL, las transformaciones realizadas, la utilidad de los tableros y la relación del proyecto con los criterios de evaluación de la asignatura.
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\section{Contexto del proyecto}
+
+El proyecto EHM plantea una plataforma para que usuarios autenticados puedan consultar un catálogo de vehículos, observar sus características, guardar favoritos, comparar vehículos y realizar simulaciones de crédito. Aunque existe una aplicación frontend y un backend que permiten la interacción del usuario, el enfoque académico del proyecto se concentra en el diseño de una arquitectura de bases de datos que permita convertir la actividad operacional en información analítica.
+
+Desde la perspectiva de Bases de Datos 2, la solución no se limita a almacenar registros transaccionales. El objetivo es construir un flujo de datos que permita responder preguntas de negocio como:
+
+\begin{itemize}
+    \item ¿Cuáles marcas generan mayor interés?
+    \item ¿Qué vehículos tienen mejor comportamiento de popularidad?
+    \item ¿Qué usuarios muestran mayor intención de compra?
+    \item ¿Cómo evolucionan las vistas, favoritos, comparaciones y simulaciones por fecha?
+    \item ¿Qué rangos de precio generan mayor conversión?
+    \item ¿Qué vehículos son vistos frecuentemente pero no llegan a simulación de crédito?
+\end{itemize}
+
+\section{Enfoque seleccionado de Bases de Datos 2}
+
+De las líneas temáticas propuestas para el proyecto final, se seleccionó el enfoque de \textbf{Bodegas de Datos o Data Warehouse}. Este enfoque consiste en diseñar una base de datos analítica separada de la base operacional, con el fin de consolidar, transformar y consultar información histórica para apoyar la toma de decisiones.
+
+La solución implementada utiliza:
+
+\begin{itemize}
+    \item \textbf{Firebase/Firestore}: base de datos operacional orientada a documentos.
+    \item \textbf{Supabase/PostgreSQL}: base de datos relacional usada como Data Warehouse.
+    \item \textbf{Procesos ETL}: extracción, transformación y carga de información desde Firestore hacia PostgreSQL.
+    \item \textbf{Modelo dimensional}: dimensiones y hechos para análisis de usuarios, vehículos, marcas, fechas e interacciones.
+    \item \textbf{Tableros administrativos}: visualización de métricas provenientes del Data Warehouse.
+\end{itemize}
+
+\section{Arquitectura general de datos}
+
+La arquitectura separa claramente dos responsabilidades:
+
+\begin{enumerate}
+    \item La base operacional guarda la actividad diaria del sistema.
+    \item El Data Warehouse consolida la información para análisis histórico.
+\end{enumerate}
+
+\begin{lstlisting}[style=textstyle,caption={Flujo general de datos}]
+Usuario
+  -> Aplicacion EHM
+  -> Backend
+  -> Firebase / Firestore
+  -> ETL
+  -> Supabase / PostgreSQL Data Warehouse
+  -> Consultas analiticas
+  -> Tableros administrativos
+\end{lstlisting}
+
+El frontend y el backend se mencionan como componentes de captura y consulta, pero no son el centro del informe. Su función principal dentro del diseño de bases de datos es alimentar la base operacional con eventos y consultar los resultados analíticos generados en la bodega de datos.
+
+\section{Base operacional}
+
+La base operacional se encuentra en Firebase/Firestore. Esta base almacena documentos que representan el estado y los eventos generados por la aplicación.
+
+\subsection{Colecciones principales}
+
+\begin{longtable}{p{4cm}p{10cm}}
+\toprule
+\textbf{Colección} & \textbf{Propósito} \\
+\midrule
+\endhead
+\texttt{users} & Usuarios registrados en la aplicación. \\
+\texttt{brands} & Marcas de vehículos disponibles en el catálogo. \\
+\texttt{vehicles} & Vehículos con sus características: modelo, precio, tipo, marca, transmisión, kilometraje y otros atributos. \\
+\texttt{vehicle\_views} & Eventos de visualización de vehículos por parte de los usuarios. \\
+\texttt{favorites} & Vehículos guardados como favoritos por los usuarios. \\
+\texttt{vehicle\_comparisons} & Eventos donde un usuario compara dos vehículos. \\
+\texttt{credit\_simulations} & Simulaciones de crédito realizadas sobre un vehículo específico. \\
+\bottomrule
+\end{longtable}
+
+\subsection{Rol de la base operacional}
+
+Firestore es adecuado para la operación diaria porque permite manejar documentos flexibles, guardar eventos de usuario y trabajar con identificadores propios de Firebase. Sin embargo, para consultas analíticas complejas no es la opción más conveniente, ya que las preguntas de negocio requieren agregaciones, relaciones, agrupamientos por fecha y cálculos de indicadores.
+
+Por esta razón, Firestore actúa como fuente de datos y PostgreSQL como destino analítico.
+
+\section{Data Warehouse en PostgreSQL}
+
+El Data Warehouse se implementa en Supabase/PostgreSQL mediante un modelo dimensional. Este modelo organiza los datos en dimensiones y tablas de hechos.
+
+\subsection{Dimensiones}
+
+Las dimensiones describen las entidades de análisis.
+
+\begin{longtable}{p{4cm}p{10cm}}
+\toprule
+\textbf{Tabla} & \textbf{Descripción} \\
+\midrule
+\endhead
+\texttt{dim\_users} & Usuarios provenientes de Firebase. Permite analizar actividad por usuario y rol. \\
+\texttt{dim\_brands} & Marcas de vehículos. Permite agrupar métricas por marca. \\
+\texttt{dim\_vehicles} & Vehículos del catálogo. Incluye modelo, tipo, año, precio, kilometraje, combustible y transmisión. \\
+\texttt{dim\_date} & Dimensión de tiempo. Permite analizar por día, mes, trimestre, año y día de la semana. \\
+\bottomrule
+\end{longtable}
+
+\subsection{Tablas de hechos}
+
+Las tablas de hechos registran eventos medibles.
+
+\begin{longtable}{p{4cm}p{10cm}}
+\toprule
+\textbf{Tabla} & \textbf{Descripción} \\
+\midrule
+\endhead
+\texttt{fact\_interactions} & Registra vistas, favoritos y comparaciones como eventos de interacción. \\
+\texttt{fact\_comparison\_vehicles} & Registra el detalle de cada vehículo involucrado en una comparación. \\
+\texttt{fact\_credit\_simulations} & Registra simulaciones de crédito, incluyendo precio, cuota inicial, monto financiado, plazo, tasa y cuota estimada. \\
+\bottomrule
+\end{longtable}
+
+\subsection{Vista analítica}
+
+También se utiliza una vista para facilitar el análisis de popularidad por marca:
+
+\begin{itemize}
+    \item \texttt{vw\_brand\_popularity}: consolida vistas, favoritos, comparaciones, simulaciones y puntaje de popularidad por marca.
+\end{itemize}
+
+\section{Modelo dimensional}
+
+El modelo utilizado se aproxima a un esquema estrella. Las tablas de hechos se encuentran en el centro y se relacionan con dimensiones por medio de llaves sustitutas.
+
+\begin{lstlisting}[style=textstyle,caption={Relación conceptual del modelo dimensional}]
+dim_users      dim_brands      dim_vehicles      dim_date
+    \              |                /               /
+     \             |               /               /
+      \            |              /               /
+       -------- fact_interactions ----------------
+
+dim_users      dim_brands      dim_vehicles      dim_date
+    \              |                /               /
+     \             |               /               /
+      ----- fact_credit_simulations ---------------
+
+dim_users      dim_brands      dim_vehicles      dim_date
+    \              |                /               /
+     \             |               /               /
+      ------ fact_comparison_vehicles -------------
+\end{lstlisting}
+
+Las llaves de Firestore se conservan como identificadores operacionales, pero dentro del Data Warehouse se utilizan llaves numéricas como \texttt{user\_key}, \texttt{brand\_key}, \texttt{vehicle\_key} y \texttt{date\_key}. Esto facilita relaciones, agregaciones y consistencia analítica.
+
+\section{Procesos ETL}
+
+La ETL se implementa en el backend y puede ejecutarse desde endpoints administrativos. Su objetivo es mover la información desde Firestore hacia PostgreSQL de manera controlada.
+
+\subsection{Ejecución completa}
+
+La ejecución completa sigue el siguiente orden:
+
+\begin{enumerate}
+    \item Usuarios.
+    \item Marcas.
+    \item Vehículos.
+    \item Vistas de vehículos.
+    \item Favoritos.
+    \item Comparaciones.
+    \item Simulaciones de crédito.
+\end{enumerate}
+
+El orden es importante porque las dimensiones deben existir antes de cargar los hechos. Por ejemplo, para insertar una simulación de crédito se requiere identificar previamente el usuario, el vehículo, la marca y la fecha.
+
+\subsection{Endpoints de ejecución}
+
+\begin{lstlisting}[style=textstyle,caption={Endpoints de ETL}]
+POST /api/admin/warehouse/run-etl?limit=100
+POST /api/admin/warehouse/run-etl/users?limit=100
+POST /api/admin/warehouse/run-etl/brands?limit=100
+POST /api/admin/warehouse/run-etl/vehicles?limit=100
+POST /api/admin/warehouse/run-etl/vehicle-views?limit=100
+POST /api/admin/warehouse/run-etl/favorites?limit=100
+POST /api/admin/warehouse/run-etl/comparisons?limit=100
+POST /api/admin/warehouse/run-etl/credit-simulations?limit=100
+GET  /api/admin/warehouse/status
+\end{lstlisting}
+
+\subsection{Carga incremental}
+
+Los eventos se procesan de manera incremental. En Firestore, cada documento de evento contiene un campo de control:
+
+\begin{lstlisting}[style=textstyle]
+syncedToWarehouse = false
+\end{lstlisting}
+
+La ETL lee únicamente los documentos no sincronizados. Después de cargarlos en PostgreSQL, actualiza el documento:
+
+\begin{lstlisting}[style=textstyle]
+syncedToWarehouse = true
+syncedAt = fecha de sincronizacion
+\end{lstlisting}
+
+Esto evita duplicados y permite ejecutar la ETL varias veces durante el ciclo de vida del proyecto.
+
+\section{Transformaciones principales}
+
+\subsection{Conversión de identificadores}
+
+Firestore utiliza identificadores de documento como texto. El Data Warehouse utiliza llaves sustitutas numéricas. Por tanto, una transformación esencial es convertir:
+
+\begin{lstlisting}[style=textstyle]
+userId    -> user_key
+brandId   -> brand_key
+vehicleId -> vehicle_key
+fecha     -> date_key
+\end{lstlisting}
+
+\subsection{Normalización de fechas}
+
+Las fechas de eventos se transforman en una llave de fecha con formato \texttt{YYYYMMDD}. Por ejemplo:
+
+\begin{lstlisting}[style=textstyle]
+2026-05-30 -> 20260530
+\end{lstlisting}
+
+Además, se inserta o reutiliza un registro en \texttt{dim\_date} con atributos como día, mes, trimestre, año y día de la semana.
+
+\subsection{Normalización de valores numéricos}
+
+Campos como precio, kilometraje, cuota inicial, monto financiado, plazo, tasa de interés y cuota mensual son convertidos a valores numéricos. Si el valor no es válido, se almacena como nulo para no contaminar los cálculos.
+
+\subsection{Clasificación de interacciones}
+
+Los eventos se clasifican en tipos analíticos:
+
+\begin{itemize}
+    \item \texttt{view}: vista de vehículo.
+    \item \texttt{favorite}: vehículo guardado como favorito.
+    \item \texttt{compare}: comparación entre vehículos.
+\end{itemize}
+
+Las simulaciones de crédito se almacenan en una tabla de hechos independiente porque contienen medidas financieras adicionales.
+
+\section{Detalle de cada ETL implementada}
+
+\subsection{ETL de usuarios}
+
+\textbf{Extrae}: documentos de la colección \texttt{users}.
+
+\textbf{Transforma}: el identificador de Firebase se conserva como \texttt{firebase\_uid}; el nombre, correo y rol se normalizan; si el rol no existe se asume \texttt{customer}.
+
+\textbf{Carga}: registros en \texttt{dim\_users}.
+
+\begin{lstlisting}[style=sqlstyle,caption={Carga de usuarios}]
+INSERT INTO dim_users (firebase_uid, name, email, role, updated_at)
+VALUES ($1, $2, $3, $4, NOW())
+ON CONFLICT (firebase_uid) DO UPDATE SET
+  name = COALESCE(EXCLUDED.name, dim_users.name),
+  email = COALESCE(EXCLUDED.email, dim_users.email),
+  role = COALESCE(EXCLUDED.role, dim_users.role),
+  updated_at = NOW()
+RETURNING user_key;
+\end{lstlisting}
+
+\subsection{ETL de marcas}
+
+\textbf{Extrae}: documentos de la colección \texttt{brands}.
+
+\textbf{Transforma}: el ID del documento se conserva como \texttt{firestore\_brand\_id}; el nombre se almacena como \texttt{brand\_name}.
+
+\textbf{Carga}: registros en \texttt{dim\_brands}.
+
+\begin{lstlisting}[style=sqlstyle,caption={Carga de marcas}]
+INSERT INTO dim_brands (firestore_brand_id, brand_name, updated_at)
+VALUES ($1, $2, NOW())
+ON CONFLICT (firestore_brand_id) DO UPDATE SET
+  brand_name = EXCLUDED.brand_name,
+  updated_at = NOW()
+RETURNING brand_key;
+\end{lstlisting}
+
+\subsection{ETL de vehículos}
+
+\textbf{Extrae}: documentos de la colección \texttt{vehicles}.
+
+\textbf{Transforma}: relaciona cada vehículo con su marca, normaliza atributos numéricos y conserva características como modelo, tipo, precio, kilometraje, combustible, transmisión, asientos y motor.
+
+\textbf{Carga}: registros en \texttt{dim\_vehicles}.
+
+\begin{lstlisting}[style=sqlstyle,caption={Carga de vehículos}]
+INSERT INTO dim_vehicles (
+  firestore_vehicle_id,
+  model,
+  brand_key,
+  type,
+  year,
+  price,
+  mileage,
+  fuel_type,
+  transmission,
+  seats,
+  engine,
+  updated_at
+)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
+ON CONFLICT (firestore_vehicle_id) DO UPDATE SET
+  model = EXCLUDED.model,
+  brand_key = EXCLUDED.brand_key,
+  type = EXCLUDED.type,
+  year = EXCLUDED.year,
+  price = EXCLUDED.price,
+  mileage = EXCLUDED.mileage,
+  fuel_type = EXCLUDED.fuel_type,
+  transmission = EXCLUDED.transmission,
+  seats = EXCLUDED.seats,
+  engine = EXCLUDED.engine,
+  updated_at = NOW()
+RETURNING vehicle_key;
+\end{lstlisting}
+
+\subsection{ETL de vistas}
+
+\textbf{Extrae}: documentos no sincronizados de \texttt{vehicle\_views}.
+
+\textbf{Transforma}: obtiene usuario, vehículo, marca y fecha; clasifica el evento como \texttt{view}.
+
+\textbf{Carga}: registros en \texttt{fact\_interactions}.
+
+\begin{lstlisting}[style=sqlstyle,caption={Carga general de interacciones}]
+INSERT INTO fact_interactions (
+  firestore_event_id,
+  user_key,
+  vehicle_key,
+  brand_key,
+  date_key,
+  interaction_type,
+  interaction_count,
+  event_timestamp
+)
+VALUES ($1, $2, $3, $4, $5, $6, 1, $7)
+ON CONFLICT (firestore_event_id) DO NOTHING;
+\end{lstlisting}
+
+\subsection{ETL de favoritos}
+
+\textbf{Extrae}: documentos no sincronizados de \texttt{favorites}.
+
+\textbf{Transforma}: usa la fecha \texttt{createdAt} como momento del evento; clasifica la interacción como \texttt{favorite}.
+
+\textbf{Carga}: registros en \texttt{fact\_interactions}.
+
+Es importante aclarar que la colección de favoritos representa los favoritos actuales del usuario. El Data Warehouse conserva el evento una vez cargado, de modo que se obtiene una lectura histórica de los favoritos sincronizados.
+
+\subsection{ETL de comparaciones}
+
+\textbf{Extrae}: documentos no sincronizados de \texttt{vehicle\_comparisons}.
+
+\textbf{Transforma}: identifica el usuario, los dos vehículos comparados, sus marcas y la fecha de comparación. Genera un evento general \texttt{compare} y dos registros de detalle, uno por cada vehículo involucrado.
+
+\textbf{Carga}: registros en \texttt{fact\_interactions} y \texttt{fact\_comparison\_vehicles}.
+
+\begin{lstlisting}[style=sqlstyle,caption={Detalle de vehículos comparados}]
+INSERT INTO fact_comparison_vehicles (
+  firestore_comparison_id,
+  user_key,
+  vehicle_key,
+  brand_key,
+  date_key,
+  compared_at
+)
+VALUES ($1, $2, $3, $4, $5, $6)
+ON CONFLICT (firestore_comparison_id, vehicle_key) DO NOTHING;
+\end{lstlisting}
+
+\subsection{ETL de simulaciones de crédito}
+
+\textbf{Extrae}: documentos no sincronizados de \texttt{credit\_simulations}.
+
+\textbf{Transforma}: relaciona usuario, vehículo, marca y fecha; normaliza las medidas financieras: precio del vehículo, cuota inicial, monto financiado, plazo, tasa de interés y cuota mensual estimada.
+
+\textbf{Carga}: registros en \texttt{fact\_credit\_simulations}.
+
+\begin{lstlisting}[style=sqlstyle,caption={Carga de simulaciones de crédito}]
+INSERT INTO fact_credit_simulations (
+  firestore_simulation_id,
+  user_key,
+  vehicle_key,
+  brand_key,
+  date_key,
+  vehicle_price,
+  down_payment,
+  amount_financed,
+  term_months,
+  interest_rate,
+  estimated_monthly_payment,
+  simulated_at
+)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+ON CONFLICT (firestore_simulation_id) DO NOTHING;
+\end{lstlisting}
+
+\section{Métricas y tableros}
+
+El Data Warehouse permite construir tableros administrativos con información consolidada. Estos tableros no consultan directamente los documentos operacionales, sino las tablas dimensionales y de hechos.
+
+\subsection{Tableros implementados o propuestos}
+
+\begin{longtable}{p{4cm}p{10cm}}
+\toprule
+\textbf{Tablero} & \textbf{Utilidad} \\
+\midrule
+\endhead
+Resumen general & Muestra usuarios, marcas, vehículos, vistas, favoritos, comparaciones y simulaciones. \\
+Popularidad por marca & Permite identificar marcas con mayor atracción e intención de compra. \\
+Popularidad por vehículo & Ordena vehículos según vistas, favoritos, comparaciones y simulaciones. \\
+Interacciones por fecha & Muestra la evolución temporal de la actividad del sistema. \\
+Simulaciones de crédito & Analiza precios, montos financiados y cuotas estimadas. \\
+Preferencias por tipo & Identifica interés por categorías de vehículo como SUV, sedán o pickup. \\
+Actividad por usuario & Detecta usuarios con mayor interacción e intención comercial. \\
+Embudo de compra & Compara vistas, favoritos, comparaciones y simulaciones como etapas de decisión. \\
+Conversión por marca & Relaciona interés inicial con simulaciones de crédito por marca. \\
+Demanda por rango de precio & Evalúa qué rangos de precio generan más actividad o conversión. \\
+Vehículos vistos sin conversión & Identifica modelos con muchas vistas pero pocas simulaciones. \\
+\bottomrule
+\end{longtable}
+
+\subsection{Puntaje de popularidad}
+
+Para interpretar el interés de los usuarios se utiliza un puntaje ponderado:
+
+\begin{lstlisting}[style=textstyle]
+Score = vistas * 1
+      + comparaciones * 3
+      + favoritos * 4
+      + simulaciones de credito * 5
+\end{lstlisting}
+
+La ponderación se justifica porque no todas las acciones tienen el mismo valor analítico. Una vista representa interés inicial, una comparación indica evaluación, un favorito indica intención más fuerte y una simulación de crédito representa una etapa cercana a una posible compra.
+
+\section{Aprovechamiento de los datos}
+
+El Data Warehouse permite que la aplicación pase de mostrar información estática a generar conocimiento útil. Algunos ejemplos:
+
+\begin{itemize}
+    \item Reemplazar una sección genérica de marcas populares por marcas realmente populares según datos históricos.
+    \item Recomendar vehículos o marcas según comportamiento de navegación.
+    \item Identificar vehículos con alto interés pero baja conversión.
+    \item Apoyar decisiones comerciales sobre inventario, promociones o campañas.
+    \item Analizar qué tipos de vehículos son más atractivos para los usuarios.
+    \item Medir si el simulador de crédito está siendo usado como paso de intención de compra.
+\end{itemize}
+
+\section{Alternativas de visualización}
+
+Los tableros pueden visualizarse de dos formas:
+
+\subsection{Tableros dentro de la aplicación}
+
+La aplicación consulta endpoints del backend que ejecutan SQL sobre el Data Warehouse y devuelven métricas al frontend. Esta alternativa es útil para un administrador del sistema, ya que mantiene la visualización integrada a la plataforma.
+
+\subsection{Power BI o Excel conectado a PostgreSQL}
+
+Como alternativa académica o empresarial, PostgreSQL puede conectarse a Power BI o Microsoft Excel. Esto permite crear reportes directivos, segmentadores, gráficos temporales y análisis más avanzados sin modificar la aplicación.
+
+Esta opción refuerza el enfoque de Data Warehouse porque demuestra que la bodega de datos es una fuente analítica independiente, no atada exclusivamente al frontend del proyecto.
+
+\section{Relación con los criterios de evaluación}
+
+\subsection{Funcionalidad: 30\%}
+
+El sistema cumple el objetivo planteado porque captura datos operacionales de usuarios y vehículos, los transforma mediante ETL y los utiliza para alimentar tableros administrativos. La solución permite consultar métricas reales de popularidad, actividad e intención de compra.
+
+\subsection{Complejidad técnica: 30\%}
+
+La complejidad técnica se evidencia en:
+
+\begin{itemize}
+    \item Separación entre base operacional y base analítica.
+    \item Implementación de un modelo dimensional.
+    \item Uso de dimensiones y tablas de hechos.
+    \item Procesos ETL incrementales.
+    \item Conversión de identificadores de Firestore a llaves sustitutas.
+    \item Normalización de fechas y valores numéricos.
+    \item Control de duplicados mediante campos de sincronización y restricciones SQL.
+    \item Consultas agregadas para tableros.
+\end{itemize}
+
+\subsection{Sustentación: 40\%}
+
+La sustentación puede enfocarse en explicar el flujo de datos completo:
+
+\begin{enumerate}
+    \item El usuario interactúa con vehículos.
+    \item La aplicación guarda eventos en Firestore.
+    \item La ETL lee eventos no sincronizados.
+    \item La ETL transforma datos operacionales en datos dimensionales.
+    \item PostgreSQL almacena dimensiones y hechos.
+    \item Los tableros consultan el Data Warehouse.
+    \item Las métricas apoyan decisiones sobre popularidad, conversión e intención de compra.
+\end{enumerate}
+
+Este punto es clave porque la evaluación de sustentación tiene el mayor peso. Por tanto, no solo se debe mostrar la aplicación, sino explicar por qué la arquitectura de datos es adecuada.
+
+\section{Conclusiones}
+
+El proyecto implementa una solución de Data Warehouse aplicada a una problemática de análisis de vehículos. La base operacional en Firebase permite registrar la actividad diaria de la aplicación, mientras que Supabase/PostgreSQL organiza esta información en un modelo dimensional preparado para análisis.
+
+La ETL cumple el papel central de integrar ambas capas: extrae documentos operacionales, transforma identificadores, fechas y valores, y carga dimensiones y hechos. Gracias a esto, el sistema puede generar tableros que muestran popularidad de marcas, ranking de vehículos, evolución temporal de interacciones, comportamiento de usuarios y simulaciones de crédito.
+
+Desde la perspectiva de Bases de Datos 2, el valor del proyecto está en demostrar que una arquitectura de bases de datos bien diseñada permite convertir eventos cotidianos en información estratégica para la toma de decisiones.
+
+\end{document}
+

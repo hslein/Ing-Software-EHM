@@ -25,7 +25,7 @@ const getAuthHeaders = async () => {
   };
 };
 
-const postEvent = async (path: string, payload: Record<string, unknown>) => {
+const postEvent = async (path: string, payload: object) => {
   const headers = await getAuthHeaders();
   const response = await fetch(`${apiBaseUrl}${path}`, {
     method: 'POST',

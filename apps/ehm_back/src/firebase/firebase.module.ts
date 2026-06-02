@@ -23,6 +23,14 @@ const serviceAccountPath =
           return admin.app();
         }
 
+        if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+          return admin.initializeApp({
+            credential: admin.credential.cert(
+              JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON),
+            ),
+          });
+        }
+
         if (!existsSync(serviceAccountPath)) {
           throw new Error(
             `Firebase service account file not found at ${serviceAccountPath}`,

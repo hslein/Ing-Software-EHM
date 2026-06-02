@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     region: oregon
-    buildCommand: npm ci && npm run build:back
+    buildCommand: npm ci --include=dev && npm run build:back
     startCommand: npm run start:back:render
     autoDeployTrigger: commit
     envVars:
@@ -27,7 +27,7 @@ services:
   - type: web
     name: ehm-front
     runtime: static
-    buildCommand: npm ci && npm run build:front
+    buildCommand: npm ci --include=dev && npm run build:front
     staticPublishPath: apps/ehm_front/dist
     autoDeployTrigger: commit
     envVars:

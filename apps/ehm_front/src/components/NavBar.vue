@@ -15,24 +15,6 @@
           <RouterLink to="/about" class="nav-link" @click="goAbout">{{ t('nav.about') }}</RouterLink>
         </li>
 
-        <li v-if="isAuthenticated && !isAdmin && brands.length" class="nav-item nav-brand-control">
-          <label for="brand" class="nav-label">{{ t('nav.brand') }}</label>
-          <select
-            id="brand"
-            class="brand-select"
-            :value="selectedBrandId"
-            @change="selectBrand"
-          >
-            <option
-              v-for="brand in brands"
-              :key="brand.id ?? brand.name"
-              :value="brand.id"
-            >
-              {{ brand.name }}
-            </option>
-          </select>
-        </li>
-
         <li class="nav-item">
           <LanguageSwitcher />
         </li>
@@ -68,11 +50,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
-import { RouterLink, useRoute, useRouter } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
 import { LogOut, UserRound } from 'lucide-vue-next';
 import { useAuth } from '../composables/useAuth';
-import { useVehicles } from '../composables/useVehicles';
 import { useI18n } from '../i18n';
 import LanguageSwitcher from './LanguageSwitcher.vue';
 
@@ -85,43 +65,9 @@ const emit = defineEmits<{
   'go-home': [];
 }>();
 
-const route = useRoute();
 const router = useRouter();
 const { isAuthenticated, isAdmin, logout } = useAuth();
-const { brands, fetchBrands } = useVehicles();
 const { t } = useI18n();
-
-const selectedBrandId = computed(() => {
-  const brandId = route.query.brandId;
-  return typeof brandId === 'string' ? brandId : '';
-});
-
-const loadBrands = async () => {
-  if (!isAuthenticated.value || brands.value.length > 0) {
-    return;
-  }
-
-  try {
-    await fetchBrands();
-  } catch (err) {
-    console.error('Failed to load brands for navbar:', err);
-  }
-};
-
-const selectBrand = async (event: Event) => {
-  const brandId = (event.target as HTMLSelectElement).value;
-  if (!brandId) {
-    return;
-  }
-
-  await router.push({
-    path: '/',
-    query: {
-      ...route.query,
-      brandId,
-    },
-  });
-};
 
 const goHome = () => {
   emit('go-home');
@@ -136,13 +82,6 @@ const handleLogout = async () => {
   router.push('/login');
 };
 
-onMounted(loadBrands);
-
-watch(isAuthenticated, (authenticated) => {
-  if (authenticated) {
-    loadBrands();
-  }
-});
 </script>
 
 <style scoped>
@@ -216,37 +155,6 @@ watch(isAuthenticated, (authenticated) => {
   background: linear-gradient(135deg, #ff6f7a, #ffa36b);
   box-shadow: 0 10px 22px rgba(255, 102, 102, 0.44);
   color: white;
-}
-
-.nav-label {
-  color: #dfe7ff;
-  margin-right: 0.4rem;
-  font-size: 0.86rem;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.brand-select {
-  background-color: rgba(255, 255, 255, 0.9);
-  color: #1d2747;
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  border-radius: 999px;
-  padding: 0.34rem 0.65rem;
-  font-size: 0.88rem;
-  font-weight: 600;
-  outline: none;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.brand-select:focus {
-  border-color: #ff9c7f;
-  box-shadow: 0 0 0 3px rgba(255, 156, 127, 0.24);
-}
-
-.nav-brand-control {
-  background-color: rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
-  padding: 0.3rem 0.45rem;
 }
 
 .nav-button {

@@ -1,7 +1,7 @@
 import { ref, computed } from 'vue';
 import { auth } from '../config/firebase';
 
-export type VehicleType = 'suv' | 'sedan' | 'deportivo' | 'pickup';
+export type VehicleType = 'suv' | 'sedan' | 'deportivo' | 'pickup' | '';
 
 export interface Vehicle {
   id?: string;
@@ -12,8 +12,16 @@ export interface Vehicle {
   description: string;
   brand: string;
   price?: number;
-  year?: number;
-  mileage?: number;
+  year?: number | string;
+  mileage?: number | string;
+  acceleration?: string;
+  capacity?: string;
+  engine?: string;
+  fuelType?: string;
+  horsepower?: string;
+  seats?: string;
+  topSpeed?: string;
+  torque?: string;
   isFavorite?: boolean;
   createdAt?: Date | string;
   updatedAt?: Date | string;

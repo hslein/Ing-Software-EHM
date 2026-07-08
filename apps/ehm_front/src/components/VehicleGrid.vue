@@ -20,12 +20,28 @@ defineEmits<{
 const highlightsSection = ref<HTMLElement>();
 const { t } = useI18n();
 
+const hasValue = (value?: number | string | null) => {
+  return value !== undefined && value !== null && String(value).trim() !== '';
+};
+
 const formatVehicleType = (value?: string) => {
-  if (!value) {
-    return t('vehicles.defaultType');
+  if (!hasValue(value)) {
+    return '';
   }
 
-  return value.charAt(0).toUpperCase() + value.slice(1);
+  return String(value).charAt(0).toUpperCase() + String(value).slice(1);
+};
+
+const formatVehiclePrice = (price?: number) => {
+  if (!hasValue(price)) {
+    return '';
+  }
+
+  return `$${Number(price).toLocaleString()} COP`;
+};
+
+const formatVehicleMeta = (vehicle: Vehicle) => {
+  return [vehicle.year, vehicle.fuelType, formatVehicleType(vehicle.type)].filter(hasValue).join(' | ');
 };
 
 const scrollLeft = () => {
@@ -69,40 +85,59 @@ const scrollRight = () => {
         :key="vehicle.id ?? `${vehicle.model}-${index}`"
         class="vehicle-card"
       >
-        <button
-          class="favorite-toggle"
-          :class="{ favorite: vehicle.isFavorite }"
-          type="button"
-          :aria-label="vehicle.isFavorite ? t('vehicles.removeFavorite') : t('vehicles.addFavorite')"
-          :title="vehicle.isFavorite ? t('vehicles.removeFavorite') : t('vehicles.addFavorite')"
-          @click.stop="$emit('toggleFavorite', vehicle)"
-        >
-          <Heart :size="20" :fill="vehicle.isFavorite ? 'currentColor' : 'none'" />
-        </button>
-        <img :src="vehicle.image" :alt="`${brandName} ${vehicle.model}`" class="vehicle-image" />
+        <div class="vehicle-media">
+          <div class="vehicle-tools">
+            <button
+              class="compare-toggle"
+              :class="{ selected: selectedCompareIds?.includes(vehicle.id ?? vehicle.model) }"
+              type="button"
+              @click="$emit('toggleCompare', vehicle)"
+            >
+              {{
+                selectedCompareIds?.includes(vehicle.id ?? vehicle.model)
+                  ? t('vehicles.selectedAction')
+                  : t('vehicles.compare')
+              }}
+            </button>
+            <button
+              class="favorite-toggle"
+              :class="{ favorite: vehicle.isFavorite }"
+              type="button"
+              :aria-label="vehicle.isFavorite ? t('vehicles.removeFavorite') : t('vehicles.addFavorite')"
+              :title="vehicle.isFavorite ? t('vehicles.removeFavorite') : t('vehicles.addFavorite')"
+              @click.stop="$emit('toggleFavorite', vehicle)"
+            >
+              <Heart :size="19" :fill="vehicle.isFavorite ? 'currentColor' : 'none'" />
+            </button>
+          </div>
+          <img :src="vehicle.image" :alt="`${brandName} ${vehicle.model}`" class="vehicle-image" />
+          <p class="image-note">*Imagen de referencia</p>
+        </div>
+
         <div class="vehicle-info">
-          <h3>{{ brandName }} {{ vehicle.model }}</h3>
-          <p class="type">{{ formatVehicleType(vehicle.type) }}</p>
-          <p class="description">{{ vehicle.description }}</p>
-          <button
-            class="compare-toggle"
-            :class="{ selected: selectedCompareIds?.includes(vehicle.id ?? vehicle.model) }"
-            type="button"
-            @click="$emit('toggleCompare', vehicle)"
-          >
-            {{
-              selectedCompareIds?.includes(vehicle.id ?? vehicle.model)
-                ? t('vehicles.selectedAction')
-                : t('vehicles.compare')
-            }}
-          </button>
-          <div class="vehicle-actions">
-            <button class="btn-primary" type="button" @click="$emit('selectVehicle', vehicle)">
-              {{ t('vehicles.viewDetails') }}
-            </button>
-            <button class="btn-secondary" type="button" @click="$emit('quoteVehicle', vehicle)">
-              {{ t('vehicles.quote') }}
-            </button>
+          <div class="vehicle-copy">
+            <h3>{{ vehicle.model }}</h3>
+            <p v-if="formatVehicleMeta(vehicle)" class="type">{{ formatVehicleMeta(vehicle) }}</p>
+            <p class="description">{{ vehicle.description }}</p>
+          </div>
+
+          <div class="vehicle-commercial">
+            <div class="vehicle-price">
+              <p class="price-kicker">Desde</p>
+              <p class="price-value">{{ formatVehiclePrice(vehicle.price) || 'Consultar precio' }}</p>
+              <p v-if="vehicle.price" class="price-note">*Precio sugerido al publico</p>
+            </div>
+
+            <hr class="vehicle-divider" />
+
+            <div class="vehicle-actions">
+              <button class="btn-primary" type="button" @click="$emit('selectVehicle', vehicle)">
+                {{ t('vehicles.viewDetails') }}
+              </button>
+              <button class="btn-secondary" type="button" @click="$emit('quoteVehicle', vehicle)">
+                {{ t('vehicles.quote') }}
+              </button>
+            </div>
           </div>
         </div>
       </article>
@@ -122,9 +157,9 @@ const scrollRight = () => {
 
 .vehicles-grid {
   display: flex;
-  gap: 20px;
+  gap: 24px;
   overflow-x: auto;
-  padding: 20px 0;
+  padding: 24px 4px;
   scroll-behavior: smooth;
 }
 
@@ -133,12 +168,12 @@ const scrollRight = () => {
 }
 
 .vehicles-grid::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #d7e4ef;
   border-radius: 10px;
 }
 
 .vehicles-grid::-webkit-scrollbar-thumb {
-  background: #888;
+  background: #2980b9;
   border-radius: 10px;
 }
 
@@ -153,37 +188,96 @@ const scrollRight = () => {
 }
 
 .vehicle-card {
-  flex: 0 0 300px;
-  background: white;
-  border-radius: 8px;
+  flex: 0 0 340px;
+  display: grid;
+  grid-template-rows: auto auto;
+  min-height: 520px;
   overflow: hidden;
   position: relative;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  border: 1px solid rgba(44, 62, 80, 0.12);
+  background:
+    linear-gradient(135deg, rgba(255, 142, 113, 0.18) 0%, rgba(255, 142, 113, 0) 26%),
+    linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: #fff;
+  padding: 16px;
+  box-shadow: 0 18px 42px rgba(44, 62, 80, 0.22);
   transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.vehicle-card::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, #2980b9, #ff8e71);
+  content: '';
 }
 
 .vehicle-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 22px 50px rgba(44, 62, 80, 0.34);
+}
+
+.vehicle-media {
+  position: relative;
+  display: flex;
+  min-height: 250px;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background:
+    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.95), rgba(236, 240, 241, 0.82) 42%, rgba(215, 228, 239, 0.95) 100%);
+  box-shadow: inset 0 -18px 40px rgba(44, 62, 80, 0.1);
+}
+
+.vehicle-tools {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
 }
 
 .vehicle-image {
   width: 100%;
-  height: 200px;
-  object-fit: cover;
+  min-height: 250px;
+  height: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  object-position: center;
+  padding: 36px 10px 26px;
+  filter: drop-shadow(0 18px 16px rgba(44, 62, 80, 0.2));
+}
+
+.image-note {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  margin: 0;
+  background: #2980b9;
+  color: #fff;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  line-height: 1.4;
+  padding: 4px 8px;
+  text-align: center;
 }
 
 .favorite-toggle {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 2;
   width: 38px;
   height: 38px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.96);
   border: 1px solid rgba(44, 62, 80, 0.18);
   border-radius: 50%;
   color: #2c3e50;
@@ -194,63 +288,119 @@ const scrollRight = () => {
 
 .favorite-toggle:hover {
   transform: scale(1.08);
-  border-color: #e74c3c;
-  color: #e74c3c;
+  background: #fff;
+  border-color: #ff8e71;
+  color: #ff8e71;
 }
 
 .favorite-toggle.favorite {
-  color: #e21b2d;
-  border-color: rgba(226, 27, 45, 0.45);
-}
-
-.vehicle-info {
-  padding: 15px;
-}
-
-.vehicle-info h3 {
-  margin: 0 0 5px;
-  font-size: 16px;
-  color: #333;
-}
-
-.type {
-  margin: 0 0 10px;
-  font-size: 12px;
-  color: #2980b9;
-  font-weight: 600;
-}
-
-.description {
-  margin: 0 0 15px;
-  font-size: 12px;
-  color: #666;
-  line-height: 1.4;
-}
-
-.vehicle-actions {
-  display: flex;
-  gap: 10px;
+  color: #ff6f7a;
+  border-color: rgba(255, 111, 122, 0.58);
 }
 
 .compare-toggle {
-  width: 100%;
-  margin-bottom: 12px;
-  background: #f3f7fb;
+  background: rgba(255, 255, 255, 0.96);
   color: #2c3e50;
-  border: 1px solid #d7e4ef;
+  border: 1px solid rgba(44, 62, 80, 0.18);
   padding: 8px 12px;
-  border-radius: 4px;
+  border-radius: 999px;
   cursor: pointer;
-  font-weight: 700;
-  font-size: 12px;
-  transition: all 0.2s;
+  font-weight: 800;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
 .compare-toggle:hover,
 .compare-toggle.selected {
-  background: #e8f4fc;
+  background: #2980b9;
   border-color: #2980b9;
-  color: #2980b9;
+  color: #fff;
+}
+
+.vehicle-info {
+  display: flex;
+  min-height: 0;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 14px 2px 2px;
+}
+
+.vehicle-info h3 {
+  margin: 0 0 6px;
+  color: #fff;
+  font-size: 23px;
+  font-weight: 700;
+  line-height: 26px;
+}
+
+.type {
+  margin: 0;
+  color: #d7e4ef;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.description {
+  display: -webkit-box;
+  margin: 10px 0 0;
+  min-height: 38px;
+  max-height: 58px;
+  color: rgba(245, 247, 250, 0.92);
+  font-size: 13px;
+  line-height: 1.45;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.vehicle-commercial {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.vehicle-price p {
+  margin: 0;
+}
+
+.price-kicker,
+.price-note {
+  color: #d7e4ef;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.price-value {
+  color: #fff;
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.price-note {
+  padding-bottom: 8px;
+}
+
+.vehicle-divider {
+  width: 100%;
+  height: 0;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid rgba(215, 228, 239, 0.35);
+}
+
+.vehicle-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .scroll-btn {
@@ -285,43 +435,56 @@ const scrollRight = () => {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #2980b9 0%, #2c3e50 100%);
+  min-width: 125px;
+  max-height: 40px;
+  background: rgba(255, 255, 255, 0.06);
   color: white;
-  border: none;
-  padding: 8px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.86);
+  padding: 10px 18px;
   border-radius: 4px;
   cursor: pointer;
-  font-weight: 600;
-  font-size: 12px;
-  transition: transform 0.2s;
-  flex: 1;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 18px;
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
 }
 
 .btn-primary:hover {
-  transform: scale(1.05);
-  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  background: #ff8e71;
+  border-color: #ff8e71;
+  color: #fff;
 }
 
 .btn-secondary {
-  background: white;
-  color: #2980b9;
-  border: 2px solid #2980b9;
-  padding: 8px 16px;
-  border-radius: 4px;
+  background: transparent;
+  color: #fff;
+  border: 0;
+  padding: 0 8px 0 0;
   cursor: pointer;
-  font-weight: 600;
-  font-size: 12px;
-  transition: all 0.2s;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 16px;
+  text-decoration: underline;
+  transition: color 0.2s;
 }
 
 .btn-secondary:hover {
-  background: #2980b9;
-  color: white;
+  color: #ff8e71;
 }
 
 @media (max-width: 768px) {
   .vehicle-card {
-    flex: 0 0 250px;
+    flex: 0 0 286px;
+    min-height: 500px;
+  }
+
+  .vehicle-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .btn-primary {
+    width: 100%;
   }
 
   .scroll-btn {

@@ -78,7 +78,7 @@ const scrollRight = () => {
 .brands-section h2 {
   font-size: 24px;
   margin-bottom: 20px;
-  color: #333;
+  color: #2c3e50;
 }
 
 .scroll-container {
@@ -87,9 +87,9 @@ const scrollRight = () => {
 
 .brands-grid {
   display: flex;
-  gap: 20px;
+  gap: 24px;
   overflow-x: auto;
-  padding: 20px 0;
+  padding: 24px 4px;
   scroll-behavior: smooth;
 }
 
@@ -98,50 +98,72 @@ const scrollRight = () => {
 }
 
 .brands-grid::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #d7e4ef;
   border-radius: 10px;
 }
 
 .brands-grid::-webkit-scrollbar-thumb {
-  background: #888;
+  background: #2980b9;
   border-radius: 10px;
 }
 
 .brand-card {
-  flex: 0 0 180px;
-  background: white;
-  border: 2px solid transparent;
+  flex: 0 0 220px;
+  position: relative;
+  display: grid;
+  grid-template-rows: 150px auto;
+  background:
+    linear-gradient(135deg, rgba(255, 142, 113, 0.14) 0%, rgba(255, 142, 113, 0) 32%),
+    linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  border: 1px solid rgba(44, 62, 80, 0.12);
   border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  padding: 0;
+  box-shadow: 0 18px 42px rgba(44, 62, 80, 0.2);
+  padding: 12px;
   text-align: left;
   font: inherit;
+  color: #fff;
+}
+
+.brand-card::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, #2980b9, #ff8e71);
+  content: '';
 }
 
 .brand-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 22px 50px rgba(44, 62, 80, 0.32);
 }
 
 .brand-card.active {
-  border-color: #2980b9;
+  border-color: #ff8e71;
+  box-shadow: 0 22px 50px rgba(44, 62, 80, 0.32), 0 0 0 3px rgba(255, 142, 113, 0.18);
 }
 
 .brand-image {
   width: 100%;
-  height: 120px;
-  object-fit: cover;
+  height: 100%;
+  object-fit: contain;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.96), rgba(236, 240, 241, 0.84) 45%, rgba(215, 228, 239, 0.95) 100%);
+  padding: 18px;
+  filter: drop-shadow(0 14px 12px rgba(44, 62, 80, 0.18));
 }
 
 .brand-name {
   display: block;
-  padding: 12px;
-  font-size: 16px;
-  color: #333;
-  font-weight: 700;
+  padding: 14px 2px 2px;
+  font-size: 17px;
+  color: #fff;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
 .scroll-btn {
@@ -177,7 +199,8 @@ const scrollRight = () => {
 
 @media (max-width: 768px) {
   .brand-card {
-    flex: 0 0 140px;
+    flex: 0 0 176px;
+    grid-template-rows: 118px auto;
   }
 
   .scroll-btn {

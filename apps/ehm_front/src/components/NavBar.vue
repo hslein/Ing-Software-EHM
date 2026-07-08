@@ -15,73 +15,46 @@
           <RouterLink to="/about" class="nav-link" @click="goAbout">{{ t('nav.about') }}</RouterLink>
         </li>
 
-        <li v-if="isAuthenticated && !isAdmin && brands.length" class="nav-item nav-brand-control">
-          <label for="brand" class="nav-label">{{ t('nav.brand') }}</label>
-          <select
-            id="brand"
-            class="brand-select"
-            :value="selectedBrandId"
-            @change="selectBrand"
-          >
-            <option
-              v-for="brand in brands"
-              :key="brand.id ?? brand.name"
-              :value="brand.id"
-            >
-              {{ brand.name }}
-            </option>
-          </select>
-        </li>
-
         <li class="nav-item">
           <LanguageSwitcher />
-        </li>
-
-        <li v-if="isAuthenticated" class="nav-item">
-          <button
-            type="button"
-            class="nav-link nav-link-btn nav-button"
-            @click="openScheduleModal"
-          >
-            {{ t('nav.scheduleAppointment') }}
-          </button>
         </li>
 
         <li class="nav-item">
           <RouterLink v-if="!isAuthenticated" to="/login" class="nav-link nav-link-btn">
             {{ t('nav.signIn') }}
           </RouterLink>
-          <div v-else style="display:flex; gap:8px; align-items:center;">
+          <div v-else class="nav-actions">
             <RouterLink v-if="isAdmin" to="/admin/dashboard" class="nav-link">
               {{ t('nav.dashboard') }}
             </RouterLink>
             <RouterLink v-if="isAdmin" to="/users" class="nav-link">{{ t('nav.users') }}</RouterLink>
-            <RouterLink to="/user-details" class="nav-link">{{ t('nav.profile') }}</RouterLink>
+            <RouterLink to="/user-details" class="nav-icon-button" :aria-label="t('nav.profile')" :title="t('nav.profile')">
+              <UserRound :size="18" aria-hidden="true" />
+              <span>{{ t('nav.profile') }}</span>
+            </RouterLink>
             <button
               type="button"
-              class="nav-link nav-link-btn nav-button"
+              class="nav-icon-button"
               @click="handleLogout"
+              :aria-label="t('nav.logOut')"
+              :title="t('nav.logOut')"
             >
-              {{ t('nav.logOut') }}
+              <LogOut :size="18" aria-hidden="true" />
+              <span>{{ t('nav.logOut') }}</span>
             </button>
           </div>
         </li>
       </ul>
     </div>
-
-    <ScheduleAppointmentModal />
   </nav>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, watch } from 'vue';
-import { RouterLink, useRoute, useRouter } from 'vue-router';
+import { RouterLink, useRouter } from 'vue-router';
+import { LogOut, UserRound } from 'lucide-vue-next';
 import { useAuth } from '../composables/useAuth';
-import { useAppointments } from '../composables/useAppointments';
-import { useVehicles } from '../composables/useVehicles';
 import { useI18n } from '../i18n';
 import LanguageSwitcher from './LanguageSwitcher.vue';
-import ScheduleAppointmentModal from './ScheduleAppointmentModal.vue';
 
 defineOptions({
   name: 'NavBar',
@@ -92,44 +65,9 @@ const emit = defineEmits<{
   'go-home': [];
 }>();
 
-const route = useRoute();
 const router = useRouter();
 const { isAuthenticated, isAdmin, logout } = useAuth();
-const { openScheduleModal } = useAppointments();
-const { brands, fetchBrands } = useVehicles();
 const { t } = useI18n();
-
-const selectedBrandId = computed(() => {
-  const brandId = route.query.brandId;
-  return typeof brandId === 'string' ? brandId : '';
-});
-
-const loadBrands = async () => {
-  if (!isAuthenticated.value || brands.value.length > 0) {
-    return;
-  }
-
-  try {
-    await fetchBrands();
-  } catch (err) {
-    console.error('Failed to load brands for navbar:', err);
-  }
-};
-
-const selectBrand = async (event: Event) => {
-  const brandId = (event.target as HTMLSelectElement).value;
-  if (!brandId) {
-    return;
-  }
-
-  await router.push({
-    path: '/',
-    query: {
-      ...route.query,
-      brandId,
-    },
-  });
-};
 
 const goHome = () => {
   emit('go-home');
@@ -144,13 +82,6 @@ const handleLogout = async () => {
   router.push('/login');
 };
 
-onMounted(loadBrands);
-
-watch(isAuthenticated, (authenticated) => {
-  if (authenticated) {
-    loadBrands();
-  }
-});
 </script>
 
 <style scoped>
@@ -226,41 +157,57 @@ watch(isAuthenticated, (authenticated) => {
   color: white;
 }
 
-.nav-label {
-  color: #dfe7ff;
-  margin-right: 0.4rem;
-  font-size: 0.86rem;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.brand-select {
-  background-color: rgba(255, 255, 255, 0.9);
-  color: #1d2747;
-  border: 1px solid rgba(255, 255, 255, 0.45);
-  border-radius: 999px;
-  padding: 0.34rem 0.65rem;
-  font-size: 0.88rem;
-  font-weight: 600;
-  outline: none;
-  transition: box-shadow 0.2s ease, border-color 0.2s ease;
-}
-
-.brand-select:focus {
-  border-color: #ff9c7f;
-  box-shadow: 0 0 0 3px rgba(255, 156, 127, 0.24);
-}
-
-.nav-brand-control {
-  background-color: rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
-  padding: 0.3rem 0.45rem;
-}
-
 .nav-button {
   border: 0;
   cursor: pointer;
   font-family: inherit;
+}
+
+.nav-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.nav-icon-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  min-height: 36px;
+  border: 0;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  padding: 0.45rem 0.7rem;
+  text-decoration: none;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, gap 0.2s ease, transform 0.2s ease;
+}
+
+.nav-icon-button span {
+  display: inline-block;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: max-width 0.24s ease, opacity 0.18s ease;
+}
+
+.nav-icon-button:hover,
+.nav-icon-button:focus-visible {
+  background: linear-gradient(135deg, #ff6f7a, #ffa36b);
+  box-shadow: 0 10px 22px rgba(255, 102, 102, 0.32);
+  gap: 0.4rem;
+  transform: translateY(-1px);
+}
+
+.nav-icon-button:hover span,
+.nav-icon-button:focus-visible span {
+  max-width: 90px;
+  opacity: 1;
 }
 
 @media (max-width: 980px) {

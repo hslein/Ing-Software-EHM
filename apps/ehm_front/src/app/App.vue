@@ -5,6 +5,7 @@ import Actions from '../components/Actions.vue';
 import DealerFooter from '../components/DealerFooter.vue';
 import NavBar from '../components/NavBar.vue';
 import FuelSavingsModal from '../components/FuelSavingsModal.vue';
+import ScheduleAppointmentModal from '../components/ScheduleAppointmentModal.vue';
 import VehicleDeliveryModal from '../components/VehicleDeliveryModal.vue'; // 1. Nueva importación
 
 const route = useRoute();
@@ -55,6 +56,7 @@ const openCredit = () => { router.push('/credit'); };
     <Teleport to="body">
       <FuelSavingsModal ref="savingsModalRef" />
       <VehicleDeliveryModal ref="deliveryModalRef" />
+      <ScheduleAppointmentModal />
     </Teleport>
   </div>
 </template>

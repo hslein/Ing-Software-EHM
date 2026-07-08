@@ -37,6 +37,19 @@
       <span class="text">{{ t('actions.credit') }}</span>
     </div>
 
+    <button
+      v-if="isAuthenticated"
+      type="button"
+      class="item appointment-item"
+      :aria-label="t('nav.scheduleAppointment')"
+      @click="openScheduleModal"
+    >
+      <div class="icon">
+        <CalendarCheck :size="20" aria-hidden="true" />
+      </div>
+      <span class="text">{{ t('nav.scheduleAppointment') }}</span>
+    </button>
+
     <div class="item" @click="scrollToFooter">
       <div class="icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -74,11 +87,16 @@
 </template>
 
 <script setup>
+import { CalendarCheck } from 'lucide-vue-next';
+import { useAppointments } from '../composables/useAppointments';
+import { useAuth } from '../composables/useAuth';
 import { useI18n } from '../i18n';
 
 defineEmits(['open-credit', 'open-savings', 'open-delivery']);
 
 const { t } = useI18n();
+const { openScheduleModal } = useAppointments();
+const { isAuthenticated } = useAuth();
 
 const scrollToFooter = () => {
   window.scrollTo({
@@ -96,7 +114,10 @@ const scrollToFooter = () => {
   transform: translateY(-50%);
   display: flex;
   flex-direction: column;
+  align-items: flex-end;
   gap: 12px;
+  width: 210px;
+  pointer-events: none;
   z-index: 10000;
 }
 
@@ -109,9 +130,12 @@ const scrollToFooter = () => {
   cursor: pointer;
   text-decoration: none;
   color: white;
+  font-family: inherit;
   background: #0a192f;
   border-radius: 25px 0 0 25px; 
-  margin-right: -2px;
+  margin-right: 0;
+  padding: 0;
+  pointer-events: auto;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -123,8 +147,8 @@ const scrollToFooter = () => {
 .item:hover {
   width: 170px; 
   background: #ff8e71; 
-  border-radius: 25px; 
-  margin-right: 15px; 
+  border-radius: 25px 0 0 25px; 
+  margin-right: 0; 
   border-right: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
@@ -159,6 +183,10 @@ const scrollToFooter = () => {
 }
 
 /* CONFIGURACIÓN PROPIA PARA BOTONES COMPLEMENTARIOS */
+.appointment-item:hover {
+  width: 210px;
+}
+
 .delivery-premium,
 .calculator-premium {
   background: #0a192f; 

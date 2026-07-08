@@ -60,12 +60,15 @@ const formatPrice = (price?: number) => {
   return `$${price.toLocaleString()}`;
 };
 
-const formatMileage = (mileage?: number) => {
-  if (mileage === undefined) {
+const formatMileage = (mileage?: number | string) => {
+  if (mileage === undefined || mileage === null || String(mileage).trim() === '') {
     return t('common.notAvailable');
   }
 
-  return `${mileage.toLocaleString()} km`;
+  const numericMileage = Number(mileage);
+  return Number.isFinite(numericMileage)
+    ? `${numericMileage.toLocaleString()} km`
+    : `${mileage} km`;
 };
 </script>
 
@@ -88,7 +91,9 @@ const formatMileage = (mileage?: number) => {
 
       <div class="compare-grid">
         <article v-for="vehicle in vehicles" :key="vehicle.id ?? vehicle.model" class="compare-card">
-          <img :src="vehicle.image" :alt="`${vehicle.brand} ${vehicle.model}`" />
+          <div class="compare-media">
+            <img :src="vehicle.image" :alt="`${vehicle.brand} ${vehicle.model}`" />
+          </div>
           <div class="compare-card-header">
             <div>
               <p class="brand-name">{{ vehicle.brand }}</p>
@@ -185,7 +190,7 @@ const formatMileage = (mileage?: number) => {
 .modal {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(15, 23, 42, 0.68);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -194,7 +199,9 @@ const formatMileage = (mileage?: number) => {
 }
 
 .modal-content {
-  background: white;
+  background:
+    linear-gradient(135deg, rgba(255, 142, 113, 0.08) 0%, rgba(255, 142, 113, 0) 26%),
+    #ecf0f1;
   border-radius: 8px;
   padding: 28px;
   max-width: 980px;
@@ -202,17 +209,19 @@ const formatMileage = (mileage?: number) => {
   max-height: 90vh;
   overflow-y: auto;
   position: relative;
+  box-shadow: 0 24px 70px rgba(44, 62, 80, 0.34);
 }
 
 .close-btn {
   position: absolute;
   top: 15px;
   right: 15px;
-  background: none;
-  border: none;
+  background: #2c3e50;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 50%;
   font-size: 28px;
   cursor: pointer;
-  color: #666;
+  color: #fff;
 }
 
 .modal-header {
@@ -232,7 +241,7 @@ const formatMileage = (mileage?: number) => {
 .modal-header h2 {
   margin: 0;
   color: #2c3e50;
-  font-size: 24px;
+  font-size: 26px;
 }
 
 .credit-toggle-row {
@@ -242,9 +251,9 @@ const formatMileage = (mileage?: number) => {
 }
 
 .credit-toggle {
-  background: #0a192f;
+  background: #2c3e50;
   color: #fff;
-  border: 1px solid #0a192f;
+  border: 1px solid #2c3e50;
   border-radius: 4px;
   padding: 11px 14px;
   cursor: pointer;
@@ -254,7 +263,8 @@ const formatMileage = (mileage?: number) => {
 }
 
 .credit-toggle:hover {
-  background: #153252;
+  background: #ff8e71;
+  border-color: #ff8e71;
 }
 
 .compare-grid {
@@ -264,17 +274,40 @@ const formatMileage = (mileage?: number) => {
 }
 
 .compare-card {
-  border: 1px solid #e5edf3;
+  position: relative;
+  border: 1px solid rgba(44, 62, 80, 0.12);
   border-radius: 8px;
   overflow: hidden;
-  background: #fbfcfd;
+  background:
+    linear-gradient(135deg, rgba(255, 142, 113, 0.14) 0%, rgba(255, 142, 113, 0) 32%),
+    linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: #fff;
+  box-shadow: 0 18px 42px rgba(44, 62, 80, 0.2);
+}
+
+.compare-card::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, #2980b9, #ff8e71);
+  content: '';
+}
+
+.compare-media {
+  margin: 16px 16px 0;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 6px;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(255, 255, 255, 0.96), rgba(236, 240, 241, 0.84) 45%, rgba(215, 228, 239, 0.95) 100%);
 }
 
 .compare-card img {
   width: 100%;
   height: 220px;
-  object-fit: cover;
-  background: #eef3f7;
+  object-fit: contain;
+  padding: 22px;
+  filter: drop-shadow(0 14px 12px rgba(44, 62, 80, 0.18));
 }
 
 .compare-card-header {
@@ -286,7 +319,7 @@ const formatMileage = (mileage?: number) => {
 
 .brand-name {
   margin: 0 0 4px;
-  color: #2980b9;
+  color: #d7e4ef;
   font-size: 12px;
   font-weight: 700;
   text-transform: uppercase;
@@ -294,15 +327,15 @@ const formatMileage = (mileage?: number) => {
 
 .compare-card h3 {
   margin: 0;
-  color: #2c3e50;
+  color: #fff;
   font-size: 20px;
 }
 
 .remove-btn {
   align-self: flex-start;
-  background: white;
-  color: #c0392b;
-  border: 1px solid #f0c4bd;
+  background: rgba(255, 255, 255, 0.94);
+  color: #2c3e50;
+  border: 1px solid rgba(44, 62, 80, 0.18);
   border-radius: 4px;
   padding: 7px 10px;
   cursor: pointer;
@@ -311,12 +344,14 @@ const formatMileage = (mileage?: number) => {
 }
 
 .remove-btn:hover {
-  background: #fff4f2;
+  background: #ff8e71;
+  border-color: #ff8e71;
+  color: #fff;
 }
 
 .description {
   margin: 12px 18px 18px;
-  color: #606f7b;
+  color: rgba(245, 247, 250, 0.92);
   font-size: 13px;
   line-height: 1.5;
 }
@@ -331,17 +366,17 @@ const formatMileage = (mileage?: number) => {
   justify-content: space-between;
   gap: 16px;
   padding: 10px 0;
-  border-top: 1px solid #e8eef3;
+  border-top: 1px solid rgba(215, 228, 239, 0.35);
 }
 
 .detail-list dt {
-  color: #667783;
+  color: #d7e4ef;
   font-size: 13px;
 }
 
 .detail-list dd {
   margin: 0;
-  color: #2c3e50;
+  color: #fff;
   font-size: 13px;
   font-weight: 700;
   text-align: right;
@@ -349,10 +384,11 @@ const formatMileage = (mileage?: number) => {
 
 .credit-comparison {
   margin-top: 24px;
-  border: 1px solid #dbe7ef;
+  border: 1px solid rgba(44, 62, 80, 0.12);
   border-radius: 8px;
-  background: #f8fafc;
+  background: #fff;
   padding: 22px;
+  box-shadow: 0 14px 32px rgba(44, 62, 80, 0.12);
 }
 
 .credit-header {
@@ -389,7 +425,7 @@ const formatMileage = (mileage?: number) => {
   display: grid;
   gap: 10px;
   background: #fff;
-  border: 1px solid #e5edf3;
+  border: 1px solid #d7e4ef;
   border-radius: 8px;
   padding: 16px;
 }
@@ -405,12 +441,12 @@ const formatMileage = (mileage?: number) => {
 }
 
 .range-control strong {
-  color: #0a192f;
+  color: #2c3e50;
 }
 
 .range-control input {
   width: 100%;
-  accent-color: #0a192f;
+  accent-color: #2980b9;
 }
 
 .range-control small {
@@ -425,8 +461,10 @@ const formatMileage = (mileage?: number) => {
 }
 
 .credit-card {
-  background: #fff;
-  border: 1px solid #e5edf3;
+  background:
+    linear-gradient(135deg, rgba(255, 142, 113, 0.1) 0%, rgba(255, 142, 113, 0) 30%),
+    #f8fafc;
+  border: 1px solid #d7e4ef;
   border-radius: 8px;
   padding: 18px;
 }
@@ -463,7 +501,7 @@ const formatMileage = (mileage?: number) => {
 }
 
 .credit-card .monthly-row dd {
-  color: #ff7f63;
+  color: #ff8e71;
   font-size: 16px;
 }
 

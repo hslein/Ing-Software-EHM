@@ -363,25 +363,25 @@ watch(routeBrandId, () => {
       <div v-else class="inventory-layout">
         <aside class="inventory-sidebar" :aria-label="t('inventory.shortcuts')">
           <button class="sidebar-row" type="button" @click="openFavoritesModal">
-            <span class="sidebar-icon"><Heart :size="18" /></span>
+            <span class="sidebar-icon">
+              <Heart :size="18" />
+            </span>
             <span>{{ t('inventory.myFavorites') }}</span>
           </button>
           <button class="sidebar-row" type="button" @click="openCreditSimulationsModal">
-            <span class="sidebar-icon"><Calculator :size="18" /></span>
+            <span class="sidebar-icon">
+              <Calculator :size="18" />
+            </span>
             <span>{{ t('inventory.myCreditSimulations') }}</span>
           </button>
         </aside>
 
         <div class="inventory-main">
 
-          <BrandSwitcher
-            v-if="popularBrands.length"
-            :brands="popularBrands"
-            :selected-brand-name="selectedBrand?.name ?? ''"
-            @select="selectBrand"
-          />
+          <BrandSwitcher v-if="popularBrands.length" :brands="popularBrands"
+            :selected-brand-name="selectedBrand?.name ?? ''" @select="selectBrand" />
 
-                    <section v-if="brands.length" class="brand-selector-panel">
+          <section v-if="brands.length" class="brand-selector-panel">
             <label for="inventory-brand-select">{{ t('inventory.allBrands') }}</label>
             <select id="inventory-brand-select" :value="selectedBrandId" @change="selectBrandById">
               <option v-for="brand in brands" :key="brand.id ?? brand.name" :value="brand.id">
@@ -393,9 +393,9 @@ watch(routeBrandId, () => {
           <section v-if="selectedBrand" class="vehicles-section">
             <div class="section-header">
               <div class="section-title">
-                     <p v-if="selectedBrand">
-        {{ t('inventory.selectedBrandCopy', { brand: selectedBrand.name }) }}
-      </p>
+                <p v-if="selectedBrand">
+                  {{ t('inventory.selectedBrandCopy', { brand: selectedBrand.name }) }}
+                </p>
                 <span v-if="loadingVehicles" class="inline-loader" aria-live="polite">
                   <span class="loader-dot"></span>
                   {{ t('vehicles.loadingVehicles') }}
@@ -403,12 +403,8 @@ watch(routeBrandId, () => {
               </div>
               <div v-if="selectedCompareVehicles.length" class="compare-actions">
                 <span>{{ t('vehicles.selected', { count: selectedCompareVehicles.length }) }}</span>
-                <button
-                  class="compare-open-btn"
-                  type="button"
-                  :disabled="selectedCompareVehicles.length < 2"
-                  @click="showCompareModal = true"
-                >
+                <button class="compare-open-btn" type="button" :disabled="selectedCompareVehicles.length < 2"
+                  @click="showCompareModal = true">
                   {{ t('vehicles.compare') }}
                 </button>
                 <button class="compare-clear-btn" type="button" @click="clearCompareVehicles">
@@ -422,16 +418,9 @@ watch(routeBrandId, () => {
               <span>{{ t('vehicles.loadingBrandVehicles', { brand: selectedBrand.name }) }}</span>
             </div>
 
-            <VehicleGrid
-              v-else
-              :brand-name="selectedBrand.name"
-              :selected-compare-ids="selectedCompareIds"
-              :vehicles="vehicles"
-              @select-vehicle="showVehicleDetail"
-              @quote-vehicle="quoteVehicle"
-              @toggle-compare="toggleCompareVehicle"
-              @toggle-favorite="toggleVehicleFavorite"
-            />
+            <VehicleGrid v-else :brand-name="selectedBrand.name" :selected-compare-ids="selectedCompareIds"
+              :vehicles="vehicles" @select-vehicle="showVehicleDetail" @quote-vehicle="quoteVehicle"
+              @toggle-compare="toggleCompareVehicle" @toggle-favorite="toggleVehicleFavorite" />
           </section>
         </div>
       </div>
@@ -473,23 +462,15 @@ watch(routeBrandId, () => {
       </section>
     </div>
 
-    <div
-      v-if="showCreditSimulationsModal"
-      class="inventory-modal-backdrop"
-      @click.self="showCreditSimulationsModal = false"
-    >
+    <div v-if="showCreditSimulationsModal" class="inventory-modal-backdrop"
+      @click.self="showCreditSimulationsModal = false">
       <section class="inventory-modal" aria-modal="true" role="dialog">
         <header class="inventory-modal-header">
           <div>
             <p class="eyebrow">{{ t('actions.credit') }}</p>
             <h2>{{ t('inventory.myCreditSimulations') }}</h2>
           </div>
-          <button
-            class="modal-close-btn"
-            type="button"
-            aria-label="Close"
-            @click="showCreditSimulationsModal = false"
-          >
+          <button class="modal-close-btn" type="button" aria-label="Close" @click="showCreditSimulationsModal = false">
             <X :size="20" />
           </button>
         </header>
@@ -504,16 +485,9 @@ watch(routeBrandId, () => {
         </p>
 
         <div v-else class="modal-card-grid">
-          <article
-            v-for="simulation in creditSimulations"
-            :key="simulation.id ?? `${simulation.vehicleId}-${simulation.termMonths}`"
-            class="simulation-card"
-          >
-            <img
-              v-if="simulation.vehicle?.image"
-              :src="simulation.vehicle.image"
-              :alt="simulation.vehicle.model"
-            />
+          <article v-for="simulation in creditSimulations"
+            :key="simulation.id ?? `${simulation.vehicleId}-${simulation.termMonths}`" class="simulation-card">
+            <img v-if="simulation.vehicle?.image" :src="simulation.vehicle.image" :alt="simulation.vehicle.model" />
             <div class="simulation-body">
               <p class="mini-card-kicker">{{ formatDate(simulation.simulatedAt) }}</p>
               <h3>
@@ -540,21 +514,11 @@ watch(routeBrandId, () => {
       </section>
     </div>
 
-    <VehicleModal
-      v-if="showVehicleModal"
-      :brand-name="selectedBrand?.name ?? ''"
-      :vehicle="selectedVehicle"
-      @close="closeVehicleModal"
-      @quote="quoteVehicle"
-      @test-drive="showVehicleModal = false"
-    />
+    <VehicleModal v-if="showVehicleModal" :brand-name="selectedBrand?.name ?? ''" :vehicle="selectedVehicle"
+      @close="closeVehicleModal" @quote="quoteVehicle" @test-drive="showVehicleModal = false" />
 
-    <VehicleCompareModal
-      v-if="showCompareModal"
-      :vehicles="selectedCompareVehicles"
-      @close="showCompareModal = false"
-      @remove="removeCompareVehicle"
-    />
+    <VehicleCompareModal v-if="showCompareModal" :vehicles="selectedCompareVehicles" @close="showCompareModal = false"
+      @remove="removeCompareVehicle" />
   </main>
 </template>
 
@@ -1063,6 +1027,7 @@ watch(routeBrandId, () => {
 }
 
 @keyframes pulse {
+
   0%,
   100% {
     opacity: 0.35;

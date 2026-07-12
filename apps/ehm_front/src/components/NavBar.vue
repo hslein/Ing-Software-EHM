@@ -86,8 +86,8 @@ const handleLogout = async () => {
 
 <style scoped>
 .navbar {
-  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, var(--ehm-black) 0%, var(--ehm-black-3) 100%);
+  border-bottom: 1px solid var(--ehm-line);
   padding: 1rem 0;
   position: sticky;
   top: 0;
@@ -139,12 +139,12 @@ const handleLogout = async () => {
 }
 
 .nav-link:hover {
-  color: #3498db;
+  color: var(--ehm-accent);
   background-color: rgba(255, 255, 255, 0.05);
 }
 
 .nav-link-btn {
-  background: linear-gradient(135deg, #2980b9 0%, #2c3e50 100%);
+  background: linear-gradient(135deg, var(--ehm-accent) 0%, var(--ehm-black-3) 100%);
   padding: 0.5rem 1rem;
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
@@ -152,7 +152,7 @@ const handleLogout = async () => {
 }
 
 .nav-link-btn:hover {
-  background: linear-gradient(135deg, #ff6f7a, #ffa36b);
+  background: linear-gradient(135deg, var(--ehm-accent-strong), #ffa36b);
   box-shadow: 0 10px 22px rgba(255, 102, 102, 0.44);
   color: white;
 }

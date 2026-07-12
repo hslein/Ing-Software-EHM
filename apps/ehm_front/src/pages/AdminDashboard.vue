@@ -676,8 +676,7 @@ onUnmounted(destroyCharts);
 }
 
 .dashboard-shell {
-  margin: 0 auto;
-  max-width: 1220px;
+  width: 100%;
 }
 
 .dashboard-header,

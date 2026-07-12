@@ -127,7 +127,7 @@ const getVehicleSpecs = (vehicle: Vehicle) =>
   overflow-y: auto;
   position: relative;
   border-radius: 8px;
-  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  background: linear-gradient(135deg, var(--ehm-black) 0%, var(--ehm-black-3) 100%);
   color: #fff;
   box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
 }
@@ -178,7 +178,7 @@ const getVehicleSpecs = (vehicle: Vehicle) =>
   bottom: 0;
   left: 0;
   margin: 0;
-  background: #2980b9;
+  background: var(--ehm-black);
   color: #fff;
   font-size: 10px;
   font-weight: 700;
@@ -302,8 +302,8 @@ const getVehicleSpecs = (vehicle: Vehicle) =>
 
 .btn-primary {
   flex: 1;
-  background: #2980b9;
-  border: 1px solid #2980b9;
+  background: var(--ehm-black);
+  border: 1px solid var(--ehm-black);
   color: white;
 }
 

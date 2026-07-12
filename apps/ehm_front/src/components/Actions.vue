@@ -131,7 +131,7 @@ const scrollToFooter = () => {
   text-decoration: none;
   color: white;
   font-family: inherit;
-  background: #0a192f;
+  background: var(--ehm-black);
   border-radius: 25px 0 0 25px; 
   margin-right: 0;
   padding: 0;
@@ -189,7 +189,7 @@ const scrollToFooter = () => {
 
 .delivery-premium,
 .calculator-premium {
-  background: #0a192f; 
+  background: var(--ehm-black); 
 }
 
 .delivery-premium:hover,

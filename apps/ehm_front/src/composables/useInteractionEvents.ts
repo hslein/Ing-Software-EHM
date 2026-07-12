@@ -12,6 +12,23 @@ interface CreditSimulationEvent {
   estimatedMonthlyPayment: number;
 }
 
+export interface CreditSimulation extends CreditSimulationEvent {
+  id?: string;
+  userId?: string;
+  simulatedAt?: unknown;
+  vehicle?: {
+    id?: string;
+    model: string;
+    brandId?: string;
+    brand?: string;
+    image: string;
+    description?: string;
+    price?: number;
+    year?: number | string;
+    type?: string;
+  } | null;
+}
+
 const getAuthHeaders = async () => {
   const user = auth.currentUser;
   if (!user) {
@@ -41,6 +58,20 @@ const postEvent = async (path: string, payload: object) => {
   return response.json();
 };
 
+const getEvent = async <T>(path: string) => {
+  const headers = await getAuthHeaders();
+  const response = await fetch(`${apiBaseUrl}${path}`, {
+    headers,
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || response.statusText);
+  }
+
+  return (await response.json()) as T;
+};
+
 export const useInteractionEvents = () => {
   const trackVehicleView = (vehicleId: string) =>
     postEvent('/events/vehicle-views', { vehicleId });
@@ -51,9 +82,13 @@ export const useInteractionEvents = () => {
   const trackCreditSimulation = (event: CreditSimulationEvent) =>
     postEvent('/events/credit-simulations', event);
 
+  const fetchCreditSimulations = () =>
+    getEvent<CreditSimulation[]>('/events/credit-simulations');
+
   return {
     trackVehicleView,
     trackVehicleComparison,
     trackCreditSimulation,
+    fetchCreditSimulations,
   };
 };

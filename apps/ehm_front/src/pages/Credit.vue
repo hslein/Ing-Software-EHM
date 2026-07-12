@@ -274,8 +274,7 @@ const contactExpert = async () => {
 .credit-page-container {
   padding: 120px 20px 60px;
   background: #ecf0f1;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 100%;
 }
 
 .hero-header { text-align: center; margin-bottom: 70px; }
@@ -283,7 +282,7 @@ const contactExpert = async () => {
   font-size: 42px; 
   font-weight: 800; 
   letter-spacing: 6px; 
-  color: #2c3e50;
+  color: var(--ehm-black);
 }
 .eyebrow { text-transform: uppercase; letter-spacing: 4px; font-size: 12px; color: #ff8e71; font-weight: bold; }
 .subtitle { color: #555; font-size: 18px; max-width: 600px; margin: 15px auto; }
@@ -294,7 +293,7 @@ const contactExpert = async () => {
   background: white;
   border: 1px solid #d7e4ef;
   border-radius: 8px;
-  color: #0a192f;
+  color: var(--ehm-black);
   font-weight: 700;
   padding: 24px;
   text-align: center;
@@ -311,7 +310,7 @@ const contactExpert = async () => {
   overflow: hidden;
   background:
     linear-gradient(135deg, rgba(255, 142, 113, 0.12) 0%, rgba(255, 142, 113, 0) 34%),
-    linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    linear-gradient(135deg, var(--ehm-black) 0%, var(--ehm-black-3) 100%);
   color: #fff;
   box-shadow: 0 18px 42px rgba(44, 62, 80, 0.18);
 }
@@ -357,7 +356,7 @@ const contactExpert = async () => {
   margin-bottom: 30px; 
   border-bottom: 1px solid #d7e4ef; 
   padding-bottom: 10px; 
-  color: #2c3e50;
+  color: var(--ehm-black);
 }
 .section-title.white { color: #fff; border-color: rgba(215, 228, 239, 0.35); }
 
@@ -369,22 +368,22 @@ const contactExpert = async () => {
   padding: 20px;
   box-shadow: 0 10px 24px rgba(44, 62, 80, 0.08);
 }
-.input-card label { display: block; font-weight: bold; font-size: 13px; text-transform: uppercase; margin-bottom: 15px; color: #2c3e50; }
+.input-card label { display: block; font-weight: bold; font-size: 13px; text-transform: uppercase; margin-bottom: 15px; color: var(--ehm-black); }
 
-.price-input-wrapper { display: flex; align-items: center; border-bottom: 2px solid #2980b9; padding-bottom: 5px; }
-.currency-symbol { font-size: 24px; font-weight: bold; margin-right: 10px; color: #2980b9; }
-.main-price-input { border: none; font-size: 32px; font-weight: bold; width: 100%; outline: none; background: transparent; color: #2c3e50; }
+.price-input-wrapper { display: flex; align-items: center; border-bottom: 2px solid var(--ehm-accent); padding-bottom: 5px; }
+.currency-symbol { font-size: 24px; font-weight: bold; margin-right: 10px; color: var(--ehm-accent); }
+.main-price-input { border: none; font-size: 32px; font-weight: bold; width: 100%; outline: none; background: transparent; color: var(--ehm-black); }
 .main-price-input[readonly] { color: #334155; cursor: not-allowed; }
 .input-help { font-size: 12px; color: #606f7b; margin-top: 8px; }
 
 .months-selector { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-.months-selector button { padding: 15px; border: 1px solid #d7e4ef; border-radius: 4px; background: #fff; color: #2c3e50; cursor: pointer; transition: 0.3s; font-weight: 700; }
-.months-selector button:hover { border-color: #2980b9; color: #2980b9; }
-.months-selector button.active { background: #2980b9; color: #fff; border-color: #2980b9; }
+.months-selector button { padding: 15px; border: 1px solid #d7e4ef; border-radius: 4px; background: #fff; color: var(--ehm-black); cursor: pointer; transition: 0.3s; font-weight: 700; }
+.months-selector button:hover { border-color: var(--ehm-accent); color: var(--ehm-accent); }
+.months-selector button.active { background: var(--ehm-black); color: #fff; border-color: var(--ehm-black); }
 
-.slider { width: 100%; accent-color: #2980b9; }
+.slider { width: 100%; accent-color: var(--ehm-accent); }
 .label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-.label-row .val { font-size: 20px; font-weight: bold; color: #2980b9; }
+.label-row .val { font-size: 20px; font-weight: bold; color: var(--ehm-accent); }
 .range-labels { display: flex; justify-content: space-between; font-size: 11px; color: #606f7b; }
 
 /* Panel Derecho EHM */
@@ -393,7 +392,7 @@ const contactExpert = async () => {
   overflow: hidden;
   background:
     linear-gradient(135deg, rgba(255, 142, 113, 0.18) 0%, rgba(255, 142, 113, 0) 32%),
-    linear-gradient(135deg, #2c3e50 0%, #34495e 100%); 
+    linear-gradient(135deg, var(--ehm-black) 0%, var(--ehm-black-3) 100%); 
   color: #fff; 
   padding: 45px; 
   border-radius: 8px; 
@@ -404,7 +403,7 @@ const contactExpert = async () => {
   position: absolute;
   inset: 0 0 auto;
   height: 4px;
-  background: linear-gradient(90deg, #2980b9, #ff8e71);
+  background: linear-gradient(90deg, var(--ehm-black), var(--ehm-accent));
   content: '';
 }
 

@@ -68,7 +68,7 @@ const { locale, setLocale, t } = useI18n();
 
 .lang-btn.active {
   color: #fff;
-  background: linear-gradient(135deg, #2980b9 0%, #2c3e50 100%);
+  background: linear-gradient(135deg, var(--ehm-accent) 0%, var(--ehm-black-3) 100%);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 

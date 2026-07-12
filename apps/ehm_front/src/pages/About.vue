@@ -95,7 +95,7 @@ export default {
 /* ESTILOS BASE */
 .about-page {
   font-family: 'Inter', -apple-system, sans-serif;
-  color: #0a192f;
+  color: var(--ehm-black);
   background-color: #fff;
   overflow-x: hidden;
   line-height: 1.6;
@@ -114,7 +114,7 @@ export default {
   align-items: center;
   justify-content: center;
   text-align: center;
-  background: linear-gradient(rgba(10, 25, 47, 0.8), rgba(10, 25, 47, 0.9)), 
+  background: linear-gradient(rgba(10, 13, 20, 0.72), rgba(10, 13, 20, 0.9)), 
               url('https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=2000&auto=format&fit=crop');
   background-size: cover;
   background-position: center;
@@ -235,7 +235,7 @@ export default {
 
 /* STATS BANNER */
 .stats-banner {
-  background: #0a192f;
+  background: var(--ehm-black);
   padding: 80px 20px;
   display: flex;
   justify-content: center;
@@ -282,8 +282,8 @@ export default {
 .btn-outline {
   padding: 18px 50px;
   background: transparent;
-  border: 1px solid #0a192f;
-  color: #0a192f;
+  border: 1px solid var(--ehm-black);
+  color: var(--ehm-black);
   cursor: pointer;
   text-transform: uppercase;
   font-weight: 700;
@@ -292,7 +292,7 @@ export default {
 }
 
 .btn-outline:hover {
-  background: #0a192f;
+  background: var(--ehm-black);
   color: white;
 }
 

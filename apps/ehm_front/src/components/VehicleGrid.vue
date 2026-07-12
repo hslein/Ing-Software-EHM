@@ -173,7 +173,7 @@ const scrollRight = () => {
 }
 
 .vehicles-grid::-webkit-scrollbar-thumb {
-  background: #2980b9;
+  background: var(--ehm-accent);
   border-radius: 10px;
 }
 
@@ -198,7 +198,7 @@ const scrollRight = () => {
   border: 1px solid rgba(44, 62, 80, 0.12);
   background:
     linear-gradient(135deg, rgba(255, 142, 113, 0.18) 0%, rgba(255, 142, 113, 0) 26%),
-    linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    linear-gradient(135deg, var(--ehm-black) 0%, var(--ehm-black-3) 100%);
   color: #fff;
   padding: 16px;
   box-shadow: 0 18px 42px rgba(44, 62, 80, 0.22);
@@ -209,7 +209,7 @@ const scrollRight = () => {
   position: absolute;
   inset: 0 0 auto;
   height: 4px;
-  background: linear-gradient(90deg, #2980b9, #ff8e71);
+  background: linear-gradient(90deg, var(--ehm-black), var(--ehm-accent));
   content: '';
 }
 
@@ -261,7 +261,7 @@ const scrollRight = () => {
   bottom: 0;
   left: 0;
   margin: 0;
-  background: #2980b9;
+  background: var(--ehm-black);
   color: #fff;
   font-size: 9px;
   font-weight: 700;
@@ -280,7 +280,7 @@ const scrollRight = () => {
   background: rgba(255, 255, 255, 0.96);
   border: 1px solid rgba(44, 62, 80, 0.18);
   border-radius: 50%;
-  color: #2c3e50;
+  color: var(--ehm-black);
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.14);
   transition: color 0.2s, transform 0.2s, border-color 0.2s;
@@ -300,7 +300,7 @@ const scrollRight = () => {
 
 .compare-toggle {
   background: rgba(255, 255, 255, 0.96);
-  color: #2c3e50;
+  color: var(--ehm-black);
   border: 1px solid rgba(44, 62, 80, 0.18);
   padding: 8px 12px;
   border-radius: 999px;
@@ -315,8 +315,8 @@ const scrollRight = () => {
 
 .compare-toggle:hover,
 .compare-toggle.selected {
-  background: #2980b9;
-  border-color: #2980b9;
+  background: var(--ehm-black);
+  border-color: var(--ehm-black);
   color: #fff;
 }
 

@@ -78,7 +78,7 @@ const scrollRight = () => {
 .brands-section h2 {
   font-size: 24px;
   margin-bottom: 20px;
-  color: #2c3e50;
+  color: var(--ehm-black);
 }
 
 .scroll-container {
@@ -103,7 +103,7 @@ const scrollRight = () => {
 }
 
 .brands-grid::-webkit-scrollbar-thumb {
-  background: #2980b9;
+  background: var(--ehm-accent);
   border-radius: 10px;
 }
 
@@ -114,7 +114,7 @@ const scrollRight = () => {
   grid-template-rows: 150px auto;
   background:
     linear-gradient(135deg, rgba(255, 142, 113, 0.14) 0%, rgba(255, 142, 113, 0) 32%),
-    linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    linear-gradient(135deg, var(--ehm-black) 0%, var(--ehm-black-3) 100%);
   border: 1px solid rgba(44, 62, 80, 0.12);
   border-radius: 8px;
   overflow: hidden;
@@ -131,7 +131,7 @@ const scrollRight = () => {
   position: absolute;
   inset: 0 0 auto;
   height: 4px;
-  background: linear-gradient(90deg, #2980b9, #ff8e71);
+  background: linear-gradient(90deg, var(--ehm-black), var(--ehm-accent));
   content: '';
 }
 

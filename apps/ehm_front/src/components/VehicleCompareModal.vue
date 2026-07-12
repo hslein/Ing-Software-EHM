@@ -216,7 +216,7 @@ const formatMileage = (mileage?: number | string) => {
   position: absolute;
   top: 15px;
   right: 15px;
-  background: #2c3e50;
+  background: var(--ehm-black);
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 50%;
   font-size: 28px;
@@ -232,7 +232,7 @@ const formatMileage = (mileage?: number | string) => {
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: #2980b9;
+  color: var(--ehm-accent);
   font-size: 12px;
   font-weight: 700;
   margin: 0 0 8px;
@@ -240,7 +240,7 @@ const formatMileage = (mileage?: number | string) => {
 
 .modal-header h2 {
   margin: 0;
-  color: #2c3e50;
+  color: var(--ehm-black);
   font-size: 26px;
 }
 
@@ -251,9 +251,9 @@ const formatMileage = (mileage?: number | string) => {
 }
 
 .credit-toggle {
-  background: #2c3e50;
+  background: var(--ehm-black);
   color: #fff;
-  border: 1px solid #2c3e50;
+  border: 1px solid var(--ehm-black);
   border-radius: 4px;
   padding: 11px 14px;
   cursor: pointer;
@@ -280,7 +280,7 @@ const formatMileage = (mileage?: number | string) => {
   overflow: hidden;
   background:
     linear-gradient(135deg, rgba(255, 142, 113, 0.14) 0%, rgba(255, 142, 113, 0) 32%),
-    linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    linear-gradient(135deg, var(--ehm-black) 0%, var(--ehm-black-3) 100%);
   color: #fff;
   box-shadow: 0 18px 42px rgba(44, 62, 80, 0.2);
 }
@@ -289,7 +289,7 @@ const formatMileage = (mileage?: number | string) => {
   position: absolute;
   inset: 0 0 auto;
   height: 4px;
-  background: linear-gradient(90deg, #2980b9, #ff8e71);
+  background: linear-gradient(90deg, var(--ehm-accent), #ff8e71);
   content: '';
 }
 
@@ -334,7 +334,7 @@ const formatMileage = (mileage?: number | string) => {
 .remove-btn {
   align-self: flex-start;
   background: rgba(255, 255, 255, 0.94);
-  color: #2c3e50;
+  color: var(--ehm-black);
   border: 1px solid rgba(44, 62, 80, 0.18);
   border-radius: 4px;
   padding: 7px 10px;
@@ -401,7 +401,7 @@ const formatMileage = (mileage?: number | string) => {
 
 .credit-header h3 {
   margin: 0;
-  color: #2c3e50;
+  color: var(--ehm-black);
   font-size: 20px;
 }
 
@@ -441,12 +441,12 @@ const formatMileage = (mileage?: number | string) => {
 }
 
 .range-control strong {
-  color: #2c3e50;
+  color: var(--ehm-black);
 }
 
 .range-control input {
   width: 100%;
-  accent-color: #2980b9;
+  accent-color: var(--ehm-accent);
 }
 
 .range-control small {
@@ -471,7 +471,7 @@ const formatMileage = (mileage?: number | string) => {
 
 .credit-card h4 {
   margin: 0 0 14px;
-  color: #2c3e50;
+  color: var(--ehm-black);
   font-size: 18px;
 }
 
@@ -494,7 +494,7 @@ const formatMileage = (mileage?: number | string) => {
 
 .credit-card dd {
   margin: 0;
-  color: #2c3e50;
+  color: var(--ehm-black);
   font-size: 13px;
   font-weight: 800;
   text-align: right;

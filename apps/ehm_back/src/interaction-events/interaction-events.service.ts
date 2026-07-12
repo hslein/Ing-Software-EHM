@@ -3,6 +3,12 @@ import * as admin from 'firebase-admin';
 import { CreateCreditSimulationEventDto } from './dto/create-credit-simulation-event.dto';
 import { CreateVehicleComparisonEventDto } from './dto/create-vehicle-comparison-event.dto';
 import { CreateVehicleViewEventDto } from './dto/create-vehicle-view-event.dto';
+import { CreditSimulation } from '../models/credit_simulations.model';
+import { Vehicle } from '../models/vehicle.model';
+
+export interface CreditSimulationWithVehicle extends CreditSimulation {
+  vehicle?: Vehicle | null;
+}
 
 @Injectable()
 export class InteractionEventsService {
@@ -79,6 +85,38 @@ export class InteractionEventsService {
     return { id: ref.id };
   }
 
+  async findCreditSimulations(userId: string | undefined): Promise<CreditSimulationWithVehicle[]> {
+    if (!userId) {
+      throw new BadRequestException('User id is required');
+    }
+
+    const snapshot = await this.db
+      .collection('credit_simulations')
+      .where('userId', '==', userId)
+      .get();
+
+    const simulations = await Promise.all(
+      snapshot.docs.map(async (doc) => {
+        const simulation = { id: doc.id, ...doc.data() } as CreditSimulation;
+        const vehicleDoc =
+          typeof simulation.vehicleId === 'string'
+            ? await this.db.collection('vehicles').doc(simulation.vehicleId).get()
+            : null;
+
+        return {
+          ...simulation,
+          vehicle: vehicleDoc?.exists
+            ? ({ id: vehicleDoc.id, ...vehicleDoc.data() } as Vehicle)
+            : null,
+        };
+      }),
+    );
+
+    return simulations.sort(
+      (first, second) => this.toMillis(second.simulatedAt) - this.toMillis(first.simulatedAt),
+    );
+  }
+
   private async getVehicle(vehicleId: string) {
     if (!vehicleId) {
       throw new BadRequestException('Vehicle id is required');
@@ -103,5 +141,17 @@ export class InteractionEventsService {
     }
 
     return value;
+  }
+
+  private toMillis(value: unknown): number {
+    if (value && typeof (value as { toMillis?: unknown }).toMillis === 'function') {
+      return (value as { toMillis: () => number }).toMillis();
+    }
+
+    if (value instanceof Date) {
+      return value.getTime();
+    }
+
+    return 0;
   }
 }

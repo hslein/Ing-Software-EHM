@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 import { FirebaseAuthGuard } from '../firebase/firebase-auth.guard';
 import { CreateCreditSimulationEventDto } from './dto/create-credit-simulation-event.dto';
 import { CreateVehicleComparisonEventDto } from './dto/create-vehicle-comparison-event.dto';
@@ -23,5 +23,10 @@ export class InteractionEventsController {
   @Post('credit-simulations')
   createCreditSimulation(@Body() dto: CreateCreditSimulationEventDto, @Req() req: any) {
     return this.interactionEventsService.createCreditSimulation(req.user?.uid, dto);
+  }
+
+  @Get('credit-simulations')
+  findCreditSimulations(@Req() req: any) {
+    return this.interactionEventsService.findCreditSimulations(req.user?.uid);
   }
 }

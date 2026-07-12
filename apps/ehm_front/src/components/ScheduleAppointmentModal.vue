@@ -212,7 +212,7 @@ const handleSubmit = async () => {
 
 h2 {
   margin: 0 0 0.5rem;
-  color: #2c3e50;
+  color: var(--ehm-black);
   font-size: 1.4rem;
 }
 
@@ -251,7 +251,7 @@ input:focus,
 select:focus,
 textarea:focus {
   outline: none;
-  border-color: #2980b9;
+  border-color: var(--ehm-accent);
   box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.15);
 }
 
@@ -295,7 +295,7 @@ textarea {
 }
 
 .btn-submit {
-  background: linear-gradient(135deg, #2980b9 0%, #2c3e50 100%);
+  background: linear-gradient(135deg, var(--ehm-accent) 0%, var(--ehm-black) 100%);
   color: white;
   border: none;
 }

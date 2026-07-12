@@ -13,6 +13,7 @@ export const messages: Record<Locale, Record<string, string>> = {
     'common.notAvailable': 'No disponible',
     'common.previous': 'Anterior',
     'common.next': 'Siguiente',
+    'common.loadingPage': 'Cargando pagina',
 
     'nav.logo': 'Concesionario EHM',
     'nav.home': 'Inicio',
@@ -44,10 +45,51 @@ export const messages: Record<Locale, Record<string, string>> = {
     'info.card3.desc':
       'Te apoyamos con opciones flexibles y agendamos tu test drive para que decidas con tranquilidad.',
 
+    'whyChoose.eyebrow': 'Por que elegirnos',
+    'whyChoose.title': 'Una experiencia pensada para comprar mejor',
+    'whyChoose.description':
+      'En EHM reunimos vehiculos de multiples marcas, asesoria clara y acompanamiento cercano para que compares, cotices y elijas con confianza.',
+    'whyChoose.card1.title': 'Multiples marcas en un solo lugar',
+    'whyChoose.card1.desc':
+      'Trabajamos con diferentes marcas y tipos de vehiculo para ayudarte a encontrar la opcion que se ajusta a tu estilo, presupuesto y necesidad.',
+    'whyChoose.card2.title': 'Asesoria transparente',
+    'whyChoose.card2.desc':
+      'Nuestro equipo te guia con informacion clara sobre precio, estado, financiacion y proceso comercial antes de tomar una decision.',
+    'whyChoose.card3.title': 'Acompanamiento de inicio a entrega',
+    'whyChoose.card3.desc':
+      'Te apoyamos desde la busqueda y la cotizacion hasta la prueba de manejo, documentacion y entrega de tu vehiculo.',
+
+    'legal.eyebrow': 'Informacion importante',
+    'legal.title': 'Legales',
+    'legal.pricing':
+      '*Imagenes de referencia. Los precios publicados o informados por Concesionario EHM son valores sugeridos al publico y pueden variar segun marca, modelo, version, disponibilidad, ubicacion, condiciones comerciales, impuestos aplicables y politicas de cada aliado o proveedor. Para mayor informacion, consulta con un asesor autorizado de EHM. Estos valores pueden incluir IVA, impuestos internos vigentes y demas cargos aplicables segun el tipo de vehiculo y la operacion comercial. Concesionario EHM trabaja con multiples marcas y aliados, y la disponibilidad final esta sujeta a confirmacion.',
+    'legal.warranty':
+      '*Las garantias aplicables dependen de la marca, modelo, ano, condicion del vehiculo, origen, fabricante, importador, concesionario aliado o plan contratado. En vehiculos nuevos, la cobertura sera la informada por la marca, fabricante, importador o concesionario autorizado correspondiente. En vehiculos usados, la garantia, si aplica, sera comunicada por EHM antes de la compra y quedara sujeta a las condiciones particulares de cada operacion.',
+
     'brands.title': 'Marcas populares',
     'brands.ariaLabel': 'Marcas populares',
     'brands.vehicles': '{count} vehiculos',
 
+    'inventory.eyebrow': 'Inventario premium',
+    'inventory.title': 'Inventario EHM',
+    'inventory.selectedBrandCopy':
+      'La marca seleccionada es {brand}; estos son los vehiculos disponibles para explorar.',
+    'inventory.selectedVehiclesTitle': 'Vehiculos disponibles',
+    'inventory.allBrands': 'Todas las marcas',
+    'inventory.shortcuts': 'Accesos de inventario',
+    'inventory.myFavorites': 'Mis favoritos',
+    'inventory.myCreditSimulations': 'Mis simulaciones de credito',
+    'inventory.loadingFavorites': 'Cargando favoritos...',
+    'inventory.loadingSimulations': 'Cargando simulaciones...',
+    'inventory.noFavorites': 'Aun no tienes vehiculos favoritos.',
+    'inventory.noSimulations': 'Aun no has creado simulaciones de credito.',
+    'inventory.details': 'Detalle',
+    'inventory.quote': 'Cotizar',
+    'inventory.monthly': 'Mensual',
+    'inventory.financed': 'Financiado',
+    'inventory.term': 'Plazo',
+    'inventory.months': '{count} meses',
+    'inventory.loadingPopularBrands': 'Cargando marcas populares...',
     'vehicles.title': 'Vehiculos {brand}',
     'vehicles.loadingBrands': 'Cargando marcas...',
     'vehicles.loadingVehicles': 'Cargando vehiculos...',
@@ -311,6 +353,7 @@ export const messages: Record<Locale, Record<string, string>> = {
     'common.notAvailable': 'Not available',
     'common.previous': 'Previous',
     'common.next': 'Next',
+    'common.loadingPage': 'Loading page',
 
     'nav.logo': 'EHM Dealership',
     'nav.home': 'Home',
@@ -342,10 +385,51 @@ export const messages: Record<Locale, Record<string, string>> = {
     'info.card3.desc':
       'We support you with flexible options and schedule your test drive so you can decide with confidence.',
 
+    'whyChoose.eyebrow': 'Why choose us',
+    'whyChoose.title': 'A better way to buy your next vehicle',
+    'whyChoose.description':
+      'At EHM we bring together vehicles from multiple brands, clear guidance, and close support so you can compare, quote, and choose with confidence.',
+    'whyChoose.card1.title': 'Multiple brands in one place',
+    'whyChoose.card1.desc':
+      'We work with different brands and vehicle types to help you find the option that fits your lifestyle, budget, and needs.',
+    'whyChoose.card2.title': 'Transparent guidance',
+    'whyChoose.card2.desc':
+      'Our team guides you with clear information about price, condition, financing, and the commercial process before you decide.',
+    'whyChoose.card3.title': 'Support from search to delivery',
+    'whyChoose.card3.desc':
+      'We support you from vehicle search and quotation through test drive, paperwork, and final delivery.',
+
+    'legal.eyebrow': 'Important information',
+    'legal.title': 'Legal',
+    'legal.pricing':
+      '*Reference images. Prices published or informed by EHM Dealership are suggested retail values and may vary by brand, model, trim, availability, location, commercial conditions, applicable taxes, and each partner or provider policy. For more information, consult an authorized EHM advisor. These values may include VAT, current internal taxes, and other applicable charges according to the vehicle type and commercial transaction. EHM Dealership works with multiple brands and partners, and final availability is subject to confirmation.',
+    'legal.warranty':
+      '*Applicable warranties depend on the brand, model, year, vehicle condition, origin, manufacturer, importer, partner dealership, or contracted plan. For new vehicles, coverage will be the one informed by the corresponding brand, manufacturer, importer, or authorized dealership. For used vehicles, the warranty, if applicable, will be communicated by EHM before purchase and will remain subject to the specific conditions of each transaction.',
+
     'brands.title': 'Popular Brands',
     'brands.ariaLabel': 'Popular brands',
     'brands.vehicles': '{count} vehicles',
 
+    'inventory.eyebrow': 'Premium inventory',
+    'inventory.title': 'EHM Inventory',
+    'inventory.selectedBrandCopy':
+      'The selected brand is {brand}, and these are the vehicles available to explore.',
+    'inventory.selectedVehiclesTitle': 'Available vehicles',
+    'inventory.allBrands': 'All brands',
+    'inventory.shortcuts': 'Inventory shortcuts',
+    'inventory.myFavorites': 'My favorites',
+    'inventory.myCreditSimulations': 'My credit simulations',
+    'inventory.loadingFavorites': 'Loading favorites...',
+    'inventory.loadingSimulations': 'Loading simulations...',
+    'inventory.noFavorites': 'You do not have favorite vehicles yet.',
+    'inventory.noSimulations': 'You have not created credit simulations yet.',
+    'inventory.details': 'Details',
+    'inventory.quote': 'Quote',
+    'inventory.monthly': 'Monthly',
+    'inventory.financed': 'Financed',
+    'inventory.term': 'Term',
+    'inventory.months': '{count} months',
+    'inventory.loadingPopularBrands': 'Loading popular brands...',
     'vehicles.title': '{brand} Vehicles',
     'vehicles.loadingBrands': 'Loading brands...',
     'vehicles.loadingVehicles': 'Loading vehicles...',

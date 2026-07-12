@@ -25,6 +25,11 @@ export class VehiclesController {
     return this.vehiclesService.findAll(brandId, req?.user?.uid);
   }
 
+  @Get('vehicles/favorites')
+  findFavorites(@Req() req: any) {
+    return this.vehiclesService.findFavorites(req.user?.uid);
+  }
+
   @Get('vehicles/:id')
   findOne(@Param('id') id: string, @Req() req?: any) {
     return this.vehiclesService.findOne(id, req?.user?.uid);
@@ -60,5 +65,15 @@ export class VehiclesController {
   @Get('brands')
   findBrands() {
     return this.vehiclesService.findBrands();
+  }
+
+  @Get('brands/popular')
+  findPopularBrands(@Query('limit') limit?: string) {
+    return this.vehiclesService.findPopularBrands(this.parseLimit(limit));
+  }
+
+  private parseLimit(value?: string): number {
+    const parsedValue = Number(value);
+    return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : 10;
   }
 }

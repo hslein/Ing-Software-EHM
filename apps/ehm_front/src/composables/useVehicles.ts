@@ -108,6 +108,12 @@ export const useVehicles = () => {
     return result;
   };
 
+  const fetchFavoriteVehicles = async () => {
+    error.value = null;
+    const result = (await apiFetch('/vehicles/favorites')) as Vehicle[];
+    return result;
+  };
+
   // Fetch brands with their vehicles
   const fetchBrands = async () => {
     loading.value = true;
@@ -122,6 +128,12 @@ export const useVehicles = () => {
     } finally {
       loading.value = false;
     }
+  };
+
+  const fetchPopularBrands = async (limit = 10) => {
+    error.value = null;
+    const result = (await apiFetch(`/brands/popular?limit=${encodeURIComponent(String(limit))}`)) as Brand[];
+    return result;
   };
 
   // Real-time subscriptions are not supported through the backend API yet.
@@ -224,8 +236,10 @@ export const useVehicles = () => {
     error: computed(() => error.value),
     fetchVehicles,
     fetchVehicleById,
+    fetchFavoriteVehicles,
     fetchVehiclesByBrand,
     fetchBrands,
+    fetchPopularBrands,
     subscribeToVehicles,
     addVehicle,
     updateVehicle,

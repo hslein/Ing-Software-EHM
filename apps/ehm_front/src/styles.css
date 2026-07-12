@@ -6,11 +6,21 @@ html {
   line-height: 1.5;
   tab-size: 4;
   scroll-behavior: smooth;
+  --ehm-black: #0a0d14;
+  --ehm-black-2: #10141f;
+  --ehm-black-3: #171c29;
+  --ehm-muted: #8892b0;
+  --ehm-line: rgba(255, 255, 255, 0.1);
+  --ehm-accent: #ff8e71;
+  --ehm-accent-strong: #ff6f7a;
 }
 body {
   font-family: inherit;
   line-height: inherit;
   margin: 0;
+  min-width: 320px;
+  width: 100%;
+  overflow-x: hidden;
 }
 h1,
 h2,

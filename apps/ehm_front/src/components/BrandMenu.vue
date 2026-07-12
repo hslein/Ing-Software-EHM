@@ -45,8 +45,8 @@ const { t } = useI18n();
 
 .brand-menu-actions button {
   background: white;
-  color: #2980b9;
-  border: 2px solid #2980b9;
+  color: var(--ehm-accent);
+  border: 2px solid var(--ehm-accent);
   padding: 8px 16px;
   border-radius: 4px;
   font-weight: 600;
@@ -56,7 +56,7 @@ const { t } = useI18n();
 }
 
 .brand-menu-actions button:hover {
-  background: #2980b9;
+  background: var(--ehm-black);
   color: white;
 }
 

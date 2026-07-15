@@ -4,11 +4,17 @@ import { Heart } from 'lucide-vue-next';
 import type { Vehicle } from '../composables/useVehicles';
 import { useI18n } from '../i18n';
 
-defineProps<{
-  brandName: string;
-  selectedCompareIds?: string[];
-  vehicles: Vehicle[];
-}>();
+const props = withDefaults(
+  defineProps<{
+    brandName: string;
+    selectedCompareIds?: string[];
+    vehicles: Vehicle[];
+    showSpecs?: boolean;
+  }>(),
+  {
+    showSpecs: false,
+  },
+);
 
 defineEmits<{
   selectVehicle: [vehicle: Vehicle];
@@ -42,6 +48,53 @@ const formatVehiclePrice = (price?: number) => {
 
 const formatVehicleMeta = (vehicle: Vehicle) => {
   return [vehicle.year, vehicle.fuelType, formatVehicleType(vehicle.type)].filter(hasValue).join(' | ');
+};
+
+const technicalSpecs = (vehicle: Vehicle) => {
+  const defaultValue = (value?: number | string | null) =>
+    hasValue(value) ? String(value) : t('common.notAvailable');
+
+  const formatDisplacement = (value?: number | string | null) => {
+    if (!hasValue(value)) return defaultValue(value);
+    const normalized = String(value).trim();
+    if (/L$/i.test(normalized) || /cc$/i.test(normalized)) {
+      return normalized;
+    }
+    const numeric = Number(normalized.replace(',', '.'));
+    if (!Number.isFinite(numeric)) return normalized;
+    return numeric <= 6 ? `${numeric}L` : `${numeric} cc`;
+  };
+
+  const formatFuelConsumption = (value?: number | string | null) => {
+    if (!hasValue(value)) return defaultValue(value);
+    const normalized = String(value).trim();
+    if (/[kK]m|L\/100|km\/gal/.test(normalized)) return normalized;
+    return `${normalized}`;
+  };
+
+  return [
+    { label: t('vehicles.spec.displacement'), value: formatDisplacement(vehicle.displacement) },
+    {
+      label: t('vehicles.spec.engineType'),
+      value: defaultValue(vehicle.engineType || vehicle.engine),
+    },
+    { label: t('vehicles.spec.valves'), value: defaultValue(vehicle.valveCount) },
+    { label: t('vehicles.spec.fuel'), value: defaultValue(vehicle.fuelType) },
+    { label: t('vehicles.spec.drivetrain'), value: defaultValue(vehicle.drivetrain) },
+    {
+      label: t('vehicles.spec.consumption'),
+      value: formatFuelConsumption(vehicle.fuelConsumption),
+    },
+    { label: t('vehicles.spec.wheels'), value: defaultValue(vehicle.wheelSize) },
+  ];
+};
+
+const formatVersions = (vehicle: Vehicle) => {
+  if (!vehicle.versions?.length) {
+    return t('common.notAvailable');
+  }
+
+  return vehicle.versions.join(', ');
 };
 
 const scrollLeft = () => {
@@ -119,6 +172,16 @@ const scrollRight = () => {
             <h3>{{ vehicle.model }}</h3>
             <p v-if="formatVehicleMeta(vehicle)" class="type">{{ formatVehicleMeta(vehicle) }}</p>
             <p class="description">{{ vehicle.description }}</p>
+
+            <dl v-if="props.showSpecs && technicalSpecs(vehicle).length" class="spec-grid">
+              <div v-for="spec in technicalSpecs(vehicle)" :key="spec.label">
+                <dt>{{ spec.label }}</dt>
+                <dd>{{ spec.value }}</dd>
+              </div>
+            </dl>
+            <p class="versions">
+              <strong>{{ t('vehicles.spec.versions') }}:</strong> {{ formatVersions(vehicle) }}
+            </p>
           </div>
 
           <div class="vehicle-commercial">
@@ -191,7 +254,7 @@ const scrollRight = () => {
   flex: 0 0 340px;
   display: grid;
   grid-template-rows: auto auto;
-  min-height: 520px;
+  min-height: 470px;
   overflow: hidden;
   position: relative;
   border-radius: 8px;
@@ -358,6 +421,47 @@ const scrollRight = () => {
   overflow: hidden;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
+}
+
+.spec-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 12px 0 0;
+}
+
+.spec-grid div {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.spec-grid dt {
+  color: #d7e4ef;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  margin: 0 0 4px;
+  text-transform: uppercase;
+}
+
+.spec-grid dd {
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.versions {
+  margin: 10px 0 0;
+  color: #d7e4ef;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.versions strong {
+  color: #fff;
 }
 
 .vehicle-commercial {

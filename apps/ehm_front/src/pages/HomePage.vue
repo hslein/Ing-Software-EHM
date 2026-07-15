@@ -1,11 +1,22 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import HeroSection from '../components/HeroSection.vue';
+import VehicleCompareModal from '../components/VehicleCompareModal.vue';
 import { useI18n } from '../i18n';
+import { useVehicles } from '../composables/useVehicles';
+import type { Brand, Vehicle } from '../composables/useVehicles';
 
+const router = useRouter();
 const { t } = useI18n();
+const { fetchPopularBrands } = useVehicles();
 
 const whyChooseSection = ref<HTMLElement>();
+const brandsCarousel = ref<HTMLElement>();
+const popularBrands = ref<Brand[]>([]);
+const selectedCompareVehicles = ref<Vehicle[]>([]);
+const showCompareModal = ref(false);
+const loadingBrands = ref(false);
 
 const whyChooseCards = [
   {
@@ -37,12 +48,90 @@ const scrollWhyChoose = (direction: 'left' | 'right') => {
   const amount = direction === 'left' ? -el.clientWidth : el.clientWidth;
   el.scrollBy({ left: amount, behavior: 'smooth' });
 };
+
+const scrollBrands = (direction: 'left' | 'right') => {
+  const el = brandsCarousel.value;
+  if (!el) return;
+
+  const amount = direction === 'left' ? -el.clientWidth : el.clientWidth;
+  el.scrollBy({ left: amount, behavior: 'smooth' });
+};
+
+const navigateToBrand = (brand: Brand) => {
+  router.push({
+    path: '/inventory',
+    query: { brandId: brand.id },
+  });
+};
+
+const loadPopularBrands = async () => {
+  loadingBrands.value = true;
+  try {
+    popularBrands.value = await fetchPopularBrands(10);
+  } finally {
+    loadingBrands.value = false;
+  }
+};
+
+onMounted(() => {
+  loadPopularBrands();
+});
 </script>
 
 <template>
   <main class="home-page">
     <div class="content">
       <HeroSection />
+
+      <!-- Popular Brands Section -->
+      <section v-if="popularBrands.length || loadingBrands" class="brands-section">
+        <div class="section-container">
+          <div class="section-header">
+            <p class="eyebrow">{{ t('home.brands.eyebrow') }}</p>
+            <h2>{{ t('home.brands.title') }}</h2>
+            <p class="section-description">
+              {{ t('home.brands.description') }}
+            </p>
+          </div>
+
+          <div v-if="!loadingBrands && popularBrands.length" class="carousel-shell">
+            <button
+              class="carousel-btn carousel-btn-left"
+              type="button"
+              :aria-label="t('common.previous')"
+              @click="scrollBrands('left')"
+            >
+              &lt;
+            </button>
+
+            <div ref="brandsCarousel" class="brands-carousel">
+              <button
+                v-for="brand in popularBrands"
+                :key="brand.id"
+                type="button"
+                class="brand-card"
+                @click="navigateToBrand(brand)"
+              >
+                <img :src="brand.image" :alt="brand.name" class="brand-image" />
+                <span class="brand-name">{{ brand.name }}</span>
+              </button>
+            </div>
+
+            <button
+              class="carousel-btn carousel-btn-right"
+              type="button"
+              :aria-label="t('common.next')"
+              @click="scrollBrands('right')"
+            >
+              &gt;
+            </button>
+          </div>
+
+          <div v-if="loadingBrands" class="brands-loading">
+            <p>{{ t('inventory.loadingPopularBrands') }}</p>
+          </div>
+        </div>
+      </section>
 
       <section class="why-section">
         <div class="section-container">
@@ -115,6 +204,13 @@ const scrollWhyChoose = (direction: 'left' | 'right') => {
         </div>
       </section>
     </div>
+
+    <!-- Vehicle Compare Modal -->
+    <VehicleCompareModal
+      v-if="showCompareModal"
+      :vehicles="selectedCompareVehicles"
+      @close="showCompareModal = false"
+    />
   </main>
 </template>
 
@@ -133,6 +229,13 @@ const scrollWhyChoose = (direction: 'left' | 'right') => {
 .legal-section {
   width: 100%;
   padding: 86px 20px;
+}
+
+.brands-section {
+  width: 100%;
+  padding: 86px 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #f9fafb 100%);
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .why-section {
@@ -181,6 +284,69 @@ const scrollWhyChoose = (direction: 'left' | 'right') => {
 
 .carousel-shell {
   position: relative;
+}
+
+.brands-carousel {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  padding: 8px 4px 22px;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ehm-accent) #e5e7eb;
+}
+
+.brands-carousel::-webkit-scrollbar {
+  height: 8px;
+}
+
+.brands-carousel::-webkit-scrollbar-track {
+  background: #d7e4ef;
+  border-radius: 10px;
+}
+
+.brands-carousel::-webkit-scrollbar-thumb {
+  background: var(--ehm-accent);
+  border-radius: 10px;
+}
+
+.brand-card {
+  flex: 0 0 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 220px;
+  padding: 16px;
+  border: 1px solid rgba(44, 62, 80, 0.1);
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  scroll-snap-align: start;
+}
+
+.brand-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  border-color: var(--ehm-accent);
+}
+
+.brand-image {
+  width: 100%;
+  height: 100px;
+  object-fit: contain;
+}
+
+.brand-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ehm-black);
+  text-align: center;
+  line-height: 1.2;
 }
 
 .why-carousel {
@@ -292,6 +458,12 @@ const scrollWhyChoose = (direction: 'left' | 'right') => {
 
 .carousel-btn-right {
   right: -20px;
+}
+
+.brands-loading {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
 }
 
 .home-stats-band {

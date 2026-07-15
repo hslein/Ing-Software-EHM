@@ -28,6 +28,24 @@ const toTitleCase = (value?: string) => {
   return text.charAt(0).toUpperCase() + text.slice(1);
 };
 
+const formatSpecValue = (value?: number | string | null) => {
+  if (!hasValue(value)) {
+    return t('common.notAvailable');
+  }
+
+  const normalized = String(value).trim();
+  if (/L$/i.test(normalized) || /cc$/i.test(normalized)) {
+    return normalized;
+  }
+
+  const numeric = Number(normalized.replace(',', '.'));
+  if (!Number.isFinite(numeric)) {
+    return normalized;
+  }
+
+  return numeric <= 6 ? `${numeric}L` : `${numeric} cc`;
+};
+
 const formatPrice = (price?: number) => {
   if (!hasValue(price)) {
     return '';
@@ -42,15 +60,26 @@ const formatMeta = (vehicle: Vehicle) => {
 
 const getVehicleSpecs = (vehicle: Vehicle) =>
   [
-    { label: 'Motor', value: vehicle.engine },
-    { label: 'Potencia', value: vehicle.horsepower },
-    { label: 'Torque', value: vehicle.torque },
-    { label: 'Vel. max', value: vehicle.topSpeed },
-    { label: '0-100', value: vehicle.acceleration },
-    { label: 'Capacidad', value: vehicle.capacity },
-    { label: 'Asientos', value: vehicle.seats },
-    { label: 'Kilometraje', value: hasValue(vehicle.mileage) ? `${vehicle.mileage} km` : '' },
-  ].filter((spec) => hasValue(spec.value));
+    { label: t('vehicles.spec.displacement'), value: formatSpecValue(vehicle.displacement) },
+    {
+      label: t('vehicles.spec.engineType'),
+      value: hasValue(vehicle.engineType || vehicle.engine) ? vehicle.engineType || vehicle.engine : t('common.notAvailable'),
+    },
+    { label: t('vehicles.spec.valves'), value: hasValue(vehicle.valveCount) ? String(vehicle.valveCount) : t('common.notAvailable') },
+    { label: t('vehicles.spec.fuel'), value: hasValue(vehicle.fuelType) ? vehicle.fuelType : t('common.notAvailable') },
+    { label: t('vehicles.spec.drivetrain'), value: hasValue(vehicle.drivetrain) ? vehicle.drivetrain : t('common.notAvailable') },
+    {
+      label: t('vehicles.spec.consumption'),
+      value: hasValue(vehicle.fuelConsumption) ? String(vehicle.fuelConsumption) : t('common.notAvailable'),
+    },
+    { label: t('vehicles.spec.wheels'), value: hasValue(vehicle.wheelSize) ? vehicle.wheelSize : t('common.notAvailable') },
+    { label: t('vehicles.spec.horsepower'), value: hasValue(vehicle.horsepower) ? String(vehicle.horsepower) : t('common.notAvailable') },
+    { label: t('vehicles.spec.torque'), value: hasValue(vehicle.torque) ? String(vehicle.torque) : t('common.notAvailable') },
+    { label: t('vehicles.spec.topSpeed'), value: hasValue(vehicle.topSpeed) ? String(vehicle.topSpeed) : t('common.notAvailable') },
+    { label: t('vehicles.spec.acceleration'), value: hasValue(vehicle.acceleration) ? String(vehicle.acceleration) : t('common.notAvailable') },
+    { label: t('vehicles.spec.capacity'), value: hasValue(vehicle.capacity) ? String(vehicle.capacity) : t('common.notAvailable') },
+    { label: t('vehicles.spec.seats'), value: hasValue(vehicle.seats) ? String(vehicle.seats) : t('common.notAvailable') },
+  ].filter((spec) => hasValue(spec.value) || spec.value === t('common.notAvailable'));
 </script>
 
 <template>

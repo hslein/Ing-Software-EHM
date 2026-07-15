@@ -7,4 +7,13 @@ export class UpdateVehicleDto {
   price?: number;
   year?: number;
   mileage?: number;
+  fuelType?: string;
+  engine?: string;
+  engineType?: string;
+  displacement?: string;
+  valveCount?: number;
+  drivetrain?: string;
+  fuelConsumption?: string;
+  wheelSize?: string;
+  versions?: string[];
 }

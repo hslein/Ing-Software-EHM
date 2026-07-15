@@ -15,7 +15,7 @@ import { useI18n } from '../i18n';
 
 const route = useRoute();
 const router = useRouter();
-const { currentUser, loading: authLoading } = useAuth();
+const { currentUser, isAuthenticated, loading: authLoading } = useAuth();
 const { t } = useI18n();
 const { fetchCreditSimulations, trackVehicleComparison, trackVehicleView } = useInteractionEvents();
 const {
@@ -88,7 +88,7 @@ const setSelectedBrand = async (brand: Brand) => {
 };
 
 const syncSelectedBrandFromRoute = async () => {
-  if (!currentUser.value || brands.value.length === 0) {
+  if (brands.value.length === 0) {
     return;
   }
 
@@ -109,7 +109,7 @@ const syncSelectedBrandFromRoute = async () => {
 };
 
 const loadInventory = async () => {
-  if (authLoading.value || !currentUser.value) {
+  if (authLoading.value) {
     return;
   }
 
@@ -120,7 +120,7 @@ const loadInventory = async () => {
     popularBrands.value = await fetchPopularBrands(10);
   } catch (err) {
     console.error('Failed to load popular brands:', err);
-    popularBrands.value = [];
+    popularBrands.value = brands.value.slice(0, 10);
   } finally {
     loadingPopularBrands.value = false;
   }
@@ -231,6 +231,11 @@ const clearCompareVehicles = () => {
 };
 
 const toggleVehicleFavorite = async (vehicle: Vehicle) => {
+  if (!isAuthenticated.value) {
+    router.push('/login');
+    return;
+  }
+
   try {
     await toggleFavorite(vehicle);
     if (showFavoritesModal.value) {
@@ -325,8 +330,10 @@ const formatDate = (value: unknown) => {
 
 onMounted(loadInventory);
 
-watch(currentUser, () => {
-  void loadInventory();
+watch(authLoading, (isLoading) => {
+  if (!isLoading) {
+    void loadInventory();
+  }
 });
 
 watch(routeBrandId, () => {
@@ -341,15 +348,7 @@ watch(routeBrandId, () => {
       <h1>{{ t('inventory.title') }}</h1>
     </section>
 
-    <section v-if="!authLoading && !currentUser" class="auth-panel">
-      <h2>{{ t('appointment.authRequired') }}</h2>
-      <button class="primary-action" type="button" @click="goToLogin">
-        {{ t('nav.signIn') }}
-      </button>
-    </section>
-
-    <template v-else>
-      <section v-if="pageLoading && !popularBrands.length" class="inventory-brand-loading" aria-live="polite">
+    <section v-if="pageLoading && !popularBrands.length" class="inventory-brand-loading" aria-live="polite">
         <p class="status-message">{{ t('inventory.loadingPopularBrands') }}</p>
         <div class="brand-skeleton-grid">
           <article v-for="item in brandSkeletons" :key="item" class="brand-skeleton-card">
@@ -361,7 +360,7 @@ watch(routeBrandId, () => {
       <p v-else-if="error" class="status-message error">{{ error }}</p>
 
       <div v-else class="inventory-layout">
-        <aside class="inventory-sidebar" :aria-label="t('inventory.shortcuts')">
+        <aside v-if="isAuthenticated" class="inventory-sidebar" :aria-label="t('inventory.shortcuts')">
           <button class="sidebar-row" type="button" @click="openFavoritesModal">
             <span class="sidebar-icon">
               <Heart :size="18" />
@@ -424,7 +423,6 @@ watch(routeBrandId, () => {
           </section>
         </div>
       </div>
-    </template>
 
     <div v-if="showFavoritesModal" class="inventory-modal-backdrop" @click.self="showFavoritesModal = false">
       <section class="inventory-modal" aria-modal="true" role="dialog">

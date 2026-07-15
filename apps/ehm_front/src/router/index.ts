@@ -29,6 +29,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../pages/Inventory.vue'),
   },
   {
+    path: '/my-vehicles',
+    name: 'MyVehicles',
+    component: () => import('../pages/MyVehiclesPage.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/users',
     name: 'Users',
     component: () => import('../pages/UsersList.vue'),
@@ -50,28 +56,33 @@ const router = createRouter({
   routes,
 });
 
-// Only redirect logged-in users away from login page
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from) => {
   const { isAuthenticated, loading } = useAuth();
 
-  if (loading.value) {
-    const unsubscribe = setInterval(() => {
-      if (!loading.value) {
-        clearInterval(unsubscribe);
-        if (to.path === '/login' && isAuthenticated.value) {
-          next('/');
-        } else {
-          next();
-        }
-      }
-    }, 100);
-  } else {
-    if (to.path === '/login' && isAuthenticated.value) {
-      next('/');
-    } else {
-      next();
+  const resolveNavigation = () => {
+    if (to.meta.requiresAuth && !isAuthenticated.value) {
+      return { path: '/login', query: { redirect: to.fullPath } };
     }
+
+    if (to.path === '/login' && isAuthenticated.value) {
+      return '/';
+    }
+
+    return true;
+  };
+
+  if (loading.value) {
+    return new Promise((resolve) => {
+      const unsubscribe = setInterval(() => {
+        if (!loading.value) {
+          clearInterval(unsubscribe);
+          resolve(resolveNavigation());
+        }
+      }, 100);
+    });
   }
+
+  return resolveNavigation();
 });
 
 export default router;

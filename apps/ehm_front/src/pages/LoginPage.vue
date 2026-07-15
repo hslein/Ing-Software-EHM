@@ -106,7 +106,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from '../i18n';
 import { useAuth } from '../composables/useAuth';
 import LanguageSwitcher from '../components/LanguageSwitcher.vue';
@@ -167,18 +167,19 @@ const handleRegister = async () => {
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--ehm-black), var(--ehm-black-3));
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   padding: 24px;
 }
 
 .login-box {
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(180deg, rgba(10, 13, 20, 0.96), rgba(23, 28, 41, 0.98));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.32);
   padding: 40px;
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   position: relative;
 }
 
@@ -189,12 +190,12 @@ const handleRegister = async () => {
 }
 
 .login-lang :deep(.lang-switcher) {
-  background: #f4f6f8;
-  border-color: #e1e8ed;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
 .login-lang :deep(.lang-btn) {
-  color: #7f8c8d;
+  color: #cfd8e7;
 }
 
 .login-lang :deep(.lang-btn.active) {
@@ -202,16 +203,16 @@ const handleRegister = async () => {
 }
 
 h1 {
-  margin: 0 0 5px;
-  color: #333;
+  margin: 0 0 6px;
+  color: #fff;
   text-align: center;
-  font-size: 28px;
+  font-size: 32px;
 }
 
 .subtitle {
   text-align: center;
-  color: #666;
-  margin: 0 0 30px;
+  color: #b8c7da;
+  margin: 0 0 28px;
   font-size: 14px;
 }
 
@@ -220,92 +221,99 @@ h1 {
 }
 
 h2 {
-  color: #667eea;
-  margin-bottom: 20px;
-  font-size: 20px;
+  color: var(--ehm-accent);
+  margin-bottom: 22px;
+  font-size: 22px;
 }
 
 .form-group {
-  margin-bottom: 15px;
+  margin-bottom: 16px;
 }
 
 label {
   display: block;
-  margin-bottom: 5px;
-  color: #333;
-  font-weight: 500;
-  font-size: 14px;
+  margin-bottom: 8px;
+  color: #d7e4ef;
+  font-weight: 600;
+  font-size: 13px;
 }
 
 input {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: #eef2ff;
   font-size: 14px;
-  transition: border-color 0.3s;
+  transition: border-color 0.3s, background 0.3s;
   box-sizing: border-box;
+}
+
+input::placeholder {
+  color: #9ca3af;
 }
 
 input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: var(--ehm-accent);
+  background: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 0 0 3px rgba(255, 142, 113, 0.15);
 }
 
 .btn-submit {
   width: 100%;
-  padding: 10px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 14px;
+  background: linear-gradient(135deg, var(--ehm-accent), var(--ehm-accent-strong));
   color: white;
   border: none;
-  border-radius: 5px;
+  border-radius: 12px;
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  margin-top: 20px;
+  transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+  margin-top: 18px;
 }
 
 .btn-submit:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 10px 30px rgba(255, 142, 113, 0.35);
 }
 
 .btn-submit:disabled {
-  opacity: 0.6;
+  opacity: 0.65;
   cursor: not-allowed;
 }
 
 .error-message {
-  background-color: #fee;
-  color: #c33;
-  padding: 10px 12px;
-  border-radius: 5px;
+  background-color: rgba(255, 97, 97, 0.12);
+  color: #ffb3b3;
+  padding: 12px 14px;
+  border-radius: 10px;
   margin-top: 15px;
   font-size: 14px;
-  border-left: 4px solid #c33;
+  border-left: 4px solid #ff6f7a;
 }
 
 .toggle-form {
   text-align: center;
-  margin-top: 20px;
-  color: #666;
+  margin-top: 22px;
+  color: #b8c7da;
   font-size: 14px;
 }
 
 .toggle-form button {
   background: none;
   border: none;
-  color: #667eea;
+  color: var(--ehm-accent);
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 700;
   text-decoration: none;
   transition: color 0.2s;
 }
 
 .toggle-form button:hover {
-  color: #764ba2;
+  color: var(--ehm-accent-strong);
   text-decoration: underline;
 }
 </style>

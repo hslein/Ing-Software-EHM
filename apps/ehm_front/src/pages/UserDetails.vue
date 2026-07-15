@@ -1,7 +1,12 @@
 <template>
   <div class="user-details-container">
     <div class="card">
-      <h2>User Details</h2>
+      <div class="profile-header">
+        <h2>User Details</h2>
+        <RouterLink to="/my-vehicles" class="secondary-btn">
+          {{ t('myVehicles.openMyVehicles') }}
+        </RouterLink>
+      </div>
 
       <form @submit.prevent="handleSubmit">
         <div class="field readonly-field">
@@ -32,10 +37,13 @@
 
 <script setup lang="ts">
 import { computed, reactive, ref, onMounted } from 'vue';
+import { RouterLink } from 'vue-router';
 import { useAuth } from '../composables/useAuth';
 import { useUserDetails } from '../composables/useUserDetails';
+import { useI18n } from '../i18n';
 
 const { currentUser, loading } = useAuth();
+const { t } = useI18n();
 const { loadDetails, saveDetails } = useUserDetails();
 const userEmail = computed(() => currentUser.value?.email ?? '');
 
@@ -103,6 +111,9 @@ label { display:block; margin-bottom:6px; font-weight:600; }
 input, textarea { width:100%; padding:8px 10px; border:1px solid #ddd; border-radius:6px; }
 .actions { margin-top:12px; }
 button { padding:10px 14px; background:linear-gradient(135deg,#667eea,#764ba2); color:white; border:0; border-radius:6px; cursor:pointer; }
+.profile-header { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:18px; }
+.secondary-btn { display:inline-flex; align-items:center; justify-content:center; padding:10px 16px; border-radius:8px; background:#f7fafc; color:#1f2937; border:1px solid #d1d5db; text-decoration:none; font-weight:700; }
+.secondary-btn:hover { background:#edf2f7; }
 .readonly-field { margin-bottom:16px; }
 .readonly-value { padding:8px 10px; border:1px solid #ddd; border-radius:6px; background:#f7f9fc; color:#333; min-height:40px; display:flex; align-items:center; }
 .error { margin-top:10px; color:#c33; }

@@ -70,6 +70,46 @@ const formatMileage = (mileage?: number | string) => {
     ? `${numericMileage.toLocaleString()} km`
     : `${mileage} km`;
 };
+
+const formatSpecValue = (value?: number | string | null) => {
+  if (value === undefined || value === null || String(value).trim() === '') {
+    return t('common.notAvailable');
+  }
+
+  const normalized = String(value).trim();
+  if (/L$/i.test(normalized) || /cc$/i.test(normalized)) {
+    return normalized;
+  }
+
+  const numeric = Number(normalized.replace(',', '.'));
+  if (!Number.isFinite(numeric)) {
+    return normalized;
+  }
+
+  return numeric <= 6 ? `${numeric}L` : `${numeric} cc`;
+};
+
+const getVehicleSpecs = (vehicle: Vehicle) => [
+  { label: t('vehicles.spec.displacement'), value: formatSpecValue(vehicle.displacement) },
+  {
+    label: t('vehicles.spec.engineType'),
+    value: vehicle.engineType || vehicle.engine || t('common.notAvailable'),
+  },
+  { label: t('vehicles.spec.valves'), value: vehicle.valveCount ? String(vehicle.valveCount) : t('common.notAvailable') },
+  { label: t('vehicles.spec.fuel'), value: vehicle.fuelType || t('common.notAvailable') },
+  { label: t('vehicles.spec.drivetrain'), value: vehicle.drivetrain || t('common.notAvailable') },
+  {
+    label: t('vehicles.spec.consumption'),
+    value: vehicle.fuelConsumption || t('common.notAvailable'),
+  },
+  { label: t('vehicles.spec.wheels'), value: vehicle.wheelSize || t('common.notAvailable') },
+  { label: t('vehicles.spec.horsepower'), value: vehicle.horsepower || t('common.notAvailable') },
+  { label: t('vehicles.spec.torque'), value: vehicle.torque || t('common.notAvailable') },
+  { label: t('vehicles.spec.topSpeed'), value: vehicle.topSpeed || t('common.notAvailable') },
+  { label: t('vehicles.spec.acceleration'), value: vehicle.acceleration || t('common.notAvailable') },
+  { label: t('vehicles.spec.capacity'), value: vehicle.capacity || t('common.notAvailable') },
+  { label: t('vehicles.spec.seats'), value: vehicle.seats || t('common.notAvailable') },
+];
 </script>
 
 <template>
@@ -117,6 +157,13 @@ const formatMileage = (mileage?: number | string) => {
             <div>
               <dt>{{ t('modal.mileage').replace(':', '') }}</dt>
               <dd>{{ formatMileage(vehicle.mileage) }}</dd>
+            </div>
+          </dl>
+
+          <dl v-if="getVehicleSpecs(vehicle).length" class="spec-grid">
+            <div v-for="spec in getVehicleSpecs(vehicle)" :key="spec.label" class="spec-item">
+              <dt>{{ spec.label }}</dt>
+              <dd>{{ spec.value }}</dd>
             </div>
           </dl>
         </article>
@@ -359,6 +406,39 @@ const formatMileage = (mileage?: number | string) => {
 .detail-list {
   margin: 0;
   padding: 0 18px 18px;
+}
+
+.spec-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 18px 18px;
+}
+
+.spec-item {
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 9px 10px;
+}
+
+.spec-item dt {
+  margin: 0 0 4px;
+  color: #d7e4ef;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.spec-item dd {
+  margin: 0;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
 }
 
 .detail-list div {

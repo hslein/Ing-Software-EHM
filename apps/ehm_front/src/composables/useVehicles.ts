@@ -17,7 +17,14 @@ export interface Vehicle {
   acceleration?: string;
   capacity?: string;
   engine?: string;
+  engineType?: string;
+  displacement?: string;
+  valveCount?: number;
   fuelType?: string;
+  drivetrain?: string;
+  fuelConsumption?: string;
+  wheelSize?: string;
+  versions?: string[];
   horsepower?: string;
   seats?: string;
   topSpeed?: string;
@@ -42,21 +49,27 @@ const error = ref<string | null>(null);
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000/api';
 
-const getAuthHeaders = async () => {
+const buildHeaders = async (requireAuth: boolean) => {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+
   const user = auth.currentUser;
-  if (!user) {
+  if (user) {
+    const token = await user.getIdToken();
+    headers.Authorization = `Bearer ${token}`;
+    return headers;
+  }
+
+  if (requireAuth) {
     throw new Error('User is not authenticated');
   }
 
-  const token = await user.getIdToken();
-  return {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
-  };
+  return headers;
 };
 
-const apiFetch = async (path: string, options: RequestInit = {}) => {
-  const headers = await getAuthHeaders();
+const apiFetch = async (path: string, options: RequestInit = {}, requireAuth = true) => {
+  const headers = await buildHeaders(requireAuth);
   const response = await fetch(`${apiBaseUrl}${path}`, {
     ...options,
     headers: { ...headers, ...(options.headers ?? {}) },
@@ -64,37 +77,43 @@ const apiFetch = async (path: string, options: RequestInit = {}) => {
   const text = await response.text();
 
   if (!response.ok) {
-    throw new Error(text || response.statusText);
+    throw new Error(`Request failed (${response.status}) ${path}: ${text || response.statusText}`);
   }
 
-  return text ? JSON.parse(text) : null;
+  try {
+    return text ? JSON.parse(text) : null;
+  } catch {
+    throw new Error(`Invalid JSON response received from ${path}`);
+  }
 };
 
 export const useVehicles = () => {
-  // Fetch all vehicles
   const fetchVehicles = async () => {
     loading.value = true;
     error.value = null;
     try {
-      const result = (await apiFetch('/vehicles')) as Vehicle[];
+      const result = (await apiFetch('/vehicles', {}, false)) as Vehicle[];
       vehicles.value = result;
-    } catch (err: any) {
-      error.value = err.message;
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Failed to load vehicles';
     } finally {
       loading.value = false;
     }
   };
 
-  // Fetch vehicles by brand
   const fetchVehiclesByBrand = async (brandId: string) => {
     loading.value = true;
     error.value = null;
     try {
-      const result = (await apiFetch(`/vehicles?brandId=${encodeURIComponent(brandId)}`)) as Vehicle[];
+      const result = (await apiFetch(
+        `/vehicles?brandId=${encodeURIComponent(brandId)}`,
+        {},
+        false,
+      )) as Vehicle[];
       vehicles.value = result;
       return result;
-    } catch (err: any) {
-      error.value = err.message;
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Failed to load vehicles';
       vehicles.value = [];
       return [];
     } finally {
@@ -104,26 +123,23 @@ export const useVehicles = () => {
 
   const fetchVehicleById = async (vehicleId: string) => {
     error.value = null;
-    const result = (await apiFetch(`/vehicles/${encodeURIComponent(vehicleId)}`)) as Vehicle;
-    return result;
+    return (await apiFetch(`/vehicles/${encodeURIComponent(vehicleId)}`, {}, false)) as Vehicle;
   };
 
   const fetchFavoriteVehicles = async () => {
     error.value = null;
-    const result = (await apiFetch('/vehicles/favorites')) as Vehicle[];
-    return result;
+    return (await apiFetch('/vehicles/favorites')) as Vehicle[];
   };
 
-  // Fetch brands with their vehicles
   const fetchBrands = async () => {
     loading.value = true;
     error.value = null;
     try {
-      const result = (await apiFetch('/brands')) as Brand[];
+      const result = (await apiFetch('/brands', {}, false)) as Brand[];
       brands.value = result;
       return result;
-    } catch (err: any) {
-      error.value = err.message;
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Failed to load brands';
       throw err;
     } finally {
       loading.value = false;
@@ -132,18 +148,19 @@ export const useVehicles = () => {
 
   const fetchPopularBrands = async (limit = 10) => {
     error.value = null;
-    const result = (await apiFetch(`/brands/popular?limit=${encodeURIComponent(String(limit))}`)) as Brand[];
-    return result;
+    return (await apiFetch(
+      `/brands/popular?limit=${encodeURIComponent(String(limit))}`,
+      {},
+      false,
+    )) as Brand[];
   };
 
-  // Real-time subscriptions are not supported through the backend API yet.
   const subscribeToVehicles = (callback?: (vehicles: Vehicle[]) => void) => {
     console.warn('Real-time vehicle subscriptions are not supported by the backend API.');
     if (callback) callback(vehicles.value);
     return () => {};
   };
 
-  // Add a new vehicle
   const addVehicle = async (vehicle: Vehicle) => {
     error.value = null;
     try {
@@ -162,13 +179,12 @@ export const useVehicles = () => {
         body: JSON.stringify(payload),
       })) as { id: string };
       return result.id;
-    } catch (err: any) {
-      error.value = err.message;
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Failed to add vehicle';
       throw err;
     }
   };
 
-  // Update a vehicle
   const updateVehicle = async (id: string, vehicle: Partial<Vehicle>) => {
     error.value = null;
     try {
@@ -176,21 +192,20 @@ export const useVehicles = () => {
         method: 'PUT',
         body: JSON.stringify(vehicle),
       });
-    } catch (err: any) {
-      error.value = err.message;
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Failed to update vehicle';
       throw err;
     }
   };
 
-  // Delete a vehicle
   const deleteVehicle = async (id: string) => {
     error.value = null;
     try {
       await apiFetch(`/vehicles/${encodeURIComponent(id)}`, {
         method: 'DELETE',
       });
-    } catch (err: any) {
-      error.value = err.message;
+    } catch (err: unknown) {
+      error.value = err instanceof Error ? err.message : 'Failed to delete vehicle';
       throw err;
     }
   };
@@ -222,9 +237,9 @@ export const useVehicles = () => {
       })) as { vehicleId: string; isFavorite: boolean };
       setVehicleFavoriteState(result.vehicleId, result.isFavorite);
       return result;
-    } catch (err: any) {
+    } catch (err: unknown) {
       setVehicleFavoriteState(vehicle.id, previousFavoriteState);
-      error.value = err.message;
+      error.value = err instanceof Error ? err.message : 'Failed to update favorite';
       throw err;
     }
   };

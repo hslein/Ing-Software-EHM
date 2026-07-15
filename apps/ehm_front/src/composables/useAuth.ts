@@ -89,15 +89,22 @@ const loadCurrentUserRole = async (user: User) => {
 // Keep Vue state in sync with Firebase Auth.
 onIdTokenChanged(auth, async (user) => {
   currentUser.value = user;
+
+  if (!user) {
+    currentUserRole.value = null;
+    roleLoading.value = false;
+    error.value = null;
+    loading.value = false;
+    return;
+  }
+
   currentUserRole.value = null;
 
   try {
-    if (user) {
-      await ensureUserDocument(user);
-      await loadCurrentUserRole(user);
-    }
+    await ensureUserDocument(user);
+    await loadCurrentUserRole(user);
   } catch (err) {
-    currentUserRole.value = user ? 'customer' : null;
+    currentUserRole.value = 'customer';
     console.error('Failed to sync authenticated user:', err);
   } finally {
     loading.value = false;
@@ -146,6 +153,9 @@ export const useAuth = () => {
     error.value = null;
     try {
       await signOut(auth);
+      currentUser.value = null;
+      currentUserRole.value = null;
+      roleLoading.value = false;
     } catch (err: any) {
       error.value = err.message;
       throw err;

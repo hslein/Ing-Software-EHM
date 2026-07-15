@@ -8,8 +8,11 @@
         <li class="nav-item">
           <RouterLink to="/" class="nav-link" @click="goHome">{{ t('nav.home') }}</RouterLink>
         </li>
-        <li v-if="isAuthenticated" class="nav-item">
+        <li class="nav-item">
           <RouterLink to="/inventory" class="nav-link">{{ t('nav.inventory') }}</RouterLink>
+        </li>
+        <li v-if="isAuthenticated" class="nav-item">
+          <RouterLink to="/my-vehicles" class="nav-link">{{ t('nav.myVehicles') }}</RouterLink>
         </li>
         <li v-if="!isAdmin" class="nav-item">
           <RouterLink to="/about" class="nav-link" @click="goAbout">{{ t('nav.about') }}</RouterLink>
@@ -78,8 +81,11 @@ const goAbout = () => {
 };
 
 const handleLogout = async () => {
-  await logout();
-  router.push('/login');
+  try {
+    await logout();
+  } finally {
+    await router.replace('/');
+  }
 };
 
 </script>
